@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import authRoutes from './routes/authRoutes.js'
+
 
 const app = express();
 
@@ -16,6 +18,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+app.use('/api/auth', authRoutes)
+
 
 app.get('/api/health', async (req: Request, res: Response) => {
   try {
