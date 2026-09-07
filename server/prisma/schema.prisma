@@ -3,6 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+}
+
+
+model Admin {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  businessName  String?  @map("business_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
 }
