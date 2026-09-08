@@ -3,6 +3,7 @@ import db from '../db/db.js'
 import bcrypt from 'bcrypt'
 import validator from 'validator';
 import jwt from 'jsonwebtoken'
+import { toClientSafe } from '../utils/sanitizer.js';
 
 
 export async function signUp(req: Request, res: Response) {
@@ -24,13 +25,17 @@ export async function signUp(req: Request, res: Response) {
     businessName = businessName?.trim() || null
 
     }
-
-    //add check if the user with that email doesnt exist already.
-
+    
     const salt = 10
 
     try {
         
+        const isExistingUser = db.admin.findUnique({where: {email}})
+
+        if (isExistingUser) {
+            return res.status(400).json({error: 'This email is already used.'})
+        }
+
         const hashedPassword = await bcrypt.hash(password, salt)
 
         const admin = await db.admin.create({
@@ -42,7 +47,7 @@ export async function signUp(req: Request, res: Response) {
             },
         })
     
-    return res.status(201).json({message: 'Successfully created account.', id:admin.id, name:admin.name})
+        return res.status(201).json({message: 'Successfully created account.', id:admin.id, name:admin.name})
 
     } catch(err){
 
@@ -87,9 +92,9 @@ export async function login(req: Request, res: Response) {
             } else {
 
                 const token = jwt.sign(
-                    { id: admin.id, role: 'ADMIN' },
-                    process.env.JWT_SECRET as string,
-                    { expiresIn: '1d' }
+                { id: admin.id, role: 'admin' }, 
+                process.env.JWT_SECRET as string, 
+                { expiresIn: '1d' }
                 )
 
                 res.cookie('auth_token', token, {
@@ -115,7 +120,8 @@ export async function login(req: Request, res: Response) {
 export async function logout(req: Request, res: Response) {
 
     try {
-        
+        res.clearCookie('auth_token')
+        return res.status(200).json({ message: "Successfully logged out!" })
 
     } catch(err){
         console.log(err)
@@ -126,11 +132,14 @@ export async function logout(req: Request, res: Response) {
 export async function mySession(req: Request, res: Response) {
 
     try {
-        return res.status(200).json({
-            message: 'Session verified',
-            user: req.user
-        })
+        if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' })
+        }
 
+        // run user through sanitizer
+        const safeUser = toClientSafe(req.user)
+
+        return res.status(200).json({message: 'Session verified', user: safeUser })
     } catch(err){
         console.log(err)
         return res.status(500).json({error: 'Internal server error.'})
