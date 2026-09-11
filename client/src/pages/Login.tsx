@@ -1,13 +1,40 @@
 import loginImg from '../images/loginImg.png'
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 
 export function LoginPage() {
-	const [showPassword, setShowPassword] = useState(false)
-	const[ password, setPassword] = useState()
-	const [ email, setEmail] = useState()
+	const [ showPassword, setShowPassword ] = useState(false)
+	const [ password, setPassword ] = useState("")
+	const [ email, setEmail ] = useState("")
+	const [ errorMessage, setErrorMessage] = useState("")
 
-	function handleSubmit(e) {
+	async function handleSubmit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault()
+		try {
+
+			const apiUrl = import.meta.env.VITE_API_URL
+			const response = await fetch(`${apiUrl}/api/auth/login`, {
+				method: "POST",
+				headers: {"Content-Type": "application/json"},
+				credentials: "include",
+				body: JSON.stringify({email, password})
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				throw new Error(data.error || "Something went wrong")
+			}
+
+			console.log("logged in!")
+
+		} catch(err: unknown) {
+			if (err instanceof Error) {
+				setErrorMessage(err.message)
+			} else {
+				setErrorMessage("An unexpected error occured.")
+			}
+		}
+
 	}
 
 	function togglePassword() {
@@ -32,6 +59,7 @@ export function LoginPage() {
 							type="email"
 							placeholder="Email"
 							autoComplete="email"
+							onChange={(e) => setEmail(e.target.value)}
 							required
 						/>
 					</label>
@@ -44,6 +72,7 @@ export function LoginPage() {
 							type={showPassword ? 'text' : 'password'}
 							placeholder="Password"
 							autoComplete="current-password"
+							onChange={(e) => setPassword(e.target.value)}
 							required
 						/>
 						<button 
