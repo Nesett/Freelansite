@@ -1,17 +1,22 @@
 import loginImg from '../images/loginImg.png'
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function LoginPage() {
 	const [ showPassword, setShowPassword ] = useState(false)
 	const [ password, setPassword ] = useState("")
 	const [ email, setEmail ] = useState("")
 	const [ errorMessage, setErrorMessage] = useState("")
+	const navigate = useNavigate()
 
 	async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+		
 		e.preventDefault()
+
 		try {
 
 			const apiUrl = import.meta.env.VITE_API_URL
+			console.log(apiUrl)
 			const response = await fetch(`${apiUrl}/api/auth/login`, {
 				method: "POST",
 				headers: {"Content-Type": "application/json"},
@@ -26,6 +31,8 @@ export function LoginPage() {
 			}
 
 			console.log("logged in!")
+
+			navigate("/dashboard")
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
