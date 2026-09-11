@@ -3,6 +3,12 @@ import { useState } from 'react'
 
 export function LoginPage() {
 	const [showPassword, setShowPassword] = useState(false)
+	const[ password, setPassword] = useState()
+	const [ email, setEmail] = useState()
+
+	function handleSubmit(e) {
+		e.preventDefault()
+	}
 
 	function togglePassword() {
 		setShowPassword(prevShowPass=>!prevShowPass)
@@ -17,7 +23,7 @@ export function LoginPage() {
 			<div className="signInContainer">
 				<h2>Sign In</h2>
 
-				<form className="signInForm">
+				<form className="signInForm" onSubmit={handleSubmit}>
 					<label className="inputField" htmlFor="email">
 						<span className="fieldIcon fieldIcon--email" aria-hidden="true" />
 						<input
@@ -26,6 +32,7 @@ export function LoginPage() {
 							type="email"
 							placeholder="Email"
 							autoComplete="email"
+							required
 						/>
 					</label>
 
@@ -37,6 +44,7 @@ export function LoginPage() {
 							type={showPassword ? 'text' : 'password'}
 							placeholder="Password"
 							autoComplete="current-password"
+							required
 						/>
 						<button 
 						type="button"
