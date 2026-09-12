@@ -16,7 +16,7 @@ export function LoginPage() {
 		try {
 
 			const apiUrl = import.meta.env.VITE_API_URL
-			console.log(apiUrl)
+
 			const response = await fetch(`${apiUrl}/api/auth/login`, {
 				method: "POST",
 				headers: {"Content-Type": "application/json"},
@@ -31,7 +31,6 @@ export function LoginPage() {
 			}
 
 			console.log("logged in!")
-
 			navigate("/dashboard")
 
 		} catch(err: unknown) {
@@ -45,7 +44,9 @@ export function LoginPage() {
 	}
 
 	function togglePassword() {
+
 		setShowPassword(prevShowPass=>!prevShowPass)
+
 	}
 
 	return (
