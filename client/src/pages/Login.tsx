@@ -1,5 +1,5 @@
 import loginImg from '../images/loginImg.png'
-import { useState, type FormEvent } from 'react'
+import { useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export function LoginPage() {
@@ -9,9 +9,8 @@ export function LoginPage() {
 	const [ errorMessage, setErrorMessage] = useState("")
 	const navigate = useNavigate()
 
-	async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+	async function handleSubmit() {
 		
-		e.preventDefault()
 
 		try {
 
@@ -58,7 +57,7 @@ export function LoginPage() {
 			<div className="signInContainer">
 				<h2>Sign In</h2>
 
-				<form className="signInForm" onSubmit={handleSubmit}>
+				<form className="signInForm" action={handleSubmit}>
 					<label className="inputField" htmlFor="email">
 						<span className="fieldIcon fieldIcon--email" aria-hidden="true" />
 						<input
