@@ -80,7 +80,7 @@ export async function getAllProjects(req: Request, res: Response) {
 
 export async function getProject(req: Request, res: Response) {
 	const adminId = req.user.id
-	const projectId = String(req.params.id)
+	const projectId = String(req.params.id || req.query.id)
 
 	try {
 		const project = await db.project.findFirst({
@@ -116,41 +116,45 @@ export async function getProject(req: Request, res: Response) {
 
 export async function updateProject(req: Request, res: Response) {
 
-    const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+	const adminId = req.user.id
+	const projectId = String(req.params.id || req.query.id)
 
-    const {name, email, phone, companyName} = req.body
+    const {title, description, budget, status, deadline, notes} = req.body
 
     try {
 
-        const existingClient = await db.client.findFirst({
+        const existingProject = await db.project.findFirst({
             where: {
-                id: clientId,
-                adminId: adminId
+                id: projectId,
+                client: {
+                    adminId: adminId
+                }
             }
         })
 
-        if (!existingClient) {
-            return res.status(404).json({error: "Client does not exist."})
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
         } 
 
-        const updatedClient = await db.client.update({
+        const updatedProject = await db.project.update({
             where: {
-                id: clientId
+                id: projectId
             },
             data: {
-                name: name,
-                email: email,
-                phone: phone,
-                companyName: companyName
+                title,
+                description,
+                budget,
+                status,
+                deadline,
+                notes
             }
         })
 
-        return res.status(200).json({updatedClient})
+        return res.status(200).json({updatedProject})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not update client with id ${clientId}.`})
+        return res.status(500).json({error: `Could not update project with id ${projectId}.`})
     }
 
 }
