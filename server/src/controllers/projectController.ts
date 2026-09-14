@@ -45,30 +45,41 @@ export async function createProject(req: Request, res: Response) {
 }
 
 
-export async function getAllClients(req: Request, res: Response) {
+export async function getAllProjects(req: Request, res: Response) {
     
     const adminId = req.user.id
     
     try {
 
-        const clients = await db.client.findMany({
+        const allProjects = await db.project.findMany({
             where: {
-                adminId: adminId
-            }
-        })
+                client: {
+                    adminId
+                }
+            }, // all projects belonging to clients of an admin.
+            include: {
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        companyName: true
+                    }
+                }
+            } // and their id, name and companyName
+        }) 
 
-        return res.status(200).json(clients)
+        return res.status(200).json(allProjects)
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: "Could not fetch all clients."})
+        return res.status(500).json({error: "Could not fetch all projects."})
     }
 
     
 }
 
 
-export async function getClient(req: Request, res: Response) {
+export async function getProject(req: Request, res: Response) {
     
     const adminId = req.user.id
     const clientId = String(req.params.id || req.query.id)
@@ -99,7 +110,7 @@ export async function getClient(req: Request, res: Response) {
 }
 
 
-export async function updateClient(req: Request, res: Response) {
+export async function updateProject(req: Request, res: Response) {
 
     const adminId = req.user.id
     const clientId = String(req.params.id || req.query.id)
@@ -141,7 +152,7 @@ export async function updateClient(req: Request, res: Response) {
 }
 
 
-export async function deactivateClient(req: Request, res: Response) {
+export async function deleteProject(req: Request, res: Response) {
 
     const adminId = req.user.id
     const clientId = String(req.params.id || req.query.id)
