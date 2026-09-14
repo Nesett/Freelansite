@@ -75,38 +75,42 @@ export async function getAllProjects(req: Request, res: Response) {
         return res.status(500).json({error: "Could not fetch all projects."})
     }
 
-    
 }
 
 
 export async function getProject(req: Request, res: Response) {
-    
-    const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+	const adminId = req.user.id
+	const projectId = String(req.params.id)
 
-    try {
+	try {
+		const project = await db.project.findFirst({
+			where: {
+				id: projectId,
+				client: {
+					adminId: adminId
+				}
+			},
+			include: {
+				client: {
+					select: {
+						id: true,
+						name: true,
+						companyName: true
+					}
+				}
+			}
+		})
 
-        const client = await db.client.findFirst({
-            where: {
-                id: clientId,
-                adminId: adminId
-                
-            }
-        })
+		if (!project) {
+			return res.status(404).json({ error: "Project not found." })
+		}
 
-        if (!client) {
-            return res.status(404).json({error: "Client not found."})
-        }
-        
-        return res.status(200).json(client)
+		return res.status(200).json(project)
 
-    } catch(err) {
-        console.log(err)
-        return res.status(500).json({error: `Could not fetch client with id ${clientId}.`})
-    }
-
-    
-    
+	} catch(err) {
+		console.log(err)
+		return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
+	}
 }
 
 
