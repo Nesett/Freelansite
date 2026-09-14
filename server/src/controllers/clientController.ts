@@ -30,3 +30,31 @@ export async function createClient(req: Request, res: Response) {
         res.status(500).json({error: "Could not create the client."})
     }
 }
+
+export async function getAllClients(req: Request, res: Response) {
+    
+    const adminId = req.user.id
+    
+    try {
+
+        const clients = await db.client.findMany({
+            where: {
+                adminId: adminId
+            }
+        })
+
+        return res.status(200).json(clients)
+
+    } catch(err) {
+        console.log(err)
+        res.status(500).json({error: "Could not fetch all clients."})
+    }
+
+    
+}
+
+
+export async function getClient(req: Request, res: Response) {
+    
+    
+}
