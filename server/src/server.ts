@@ -6,6 +6,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 import authRoutes from './routes/authRoutes.js'
 import clientRoutes from './routes/clientRoutes.js'
+import projectRoutes from './routes/projectRoutes.js'
 
 
 const app = express()
@@ -26,6 +27,7 @@ app.use(cookieParser())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/clients', clientRoutes)
+app.use('/api/projects', projectRoutes)
 
 
 app.get('/api/health', async (req: Request, res: Response) => {
