@@ -7,7 +7,7 @@ export async function createClient(req: Request, res: Response) {
     const adminId = req.user.id
 
     if (!name || !email) {
-        res.status(400).json({message:"Enter all necessary information."})
+        return res.status(400).json({message:"Enter all necessary information."})
     } 
 
     try{
@@ -27,9 +27,10 @@ export async function createClient(req: Request, res: Response) {
 
     } catch(err) {
         console.log(err)
-        res.status(500).json({error: "Could not create the client."})
+        return res.status(500).json({error: "Could not create the client."})
     }
 }
+
 
 export async function getAllClients(req: Request, res: Response) {
     
@@ -43,15 +44,11 @@ export async function getAllClients(req: Request, res: Response) {
             }
         })
 
-        if (!clients) {
-            res.status(400).json({message: "No clients found."})
-        }
-
         return res.status(200).json(clients)
 
     } catch(err) {
         console.log(err)
-        res.status(500).json({error: "Could not fetch all clients."})
+        return res.status(500).json({error: "Could not fetch all clients."})
     }
 
     
@@ -77,9 +74,87 @@ export async function getClient(req: Request, res: Response) {
 
     } catch(err) {
         console.log(err)
-        res.status(500).json({error: `Could not fetch client with id ${clientId}.`})
+        return res.status(500).json({error: `Could not fetch client with id ${clientId}.`})
     }
 
     
     
+}
+
+
+export async function updateClient(req: Request, res: Response) {
+
+    const adminId = req.user.id
+    const clientId = String(req.params.id || req.query.id)
+
+    const {name, email, phone, companyName} = req.body
+
+    try {
+
+        const existingClient = await db.client.findFirst({
+            where: {
+                id: clientId,
+                adminId: adminId
+            }
+        })
+
+        if (!existingClient) {
+            return res.status(404).json({error: "Client does not exist."})
+        } 
+
+        const updatedClient = await db.client.update({
+            where: {
+                id: clientId
+            },
+            data: {
+                name: name,
+                email: email,
+                phone: phone,
+                companyName: companyName
+            }
+        })
+
+        return res.status(200).json({updatedClient})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not update client with id ${clientId}.`})
+    }
+
+}
+
+
+export async function deactivateClient(req: Request, res: Response) {
+
+    const adminId = req.user.id
+    const clientId = String(req.params.id || req.query.id)
+
+    try {
+        const existingClient = await db.client.findFirst({
+            where: {
+                id: clientId,
+                adminId: adminId
+            }
+        })
+
+        if (!existingClient) {
+            return res.status(404).json({error: "Client does not exist."})
+        } 
+
+        const deactivatedClient = await db.client.update({
+            where: {
+                id: clientId
+            },
+            data: {
+                isActive: false
+            }
+        })
+
+        return res.status(200).json({deactivatedClient})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not deactivate client with id ${clientId}.`})
+    }
+
 }
