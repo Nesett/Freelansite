@@ -43,6 +43,10 @@ export async function getAllClients(req: Request, res: Response) {
             }
         })
 
+        if (!clients) {
+            res.status(400).json({message: "No clients found."})
+        }
+
         return res.status(200).json(clients)
 
     } catch(err) {
@@ -55,6 +59,27 @@ export async function getAllClients(req: Request, res: Response) {
 
 
 export async function getClient(req: Request, res: Response) {
+    
+    const adminId = req.user.id
+    const clientId = String(req.params.id || req.query.id)
+
+    try {
+
+        const client = await db.client.findFirst({
+            where: {
+                id: clientId,
+                adminId: adminId
+                
+            }
+        })
+
+        return res.status(200).json(client)
+
+    } catch(err) {
+        console.log(err)
+        res.status(500).json({error: `Could not fetch client with id ${clientId}.`})
+    }
+
     
     
 }
