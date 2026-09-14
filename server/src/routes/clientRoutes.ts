@@ -10,7 +10,7 @@ router.post("/", createClient)
 router.get("/", getAllClients)
 router.get("/:id", getClient)
 router.put("/:id", updateClient)
-router.delete("./:id", deactivateClient)
+router.delete("/:id", deactivateClient)
 
 
 export default router

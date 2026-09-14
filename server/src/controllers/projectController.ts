@@ -16,7 +16,8 @@ export async function createProject(req: Request, res: Response) {
         const existingClient = await db.client.findFirst({
             where: {
                 id: clientId,
-                adminId: adminId
+                adminId: adminId,
+                isActive: true
             }
         })
 
@@ -29,7 +30,7 @@ export async function createProject(req: Request, res: Response) {
                 clientId,
                 title,
                 description, 
-                budget, 
+                budget: budget !== undefined && budget !== null ? Number(budget) : null,
                 deadline: deadline ? new Date(deadline) : null,
                 notes
             }
@@ -53,8 +54,10 @@ export async function getAllProjects(req: Request, res: Response) {
 
         const allProjects = await db.project.findMany({
             where: {
+                isActive: true,
                 client: {
-                    adminId
+                    adminId,
+                    isActive: true
                 }
             }, // all projects belonging to clients of an admin.
             include: {
@@ -80,14 +83,16 @@ export async function getAllProjects(req: Request, res: Response) {
 
 export async function getProject(req: Request, res: Response) {
 	const adminId = req.user.id
-	const projectId = String(req.params.id || req.query.id)
+	const projectId = String(req.params.id)
 
 	try {
 		const project = await db.project.findFirst({
 			where: {
 				id: projectId,
+                isActive: true,
 				client: {
-					adminId: adminId
+					adminId: adminId,
+                    isActive: true
 				}
 			},
 			include: {
@@ -117,7 +122,7 @@ export async function getProject(req: Request, res: Response) {
 export async function updateProject(req: Request, res: Response) {
 
 	const adminId = req.user.id
-	const projectId = String(req.params.id || req.query.id)
+	const projectId = String(req.params.id)
 
     const {title, description, budget, status, deadline, notes} = req.body
 
@@ -126,8 +131,10 @@ export async function updateProject(req: Request, res: Response) {
         const existingProject = await db.project.findFirst({
             where: {
                 id: projectId,
+                isActive: true,
                 client: {
-                    adminId: adminId
+                    adminId: adminId,
+                    isActive: true
                 }
             }
         })
@@ -138,15 +145,16 @@ export async function updateProject(req: Request, res: Response) {
 
         const updatedProject = await db.project.update({
             where: {
-                id: projectId
+                id: projectId,
+                isActive: true
             },
             data: {
-                title,
-                description,
-                budget,
-                status,
-                deadline,
-                notes
+                title: title !== undefined ? title : existingProject.title,
+				description: description !== undefined ? description : existingProject.description,
+				budget: budget !== undefined ? Number(budget) : existingProject.budget,
+				status: status !== undefined ? status : existingProject.status,
+				deadline: deadline !== undefined ? (deadline ? new Date(deadline) : null) : existingProject.deadline,
+				notes: notes !== undefined ? notes : existingProject.notes
             }
         })
 
@@ -160,37 +168,43 @@ export async function updateProject(req: Request, res: Response) {
 }
 
 
-export async function deleteProject(req: Request, res: Response) {
+export async function deactivateProject(req: Request, res: Response) {
 
     const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+    const projectId = String(req.params.id)
 
     try {
-        const existingClient = await db.client.findFirst({
+
+        const existingProject = await db.project.findFirst({
             where: {
-                id: clientId,
-                adminId: adminId
+                id: projectId,
+                isActive: true,
+                client: {
+                    adminId: adminId,
+                    isActive: true
+                }
             }
         })
 
-        if (!existingClient) {
-            return res.status(404).json({error: "Client does not exist."})
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
         } 
 
-        const deactivatedClient = await db.client.update({
+        const deactivateProject = await db.project.update({
             where: {
-                id: clientId
+                id: projectId,
+				isActive: true
             },
             data: {
                 isActive: false
             }
         })
 
-        return res.status(200).json({deactivatedClient})
+        return res.status(200).json({deactivateProject})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not deactivate client with id ${clientId}.`})
+        return res.status(500).json({error: `Could not deactivate project with id ${projectId}.`})
     }
 
 }

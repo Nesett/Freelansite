@@ -52,6 +52,7 @@ model Project {
   status      ProjectStatus @default(NOT_STARTED)
   deadline    DateTime?
   notes       String?
+  isActive    Boolean       @default(true) @map("is_active")
   createdAt   DateTime      @default(now()) @map("created_at")
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)

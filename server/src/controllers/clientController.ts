@@ -40,7 +40,8 @@ export async function getAllClients(req: Request, res: Response) {
 
         const clients = await db.client.findMany({
             where: {
-                adminId: adminId
+                adminId: adminId,
+				isActive: true
             }
         })
 
@@ -58,14 +59,15 @@ export async function getAllClients(req: Request, res: Response) {
 export async function getClient(req: Request, res: Response) {
     
     const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+    const clientId = String(req.params.id)
 
     try {
 
         const client = await db.client.findFirst({
             where: {
                 id: clientId,
-                adminId: adminId
+                adminId: adminId,
+				isActive: true
                 
             }
         })
@@ -73,7 +75,7 @@ export async function getClient(req: Request, res: Response) {
         if (!client) {
             return res.status(404).json({error: "Client not found."})
         }
-        
+
         return res.status(200).json(client)
 
     } catch(err) {
@@ -89,7 +91,7 @@ export async function getClient(req: Request, res: Response) {
 export async function updateClient(req: Request, res: Response) {
 
     const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+    const clientId = String(req.params.id)
 
     const {name, email, phone, companyName} = req.body
 
@@ -98,7 +100,8 @@ export async function updateClient(req: Request, res: Response) {
         const existingClient = await db.client.findFirst({
             where: {
                 id: clientId,
-                adminId: adminId
+                adminId: adminId,
+				isActive: true
             }
         })
 
@@ -108,13 +111,14 @@ export async function updateClient(req: Request, res: Response) {
 
         const updatedClient = await db.client.update({
             where: {
-                id: clientId
+                id: clientId,
+				isActive: true
             },
             data: {
-                name: name,
-                email: email,
-                phone: phone,
-                companyName: companyName
+                name: name !== undefined ? name : existingClient.name,
+				email: email !== undefined ? email : existingClient.email,
+				phone: phone !== undefined ? phone : existingClient.phone,
+				companyName: companyName !== undefined ? companyName : existingClient.companyName
             }
         })
 
@@ -131,13 +135,14 @@ export async function updateClient(req: Request, res: Response) {
 export async function deactivateClient(req: Request, res: Response) {
 
     const adminId = req.user.id
-    const clientId = String(req.params.id || req.query.id)
+    const clientId = String(req.params.id)
 
     try {
         const existingClient = await db.client.findFirst({
             where: {
                 id: clientId,
-                adminId: adminId
+                adminId: adminId,
+				isActive: true
             }
         })
 
@@ -145,16 +150,26 @@ export async function deactivateClient(req: Request, res: Response) {
             return res.status(404).json({error: "Client does not exist."})
         } 
 
-        const deactivatedClient = await db.client.update({
-            where: {
-                id: clientId
-            },
-            data: {
-                isActive: false
-            }
-        })
+        const [deactivatedClient] = await db.$transaction([
+			db.client.update({
+				where: {
+                    id: clientId 
+                },
+				data: { 
+                    isActive: false
+                }
+			}),
+			db.project.updateMany({
+				where: { 
+                    clientId: clientId 
+                },
+				data: { 
+                    isActive: false 
+                }
+			})
+		])
 
-        return res.status(200).json({deactivatedClient})
+        return res.status(200).json({message: "Client and their projects have been deactivated.", deletedUser: deactivatedClient})
 
     } catch(err) {
         console.log(err)
