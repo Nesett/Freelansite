@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 import authRoutes from './routes/authRoutes.js'
+import clientRoutes from './routes/clientRoutes.js'
 
 
 const app = express()
@@ -13,7 +14,7 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5001
 
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -24,6 +25,7 @@ app.use(cookieParser())
 
 
 app.use('/api/auth', authRoutes)
+app.use('/api/clients', clientRoutes)
 
 
 app.get('/api/health', async (req: Request, res: Response) => {
