@@ -35,6 +35,7 @@ model Client {
   companyName String?
   password    String?
   createdAt   DateTime @default(now()) @map("created_at")
+  lastActive  DateTime @default(now()) @map("last_active")
   isActive    Boolean  @default(true) @map("is_active")
 
   admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)

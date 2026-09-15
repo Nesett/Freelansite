@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "clients" ADD COLUMN     "last_active" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
