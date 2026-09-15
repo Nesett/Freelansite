@@ -2,7 +2,7 @@ import loginImg from '../images/loginImg.png'
 import { useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export function LoginPage() {
+export default function LoginPage() {
 	const [ showPassword, setShowPassword ] = useState(false)
 	const [ password, setPassword ] = useState("")
 	const [ email, setEmail ] = useState("")
