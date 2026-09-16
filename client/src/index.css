@@ -589,6 +589,97 @@ h1, h2, h3, h4, p, a {
 	opacity: 0.9;
 }
 
+/* ----- are you sure modal (delete client) ----- */
+
+.areYouSureModal {
+	background-color: var(--elements-color);
+	border-radius: var(--radius-md);
+	width: 100%;
+	max-width: 460px;
+	max-height: 90vh;
+	overflow-y: auto;
+	padding: 32px 40px 40px;
+	box-shadow: 0 20px 60px rgba(29, 53, 87, 0.25);
+	text-align: center;
+}
+
+.areYouSureModalTop {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 28px;
+}
+
+.areYouSureModalTop button {
+	position: absolute;
+	left: 0;
+	top: 0;
+	border: none;
+	background: none;
+	color: var(--text-color);
+	cursor: pointer;
+	padding: 4px;
+	display: flex;
+}
+
+.areYouSureModalTop h2 {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: var(--primary-color);
+}
+
+.areYouSureModal h1 {
+	font-size: 1.75rem;
+	font-weight: 700;
+	color: var(--primary-color);
+	margin-bottom: 20px;
+}
+
+.areYouSureModal > p {
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--text-color);
+	max-width: 320px;
+	margin: 0 auto 32px;
+	line-height: 1.5;
+}
+
+.areYouSureModalButtons {
+	display: flex;
+	gap: 16px;
+}
+
+.areYouSureModalButtons button {
+	flex: 1;
+	padding: 14px;
+	border: none;
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+	font-size: 0.95rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.areYouSureCancelButton {
+	background-color: var(--input-color);
+	color: var(--text-color);
+}
+
+.areYouSureCancelButton:hover {
+	background-color: var(--border-color);
+}
+
+.areYouSureProceedButton {
+	background-color: var(--primary-color);
+	color: var(--elements-color);
+}
+
+.areYouSureProceedButton:hover {
+	opacity: 0.9;
+}
+
 /* -------------------------------------------- Client Details Page -------------------------------------------- */
 
 .clientPageTitle {
