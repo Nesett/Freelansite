@@ -4,6 +4,7 @@ interface Client {
 	companyName: string | null
 	email: string
 	phone: string | null
+	nextDeadline: string | null
 	lastActive: string
 }
 
@@ -11,23 +12,57 @@ interface ClientEntryProps {
 	client: Client
 }
 
-export default function ClientEntry({ client }: ClientEntryProps) {
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+	month: 'short',
+	day: 'numeric',
+	year: 'numeric',
+})
+
+function formatDeadline(nextDeadline: string | null) {
+	if (!nextDeadline) {
+		return { label: 'No deadline', className: 'deadlineNone' }
+	}
+
+	const msPerDay = 1000 * 60 * 60 * 24 //what is this/how does it work?
+	const daysLeft = Math.ceil((new Date(nextDeadline).getTime() - Date.now()) / msPerDay) //what is this, and how does it work?
+
+	if (daysLeft < 0) {
+		return { label: `${Math.abs(daysLeft)}d overdue`, className: 'deadlineUrgent' }
+	}
+
+	if (daysLeft === 0) {
+		return { label: 'Due today', className: 'deadlineUrgent' } 
+	}
+
+	return {
+		label: `${daysLeft}d left`,
+		className: daysLeft <= 7 ? 'deadlineUrgent' : 'deadlineNormal',
+	}
+}
+
+export default function ClientEntry({ client }: ClientEntryProps) { //how does the props work here? (more exactly - why do we do it this way, {client} and then rest i believe is ts stuff but still.)
+	const deadline = formatDeadline(client.nextDeadline)
+
 	return (
-		<div className="clientComponent">
-			<div>
-				<p>{client.companyName}</p>
-				<p>{client.name}</p>
-			</div>
-			<div>
-				<p>{client.email}</p>
-				<p>{client.phone}</p>
-			</div>
-			<div>
-				<p>deadline, cannot implement yet (need milestones)</p>
-			</div>
-			<div>
-				<p>{client.lastActive}</p>
-			</div>
-		</div>
+		<tr>
+			<td>
+				{client.companyName ? (
+					<>
+						<div className="clientPrimary">{client.companyName}</div>
+						<div className="clientSecondary">{client.name}</div>
+					</>
+				) : (
+					<div className="clientPrimary">{client.name}</div>
+				)}
+			</td>
+			<td>
+				<div>{client.email}</div>
+				{client.phone && <div className="contactSecondary">{client.phone}</div>}
+			</td>
+			<td>
+				<span className={deadline.className}>{deadline.label}</span>
+			</td>
+			<td>{dateFormatter.format(new Date(client.lastActive))}</td>
+		</tr>
 	)
 }
