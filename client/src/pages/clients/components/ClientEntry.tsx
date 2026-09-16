@@ -16,8 +16,8 @@ function formatDeadline(nextDeadline: string | null) {
 		return { label: 'No deadline', className: 'deadlineNone' }
 	}
 
-	const msPerDay = 1000 * 60 * 60 * 24 //what is this/how does it work?
-	const daysLeft = Math.ceil((new Date(nextDeadline).getTime() - Date.now()) / msPerDay) //what is this, and how does it work?
+	const msPerDay = 1000 * 60 * 60 * 24
+	const daysLeft = Math.ceil((new Date(nextDeadline).getTime() - Date.now()) / msPerDay) 
 
 	if (daysLeft < 0) {
 		return { label: `${Math.abs(daysLeft)}d overdue`, className: 'deadlineUrgent' }
@@ -33,7 +33,7 @@ function formatDeadline(nextDeadline: string | null) {
 	}
 }
 
-export default function ClientEntry({ client }: ClientEntryProps) { //how does the props work here? (more exactly - why do we do it this way, {client} and then rest i believe is ts stuff but still.)
+export default function ClientEntry({ client }: ClientEntryProps) { 
 	const deadline = formatDeadline(client.nextDeadline)
 	const navigate = useNavigate()
 

@@ -68,7 +68,7 @@ export default function ClientsDetails() {
     }
     
     return(
-        <>
+        <div className="pageContent">
             {client.companyName ? (
                 <header>
                     <div className="clientPageTitle">
@@ -101,9 +101,9 @@ export default function ClientsDetails() {
             )}
             <hr/>
             <main>
-				<div>
+				<div className="projectsSectionHeader">
 					<h3>Projects</h3>
-					<button>
+					<button className="newClientButton">
 						<Plus />
 						New Project
 					</button>
@@ -118,6 +118,6 @@ export default function ClientsDetails() {
 					)}
 				</div>
 			</main>
-        </>
+        </div>
     )
 }

@@ -9,7 +9,7 @@ interface ProjectProps {
 export default function ProjectComponent({ project }: ProjectProps) {
 	return (
 		<div className="projectCardClientDetails">
-			<div>
+			<div className="projectCardTitleRow">
 				<h3>{project.title}</h3>
 				<MilestoneTag milestoneStatus="hardcoded for now" />
 			</div>

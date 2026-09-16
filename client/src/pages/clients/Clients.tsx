@@ -85,45 +85,48 @@ export default function Clients() {
 
 	return (
 		<div className="pageContent">
-			{showNewClientModal && <div className='newClientModal'>
-				<div className='newClientModalTop'>
-					<button onClick={showClientModal}><X size={16}/></button>
-					<h2>Add new client</h2>
+			{showNewClientModal && (
+				<div className="modalOverlay" onClick={showClientModal}>
+					<div className="newClientModal" onClick={(e) => e.stopPropagation()}>
+						<div className='newClientModalTop'>
+							<button onClick={showClientModal}><X size={16}/></button>
+							<h2>Add new client</h2>
+						</div>
+						<form onSubmit={handleAddNewClient}>
+							<label htmlFor='name'>Name</label>
+							<input 
+								id='name' 
+								name='name' 
+								type='text' 
+								onChange={(e) => setClientName(e.target.value)}
+							/>
+							<label htmlFor='companyName'>Company Name</label>
+							<input 
+								id='companyName' 
+								name='companyName' 
+								type='text' 
+								onChange={(e) => setClientCname(e.target.value)}
+							/>
+							<label htmlFor='email'>Email</label>
+							<input 
+								id='email' 
+								name='email' 
+								type='text' 
+								onChange={(e) => setClientEmail(e.target.value)}
+								required
+							/>
+							<label htmlFor='phoneNr'>Phone Number</label>
+							<input 
+								id='phoneNr' 
+								name='phoneNr' 
+								type='text' 
+								onChange={(e) => setClientPhone(e.target.value)}
+							/>
+							<button> Add and invite new client</button>
+						</form>
+					</div>
 				</div>
-				<form onSubmit={handleAddNewClient}>
-					<label htmlFor='name'>Name</label>
-					<input 
-						id='name' 
-						name='name' 
-						type='text' 
-						onChange={(e) => setClientName(e.target.value)}
-					/>
-					<label htmlFor='companyName'>Company Name</label>
-					<input 
-						id='companyName' 
-						name='companyName' 
-						type='text' 
-						onChange={(e) => setClientCname(e.target.value)}
-					/>
-					<label htmlFor='email'>Email</label>
-					<input 
-						id='email' 
-						name='email' 
-						type='text' 
-						onChange={(e) => setClientEmail(e.target.value)}
-						required
-					/>
-					<label htmlFor='phoneNr'>Phone Number</label>
-					<input 
-						id='phoneNr' 
-						name='phoneNr' 
-						type='text' 
-						onChange={(e) => setClientPhone(e.target.value)}
-					/>
-					<button> Add and invite new client</button>
-				</form>
-				
-			</div>}
+			)}
 			<div className="clientsHeader">
 				<div>
 					<h1>Clients</h1>
