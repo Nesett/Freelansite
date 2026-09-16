@@ -1,14 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-
-interface Client {
-	id: string
-	name: string
-	companyName: string | null
-	email: string
-	phone: string | null
-	nextDeadline: string | null
-	lastActive: string
-}
+import type { Client } from '../Clients'
 
 interface ClientEntryProps {
 	client: Client

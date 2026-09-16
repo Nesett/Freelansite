@@ -1,15 +1,6 @@
 import { useState, useMemo } from 'react'
+import type { Client } from './Clients'
 
-//why do we import client everywhere? cant we use some "global" client interface across files that need it?
-export interface Client {
-	id: string
-	name: string
-	companyName: string | null
-	email: string
-	phone: string | null
-	nextDeadline: string | null
-	lastActive: string
-}
 
 // understand
 export type SortField = 'client' | 'deadline'

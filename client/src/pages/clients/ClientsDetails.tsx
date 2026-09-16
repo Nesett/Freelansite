@@ -2,70 +2,86 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { User, Mail, Plus } from 'lucide-react'
 import ProjectComponent from "./components/ProjectComponent"
+import type { Client } from "./Clients"
 
-interface Client {
+export interface Project {
 	id: string
-	name: string
-	companyName: string | null
-	email: string
-	phone: string | null
-	nextDeadline: string | null
-	lastActive: string
-}
-
-interface ClientEntryProps {
-	client?: Client
+	title: string
+	description?: string | null
+	budget?: number | null
+	status: string
+	deadline?: string | null
 }
 
 
-export default function ClientsDetails({ client }: ClientEntryProps) {
-    const [clientData, setClientData] = useState<Client | null>(null)
+export default function ClientsDetails() {
+    const [client, setClient] = useState<Client | null>(null)
+    const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const { id } = useParams<{ id: string }>()
 
     useEffect(() => {
-		const fetchClient = async () => {
-			if (!id) return
+		if (!id) return
+
+		let isFinished = true
+
+		const fetchData = async () => {
 			try {
-				const res = await fetch(`/api/clients/${id}`, {
-					credentials: 'include'
-				})
-				const data = await res.json()
-				setClientData(data)
+				const [clientRes, projectsRes] = await Promise.all([
+					fetch(`/api/clients/${id}`, { credentials: 'include' }),
+					fetch(`/api/clients/${id}/projects`, { credentials: 'include' })
+				])
+
+				if (!clientRes.ok || !projectsRes.ok) {
+					throw new Error("Network request failed")
+				}
+
+				const clientJson = await clientRes.json()
+				const projectsJson = await projectsRes.json()
+
+				if (isFinished) {
+					setClient(clientJson)
+					setProjects(projectsJson)
+				}
 			} catch (error) {
-				console.error("Failed to load client:", error)
+				console.error("Failed to load client data or projects:", error)
 			} finally {
-				setLoading(false)
+				if (isFinished) {
+					setLoading(false)
+				}
 			}
 		}
 
-		fetchClient()
+		fetchData()
+
+		return () => {
+			isFinished = false
+		}
 	}, [id])
 
     if (loading) {
-		return <div>Loading client details...</div>
-	}
+        return <div>Loading client details...</div>
+    }
 
-    if (!clientData) {
-		return <div>Client not found.</div>
-	}
-
-
-    console.log(clientData)
-    return(<>
-            {clientData.companyName ? (
+    if (!client) {
+        return <div>Client not found.</div>
+    }
+    
+    return(
+        <>
+            {client.companyName ? (
                 <header>
                     <div className="clientPageTitle">
-                        <h2>{clientData.companyName}</h2>
+                        <h2>{client.companyName}</h2>
                     </div>
                     <div className="smallClientInfoContainer">
                         <div className="smallClientInfo">
                             <User />
-                            <p>{clientData.name}</p>
+                            <p>{client.name}</p>
                         </div>
                         <div className="smallClientInfo">
                             <Mail />
-                            <p>{clientData.email}</p>
+                            <p>{client.email}</p>
                         </div>
                     </div>
 
@@ -73,29 +89,35 @@ export default function ClientsDetails({ client }: ClientEntryProps) {
             ) : (
                 <header>
                     <div className="clientPageTitle">
-                        <h2>{clientData.name}</h2>
+                        <h2>{client.name}</h2>
                     </div>
                     <div className="smallClientInfoContainer">
                         <div className="smallClientInfo">
                             <Mail />
-                            <p>{clientData.email}</p>
+                            <p>{client.email}</p>
                         </div>
                     </div>
                 </header>
             )}
             <hr/>
             <main>
-                <div>
-                    <h3>Projects</h3>
-                    <button>
-                        <Plus />
-                        New Project
-                    </button>
-                </div>
-                <div className="projectsHolder">
-                    <ProjectComponent />
-                </div>
-            </main>
+				<div>
+					<h3>Projects</h3>
+					<button>
+						<Plus />
+						New Project
+					</button>
+				</div>
+				<div className="projectsHolder">
+					{projects.length > 0 ? (
+						projects.map(project => (
+							<ProjectComponent key={project.id} project={project} />
+						))
+					) : (
+						<p>No projects found for this client.</p>
+					)}
+				</div>
+			</main>
         </>
     )
 }

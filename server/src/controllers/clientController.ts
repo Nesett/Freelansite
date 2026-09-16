@@ -180,7 +180,7 @@ export async function deactivateClient(req: Request, res: Response) {
 
 export async function getProjectsByClient(req: Request, res: Response) {
 	const adminId = req.user.id
-	const clientId = String(req.params.clientId)
+	const clientId = String(req.params.id)
 
 	try {
 		const clientProjects = await db.project.findMany({

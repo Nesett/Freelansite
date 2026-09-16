@@ -5,7 +5,7 @@ import { useSortableClients } from './useSortableClients'
 import { useNavigate } from 'react-router-dom'
 
 
-interface Client {
+export interface Client {
 	id: string
 	name: string
 	companyName: string | null
