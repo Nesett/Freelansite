@@ -591,10 +591,59 @@ h1, h2, h3, h4, p, a {
 
 /* -------------------------------------------- Client Details Page -------------------------------------------- */
 
+.clientPageTitle {
+	display: flex;
+	justify-content: space-between;
+}
+
 .clientPageTitle h2 {
 	font-size: 1.75rem;
 	font-weight: 700;
 	margin-bottom: 14px;
+}
+
+.clientPageTitle button {
+	background-color: transparent;
+	border-color: transparent;
+	cursor: pointer;
+}
+
+.clientPageTitle button:hover {
+	background-color: transparent;
+}
+
+.clientOptionsWrapper {
+	position: relative;
+}
+
+.clientOptionsMenu {
+	position: absolute;
+	top: calc(100% + 2px);
+	right: 0;
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	padding: 6px;
+	min-width: 160px;
+	z-index: 10;
+}
+
+.clientOptionsMenuItem {
+	display: block;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: 10px 14px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	color: var(--text-color);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+}
+
+.clientOptionsMenuItem:hover {
+	background-color: var(--input-color);
 }
 
 .smallClientInfoContainer {

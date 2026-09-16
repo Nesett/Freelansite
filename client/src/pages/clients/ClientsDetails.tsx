@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import { User, Mail, Plus } from 'lucide-react'
+import { useEffect, useRef, useState } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import { User, Mail, Plus, EllipsisVertical } from 'lucide-react'
 import ProjectComponent from "./components/ProjectComponent"
+import AreYouSureModal from "../../components/AreYouSureModal"
 import type { Client } from "./Clients"
 
 export interface Project {
@@ -18,7 +19,30 @@ export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
     const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState<boolean>(true)
+    const [editOptions, setEditOptions] = useState<boolean>(false)
+    const [areYouSure, setAreYouSure] = useState<boolean>(false)
     const { id } = useParams<{ id: string }>()
+    const clientOptionsRef = useRef<HTMLDivElement | null>(null)
+    const [ errorMessage, setErrorMessage] = useState("")
+    const navigate = useNavigate()
+
+    useEffect(() => {
+		if (!editOptions) return
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (clientOptionsRef.current && !clientOptionsRef.current.contains(event.target as Node)) {
+				setEditOptions(false)
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside)
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside)
+		}
+	}, [editOptions])
+
+
 
     useEffect(() => {
 		if (!id) return
@@ -33,7 +57,7 @@ export default function ClientsDetails() {
 				])
 
 				if (!clientRes.ok || !projectsRes.ok) {
-					throw new Error("Network request failed")
+					throw new Error("Request failed")
 				}
 
 				const clientJson = await clientRes.json()
@@ -43,8 +67,14 @@ export default function ClientsDetails() {
 					setClient(clientJson)
 					setProjects(projectsJson)
 				}
-			} catch (error) {
-				console.error("Failed to load client data or projects:", error)
+			} catch (err) {
+                if (err instanceof Error) {
+                    setErrorMessage(err.message)
+                } else {
+                    setErrorMessage("An unexpected error occured.")
+                    console.error("error:", err)
+                }
+				
 			} finally {
 				if (isFinished) {
 					setLoading(false)
@@ -59,6 +89,32 @@ export default function ClientsDetails() {
 		}
 	}, [id])
 
+
+    async function deleteClient() {
+        try{ 
+            const res = await fetch(`/api/clients/${id}`, {
+                method:'DELETE',
+                credentials: 'include'
+            })
+
+            if (!res.ok) {
+                throw new Error("Request failed")
+            }
+
+            setAreYouSure(false)
+            navigate("/clients")
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occured while deleting client.")
+                console.error("error:", err)
+            }
+        }
+    }
+
+
     if (loading) {
         return <div>Loading client details...</div>
     }
@@ -66,13 +122,34 @@ export default function ClientsDetails() {
     if (!client) {
         return <div>Client not found.</div>
     }
+
+
     
+    function showClientOptions() {
+        setEditOptions(prev => !prev)
+    }
+
     return(
         <div className="pageContent">
+            {areYouSure && (
+                <AreYouSureModal 
+                    client={client} 
+                    setAreYouSure={setAreYouSure} 
+                    deleteClient={deleteClient}
+                />
+            )}
             {client.companyName ? (
                 <header>
                     <div className="clientPageTitle">
                         <h2>{client.companyName}</h2>
+                        <div className="clientOptionsWrapper" ref={clientOptionsRef}>
+                            <button onClick={showClientOptions}><EllipsisVertical /></button>
+                            {editOptions && (
+                                <div className="clientOptionsMenu">
+                                    <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete client</button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="smallClientInfoContainer">
                         <div className="smallClientInfo">
@@ -90,6 +167,14 @@ export default function ClientsDetails() {
                 <header>
                     <div className="clientPageTitle">
                         <h2>{client.name}</h2>
+                        <div className="clientOptionsWrapper" ref={clientOptionsRef}>
+                            <button onClick={showClientOptions}><EllipsisVertical /></button>
+                            {editOptions && (
+                                <div className="clientOptionsMenu">
+                                    <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete client</button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="smallClientInfoContainer">
                         <div className="smallClientInfo">

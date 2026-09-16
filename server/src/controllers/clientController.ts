@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import validator from 'validator'
 
 export async function createClient(req: Request, res: Response) {
 
@@ -7,8 +8,14 @@ export async function createClient(req: Request, res: Response) {
     const adminId = req.user.id
 
     if (!name || !email) {
+
         return res.status(400).json({message:"Enter all necessary information."})
-    } 
+
+    } else if (!validator.isEmail(email)){
+    
+            return res.status(400).json({error: "The email is invalid."})
+    
+    }
 
     try{
 
