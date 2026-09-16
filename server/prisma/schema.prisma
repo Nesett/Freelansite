@@ -47,6 +47,7 @@ model Client {
 model Project {
   id          String        @id @default(uuid())
   clientId    String        @map("client_id")
+  adminId     String        @map("admin_id")
   title       String
   description String?
   budget      Int?
@@ -57,6 +58,7 @@ model Project {
   createdAt   DateTime      @default(now()) @map("created_at")
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("projects")
 }

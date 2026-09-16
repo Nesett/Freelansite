@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Plus, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { Plus, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import ClientEntry from './components/ClientEntry'
 import { useSortableClients } from './useSortableClients'
+import { useNavigate } from 'react-router-dom'
+
 
 interface Client {
 	id: string
@@ -17,7 +19,14 @@ type SortField = 'client' | 'deadline'
 type SortDirection = 'asc' | 'desc'
 
 export default function Clients() {
-	const [clients, setClients] = useState<Client[]>([])
+	const [ clients, setClients ] = useState<Client[]>([])
+	const [ showNewClientModal, setShowNewClientModal ] = useState(false)
+	const [ clientEmail, setClientEmail ] = useState('')
+	const [ clientName, setClientName ] = useState('')
+	const [ clientCname, setClientCname ] = useState('')
+	const [ clientPhone, setClientPhone ] = useState('')
+	const [ errorMessage, setErrorMessage ]= useState('')
+	const navigate = useNavigate()
 
 	const { sortedClients, sortField, sortDirection, handleSort } = useSortableClients(clients)
 
@@ -33,8 +42,88 @@ export default function Clients() {
 		fetchClients()
 	}, [])
 
+	function showClientModal() {
+		setShowNewClientModal(prevShown => !prevShown)
+	}
+
+	async function handleAddNewClient(e: React.FormEvent) {
+		e.preventDefault()
+
+		try {
+
+			const response = await fetch(`/api/clients`, {
+				method: "POST",
+				headers: {"Content-Type": "application/json"},
+				credentials: "include",
+				body: JSON.stringify({
+					name: clientName,
+					companyName: clientCname,
+					email: clientEmail,
+					phone: clientPhone
+				})
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				throw new Error(data.error || "Something went wrong")
+			}
+
+			console.log("Added new client.")
+			navigate(`/clients/${data.newClient.id}`)
+
+		} catch(err: unknown) {
+			if (err instanceof Error) {
+				setErrorMessage(err.message)
+				console.log(errorMessage)
+			} else {
+				setErrorMessage("An unexpected error occured.")
+			}
+		}
+
+	}
+
 	return (
 		<div className="pageContent">
+			{showNewClientModal && <div className='newClientModal'>
+				<div className='newClientModalTop'>
+					<button onClick={showClientModal}><X size={16}/></button>
+					<h2>Add new client</h2>
+				</div>
+				<form onSubmit={handleAddNewClient}>
+					<label htmlFor='name'>Name</label>
+					<input 
+						id='name' 
+						name='name' 
+						type='text' 
+						onChange={(e) => setClientName(e.target.value)}
+					/>
+					<label htmlFor='companyName'>Company Name</label>
+					<input 
+						id='companyName' 
+						name='companyName' 
+						type='text' 
+						onChange={(e) => setClientCname(e.target.value)}
+					/>
+					<label htmlFor='email'>Email</label>
+					<input 
+						id='email' 
+						name='email' 
+						type='text' 
+						onChange={(e) => setClientEmail(e.target.value)}
+						required
+					/>
+					<label htmlFor='phoneNr'>Phone Number</label>
+					<input 
+						id='phoneNr' 
+						name='phoneNr' 
+						type='text' 
+						onChange={(e) => setClientPhone(e.target.value)}
+					/>
+					<button> Add and invite new client</button>
+				</form>
+				
+			</div>}
 			<div className="clientsHeader">
 				<div>
 					<h1>Clients</h1>
@@ -42,7 +131,7 @@ export default function Clients() {
 						{clients.length} client{clients.length === 1 ? '' : 's'} across your studio.
 					</p>
 				</div>
-				<button className="newClientButton" type="button">
+				<button onClick= {showClientModal} className="newClientButton" type="button" disabled={showNewClientModal}>
 					<Plus size={16} />
 					New Client
 				</button>
@@ -88,7 +177,7 @@ export default function Clients() {
 		</div>
 	)
 }
-// understand
+
 interface SortableHeaderProps {
 	label: string
 	field: SortField
@@ -97,7 +186,7 @@ interface SortableHeaderProps {
 	onSort: (field: SortField) => void
 }
 
-// understand
+
 function SortableHeader({ label, field, activeField, direction, onSort }: SortableHeaderProps) {
 	const isActive = field === activeField
 

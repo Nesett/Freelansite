@@ -7,6 +7,7 @@ import Projects from './pages/Projects'
 import Invoices from './pages/Invoices'
 import Team from './pages/Team'
 import Settings from './pages/Settings'
+import ClientsDetails from './pages/clients/ClientsDetails'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Layout from './components/Layout'
 
@@ -24,6 +25,7 @@ export function App() {
 						<Route path="/invoices" element={<Invoices />} />
 						<Route path="/team" element={<Team />} />
 						<Route path="/settings" element={<Settings />} />
+						<Route path="/clients/:id" element={<ClientsDetails />} />
 					</Route>
 				</Route>
 			</Routes>

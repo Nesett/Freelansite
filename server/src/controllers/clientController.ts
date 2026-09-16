@@ -177,3 +177,29 @@ export async function deactivateClient(req: Request, res: Response) {
     }
 
 }
+
+export async function getProjectsByClient(req: Request, res: Response) {
+	const adminId = req.user.id
+	const clientId = String(req.params.clientId)
+
+	try {
+		const clientProjects = await db.project.findMany({
+			where: {
+				clientId: clientId,
+				isActive: true,
+				client: {
+					adminId: adminId,
+					isActive: true
+				}
+			},
+			orderBy: {
+				createdAt: 'desc'
+			}
+		})
+
+		return res.status(200).json(clientProjects)
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })
+	}
+}

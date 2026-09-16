@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 interface Client {
 	id: string
 	name: string
@@ -42,9 +44,14 @@ function formatDeadline(nextDeadline: string | null) {
 
 export default function ClientEntry({ client }: ClientEntryProps) { //how does the props work here? (more exactly - why do we do it this way, {client} and then rest i believe is ts stuff but still.)
 	const deadline = formatDeadline(client.nextDeadline)
+	const navigate = useNavigate()
+
+	function handleRowClick(){
+		navigate(`/clients/${client.id}`)
+	}
 
 	return (
-		<tr>
+		<tr onClick={handleRowClick} className='clickableClientEntry'>
 			<td>
 				{client.companyName ? (
 					<>
