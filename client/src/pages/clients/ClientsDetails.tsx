@@ -1,18 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { User, Mail, Plus, EllipsisVertical } from 'lucide-react'
-import ProjectComponent from "./components/ProjectComponent"
+import ProjectComponent from "../../components/ProjectComponent"
 import AreYouSureModal from "../../components/AreYouSureModal"
+import useClickOutside from "../../components/clicksOutside"
 import type { Client } from "./Clients"
-
-export interface Project {
-	id: string
-	title: string
-	description?: string | null
-	budget?: number | null
-	status: string
-	deadline?: string | null
-}
+import type { Project } from "../Projects"
 
 
 export default function ClientsDetails() {
@@ -23,24 +16,10 @@ export default function ClientsDetails() {
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
     const { id } = useParams<{ id: string }>()
     const clientOptionsRef = useRef<HTMLDivElement | null>(null)
-    const [ errorMessage, setErrorMessage] = useState("")
+    const [ errorMessage, setErrorMessage] = useState<string>("")
     const navigate = useNavigate()
 
-    useEffect(() => {
-		if (!editOptions) return
-
-		const handleClickOutside = (event: MouseEvent) => {
-			if (clientOptionsRef.current && !clientOptionsRef.current.contains(event.target as Node)) {
-				setEditOptions(false)
-			}
-		}
-
-		document.addEventListener("mousedown", handleClickOutside)
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside)
-		}
-	}, [editOptions])
+    useClickOutside(editOptions, () => setEditOptions(false), clientOptionsRef)
 
 
 
@@ -57,7 +36,7 @@ export default function ClientsDetails() {
 				])
 
 				if (!clientRes.ok || !projectsRes.ok) {
-					throw new Error("Request failed")
+					throw new Error("Request failed.")
 				}
 
 				const clientJson = await clientRes.json()
@@ -138,8 +117,9 @@ export default function ClientsDetails() {
                     deleteClient={deleteClient}
                 />
             )}
+            <header>
             {client.companyName ? (
-                <header>
+                <>
                     <div className="clientPageTitle">
                         <h2>{client.companyName}</h2>
                         <div className="clientOptionsWrapper" ref={clientOptionsRef}>
@@ -161,10 +141,9 @@ export default function ClientsDetails() {
                             <p>{client.email}</p>
                         </div>
                     </div>
-
-                </header>
+                </>
             ) : (
-                <header>
+                <>
                     <div className="clientPageTitle">
                         <h2>{client.name}</h2>
                         <div className="clientOptionsWrapper" ref={clientOptionsRef}>
@@ -182,8 +161,9 @@ export default function ClientsDetails() {
                             <p>{client.email}</p>
                         </div>
                     </div>
-                </header>
+                </>
             )}
+            </header>
             <hr/>
             <main>
 				<div className="projectsSectionHeader">
