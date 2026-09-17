@@ -9,8 +9,16 @@ datasource db {
 enum ProjectStatus {
   NOT_STARTED
   IN_PROGRESS
+  AWAITING_APPROVAL
   COMPLETED
   ON_HOLD
+}
+
+enum MilestoneStatus {
+  NOT_STARTED
+  CURRENTLY_WORKED_ON
+  AWAITING_APPROVAL
+  APPROVED
 }
 
 model Admin {
@@ -22,6 +30,7 @@ model Admin {
   createdAt    DateTime @default(now()) @map("created_at")
 
   clients Client[]
+  projects Project[]
 
   @@map("admins")
 }
@@ -52,13 +61,28 @@ model Project {
   description String?
   budget      Int?
   status      ProjectStatus @default(NOT_STARTED)
-  deadline    DateTime?
   notes       String?
   isActive    Boolean       @default(true) @map("is_active")
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
 
   @@map("projects")
+}
+
+model Milestone {
+  id          String          @id @default(uuid())
+  projectId   String          @map("project_id")
+  title       String
+  description String?
+  budget      Int?
+  status      MilestoneStatus @default(NOT_STARTED)
+  deadline    DateTime?
+  orderIndex  Int             @map("order_index")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
 }
