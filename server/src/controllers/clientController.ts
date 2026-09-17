@@ -7,15 +7,21 @@ export async function createClient(req: Request, res: Response) {
     const { name, email, phone, companyName } = req.body
     const adminId = req.user.id
 
-    if (!name || !email) {
+    if (!name || !companyName) {
+        return res.status(400).json({message:"Enter at least name or company name of your client."})
+    } else {
+        if (!email) {
 
-        return res.status(400).json({message:"Enter all necessary information."})
+            return res.status(400).json({message:"Enter email."})
 
-    } else if (!validator.isEmail(email)){
-    
-            return res.status(400).json({error: "The email is invalid."})
-    
+        } else if (!validator.isEmail(email)){
+        
+                return res.status(400).json({error: "The email is invalid."})
+        
+        }
     }
+
+
 
     try{
 

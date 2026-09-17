@@ -30,7 +30,7 @@ export async function signUp(req: Request, res: Response) {
 
     try {
         
-        const isExistingUser = db.admin.findUnique({where: {email}})
+        const isExistingUser = await db.admin.findUnique({where: {email}})
 
         if (isExistingUser) {
             return res.status(400).json({error: 'This email is already used.'})

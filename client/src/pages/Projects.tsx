@@ -7,7 +7,6 @@ export interface Project {
 	description?: string | null
 	budget?: number | null
 	status: string
-	deadline?: string | null
 }
 
 
@@ -25,7 +24,7 @@ export default function Projects() {
 				)
 
 				if (!res.ok) {
-					throw new Error("Request failed.")
+					return
 				}
 
 				const data = await res.json()

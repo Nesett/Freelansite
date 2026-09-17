@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 
 export async function createProject(req: Request, res: Response) {
 
-    const { clientId, title, description, budget, deadline, notes } = req.body
+    const { clientId, title, description, budget, notes } = req.body
 
     const adminId = req.user.id
 
@@ -25,15 +26,32 @@ export async function createProject(req: Request, res: Response) {
             return res.status(404).json({error: "Client does not exist."})
         } 
 
-        const newProject = await db.project.create({
-            data: {
-                clientId,
-                title,
-                description, 
-                budget: budget !== undefined && budget !== null ? Number(budget) : null,
-                deadline: deadline ? new Date(deadline) : null,
-                notes
-            }
+        const projectBudget = budget !== undefined && budget !== null ? Number(budget) : null
+
+        // every project starts with exactly one milestone, same as project.
+        const newProject = await db.$transaction(async (tx) => {
+            const project = await tx.project.create({
+                data: {
+                    clientId,
+                    adminId,
+                    title,
+                    description,
+                    budget: projectBudget,
+                    notes
+                }
+            })
+
+            await tx.milestone.create({
+                data: {
+                    projectId: project.id,
+                    title: project.title,
+                    budget: projectBudget,
+                    orderIndex: 0,
+                    status: MilestoneStatus.NOT_STARTED
+                }
+            })
+
+            return project
         })
 
         return res.status(201).json({newProject})
@@ -67,9 +85,27 @@ export async function getAllProjects(req: Request, res: Response) {
                         name: true,
                         companyName: true
                     }
+                }, // and their id, name and companyName
+                _count: {
+                    select: { milestones: true }
+                }, // total milestone count, for the progress-bar math
+                milestones: {
+                    where: {
+                        status: { not: MilestoneStatus.APPROVED }
+                    },
+                    orderBy: { orderIndex: 'asc' },
+                    take: 1,
+                    select: {
+                        id: true,
+                        status: true,
+                        deadline: true,
+                        orderIndex: true,
+                        budget: true
+                    }
                 }
-            } // and their id, name and companyName
-        }) 
+            }
+        })
+        
 
         return res.status(200).json(allProjects)
 
@@ -102,6 +138,9 @@ export async function getProject(req: Request, res: Response) {
 						name: true,
 						companyName: true
 					}
+				},
+				milestones: {
+					orderBy: { orderIndex: 'asc' }
 				}
 			}
 		})
@@ -124,7 +163,15 @@ export async function updateProject(req: Request, res: Response) {
 	const adminId = req.user.id
 	const projectId = String(req.params.id)
 
-    const {title, description, budget, status, deadline, notes} = req.body
+    const {title, description, budget, status, notes} = req.body
+
+    // COMPLETED and AWAITING_APPROVAL are only reachable through milestone
+    // actions (submitForReview / approveMilestone on the last milestone) -
+    // this endpoint is for the manual states (NOT_STARTED, IN_PROGRESS,
+    // ON_HOLD), set by the admin (or ON_HOLD requested by the client).
+    if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
+        return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
+    }
 
     try {
 
@@ -153,7 +200,6 @@ export async function updateProject(req: Request, res: Response) {
 				description: description !== undefined ? description : existingProject.description,
 				budget: budget !== undefined ? Number(budget) : existingProject.budget,
 				status: status !== undefined ? status : existingProject.status,
-				deadline: deadline !== undefined ? (deadline ? new Date(deadline) : null) : existingProject.deadline,
 				notes: notes !== undefined ? notes : existingProject.notes
             }
         })

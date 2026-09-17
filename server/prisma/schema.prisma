@@ -38,7 +38,7 @@ model Admin {
 model Client {
   id          String   @id @default(uuid())
   adminId     String   @map("admin_id")
-  name        String
+  name        String?
   email       String   @unique
   phone       String?
   companyName String?

@@ -14,7 +14,7 @@ function getDaysUntil(deadline: string): number {
 
 export default function ProjectComponent({ project, showClientLabel = false }: ProjectProps) {
 	const isAwaitingApproval = project.status === "awaiting_approval"
-	const hasApprovedMilestone = project.status === "approved"
+	const isCompleted = project.status === "completed"
 
 	function getDeadlineText() {
 		if (!project.deadline) return "No deadline"

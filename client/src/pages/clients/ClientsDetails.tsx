@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { User, Mail, Plus, EllipsisVertical } from 'lucide-react'
+import { User, Mail, Plus, EllipsisVertical, X } from 'lucide-react'
 import ProjectComponent from "../../components/ProjectComponent"
 import AreYouSureModal from "../../components/AreYouSureModal"
 import useClickOutside from "../../components/clicksOutside"
 import type { Client } from "./Clients"
 import type { Project } from "../Projects"
-
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
@@ -14,9 +13,16 @@ export default function ClientsDetails() {
     const [loading, setLoading] = useState<boolean>(true)
     const [editOptions, setEditOptions] = useState<boolean>(false)
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
+    const [showNewProjectForm, setShowNewProjectForm] = useState<boolean>(false)
     const { id } = useParams<{ id: string }>()
     const clientOptionsRef = useRef<HTMLDivElement | null>(null)
     const [ errorMessage, setErrorMessage] = useState<string>("")
+    const [ projectTitle, setProjectTitle ] = useState<string>("")
+    const [ projectDescription, setProjectDescription] = useState<string>("")
+    const [ projectBudget, setProjectBudget ] = useState<number | "">("")
+    const [ projectDeadline, setProjectDeadline ] = useState<string>("")
+    const [ hasDeadline, setHasDeadline ] = useState<boolean>(false)
+
     const navigate = useNavigate()
 
     useClickOutside(editOptions, () => setEditOptions(false), clientOptionsRef)
@@ -93,6 +99,40 @@ export default function ClientsDetails() {
         }
     }
 
+    async function handleAddNewProject(e: React.FormEvent) {
+        e.preventDefault()
+        try{ 
+            const res = await fetch(`/api/projects/`, {
+                method:'POST',
+                headers: {"Content-Type": "application/json"},
+                credentials: 'include',
+                body: JSON.stringify({
+                    clientId: id,
+					title: projectTitle,
+					description: projectDescription,
+					budget: projectBudget,
+					deadline: projectDeadline
+				})
+            })
+
+            if (!res.ok) {
+                throw new Error("Request failed")
+            }
+
+            const data = await res.json()
+
+
+            navigate(`/projects/${data.newProject.id}`)
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occured while deleting client.")
+                console.error("error:", err)
+            }
+        }
+    }
 
     if (loading) {
         return <div>Loading client details...</div>
@@ -108,6 +148,10 @@ export default function ClientsDetails() {
         setEditOptions(prev => !prev)
     }
 
+	function showProjectModal() {
+		setShowNewProjectForm(prevShown => !prevShown)
+	}
+
     return(
         <div className="pageContent">
             {areYouSure && (
@@ -117,6 +161,67 @@ export default function ClientsDetails() {
                     deleteClient={deleteClient}
                 />
             )}
+            {showNewProjectForm && (
+				<div className="modalOverlay" onClick={showProjectModal}>
+					<div className="newClientModal" onClick={(e) => e.stopPropagation()}>
+						<div className='newClientModalTop'>
+							<button onClick={showProjectModal}><X size={16}/></button>
+							<h2>Add new project </h2>
+						</div>
+						<form onSubmit={handleAddNewProject}>
+							<label htmlFor='title'>Title</label>
+							<input 
+								id='title' 
+								name='title' 
+								type='textarea'
+                                placeholder="E-commerce platform"
+								onChange={(e) => setProjectTitle(e.target.value)}
+                                required
+							/>
+							<label htmlFor='description'>Description</label>
+							<textarea 
+								id='description' 
+								name='description' 
+								onChange={(e) => setProjectDescription(e.target.value)}
+							></textarea>
+                            <label htmlFor='budget'>Budget</label>
+                                <input 
+                                    id='budget' 
+                                    name='budget' 
+                                    type='number' 
+                                    value={projectBudget}
+                                    onChange={(e) => setProjectBudget(e.target.value ? Number(e.target.value) : "")}
+                                />
+							<label htmlFor='deadline'>Deadline</label>
+                            <label style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={hasDeadline} 
+                                        onChange={(e) => {
+                                            setHasDeadline(e.target.checked)
+                                            if (!e.target.checked) {
+                                                setProjectDeadline("")
+                                            }
+                                        }} 
+                                    />
+                                    Set a deadline?
+                                </label>
+                                {hasDeadline && (
+                                    <>
+                                        <input 
+                                            id='deadline' 
+                                            name='deadline' 
+                                            type='date' 
+                                            value={projectDeadline}
+                                            onChange={(e) => setProjectDeadline(e.target.value)}
+                                        />
+                                    </>
+                                )}
+							<button> Add new project </button>
+						</form>
+					</div>
+				</div>
+			)}
             <header>
             {client.companyName ? (
                 <>
@@ -168,7 +273,7 @@ export default function ClientsDetails() {
             <main>
 				<div className="projectsSectionHeader">
 					<h3>Projects</h3>
-					<button className="newClientButton">
+					<button onClick={()=>setShowNewProjectForm(prev=>!prev)} className="newClientButton">
 						<Plus />
 						New Project
 					</button>
