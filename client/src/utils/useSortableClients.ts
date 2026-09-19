@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
-import type { Client } from './Clients'
+import type { Client } from '../pages/clients/Clients'
 
 
-// understand
 export type SortField = 'client' | 'deadline'
 export type SortDirection = 'asc' | 'desc'
 
@@ -10,7 +9,6 @@ export function useSortableClients(clients: Client[]) {
 	const [sortField, setSortField] = useState<SortField>('client')
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
-    //understand
 	const handleSort = (field: SortField) => {
 		if (field === sortField) {
 			setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'))
@@ -20,7 +18,6 @@ export function useSortableClients(clients: Client[]) {
 		}
 	}
 
-    //understand this whole function
 	const sortedClients = useMemo(() => {
 		const sorted = [...clients]
 
@@ -41,7 +38,7 @@ export function useSortableClients(clients: Client[]) {
 		})
 
 		return sorted
-	}, [clients, sortField, sortDirection]) // what is that that we pass after the function? is it for useMemo? how does it work?
+	}, [clients, sortField, sortDirection])
 
 	return { sortedClients, sortField, sortDirection, handleSort }
 }

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import type { Client } from '../Clients'
+import type { Client } from '../pages/clients/Clients'
 
 interface ClientEntryProps {
 	client: Client
@@ -42,7 +42,7 @@ export default function ClientEntry({ client }: ClientEntryProps) {
 	}
 
 	return (
-		<tr onClick={handleRowClick} className='clickableClientEntry'>
+		<tr onClick={handleRowClick} className='clickableEntry'>
 			<td>
 				{client.companyName ? (
 					<>

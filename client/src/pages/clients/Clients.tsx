@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
-import ClientEntry from './components/ClientEntry'
-import { useSortableClients } from './useSortableClients'
+import ClientEntry from '../../components/ClientEntry'
+import { useSortableClients } from '../../utils/useSortableClients'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -134,7 +134,7 @@ export default function Clients() {
 						{clients.length} client{clients.length === 1 ? '' : 's'} across your studio.
 					</p>
 				</div>
-				<button onClick= {showClientModal} className="newClientButton" type="button" disabled={showNewClientModal}>
+				<button onClick= {showClientModal} className="newButton" type="button" disabled={showNewClientModal}>
 					<Plus size={16} />
 					New Client
 				</button>

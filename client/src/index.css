@@ -377,7 +377,7 @@ h1, h2, h3, h4, p, a {
 	font-size: 0.9rem;
 }
 
-.newClientButton {
+.newButton {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -393,7 +393,7 @@ h1, h2, h3, h4, p, a {
 	transition: opacity 0.15s ease;
 }
 
-.newClientButton:hover {
+.newButton:hover {
 	opacity: 0.9;
 }
 
@@ -430,12 +430,12 @@ h1, h2, h3, h4, p, a {
 	border-bottom: none;
 }
 
-.clickableClientEntry {
+.clickableEntry {
 	cursor: pointer;
 	transition: background-color 0.15s ease;
 }
 
-.clickableClientEntry:hover {
+.clickableEntry:hover {
 	background-color: var(--input-color);
 }
 
@@ -792,6 +792,10 @@ hr {
 	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	padding: 20px 24px;
+}
+
+.projectCardClientDetails:hover {
+	background-color: var(--input-color);
 }
 
 @media (max-width: 720px) {

@@ -1,12 +1,35 @@
 import { useEffect, useState } from "react"
-import ProjectComponent from "../components/ProjectComponent"
+import ProjectEntry from "../components/ProjectEntry"
+
+export type ProjectStatusValue = "NOT_STARTED" | "IN_PROGRESS" | "AWAITING_APPROVAL" | "COMPLETED" | "ON_HOLD"
+export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
+
+export interface ProjectClient {
+	id: string
+	name?: string | null
+	companyName?: string | null
+}
+
+export interface Milestone {
+	id: string
+	status: MilestoneStatusValue
+	deadline?: string | null
+	orderIndex: number
+	budget?: number | null
+	// title/description are only present on the full milestone list returned.
+	title?: string
+	description?: string | null
+}
 
 export interface Project {
 	id: string
 	title: string
 	description?: string | null
 	budget?: number | null
-	status: string
+	status: ProjectStatusValue
+	client: ProjectClient
+	_count?: { milestones: number }
+	milestones: Milestone[]
 }
 
 
@@ -58,7 +81,7 @@ export default function Projects() {
 			<div className="projectsHolder">
 				{projects.length > 0 ? (
 					projects.map(project => (
-						<ProjectComponent key={project.id} project={project} showClientLabel />
+						<ProjectEntry key={project.id} project={project} showClientLabel />
 					))
 				) : (
 					<p>No projects found.</p>

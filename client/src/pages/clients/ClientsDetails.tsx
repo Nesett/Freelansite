@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { User, Mail, Plus, EllipsisVertical, X } from 'lucide-react'
-import ProjectComponent from "../../components/ProjectComponent"
+import ProjectComponent from "../../components/ProjectEntry"
 import AreYouSureModal from "../../components/AreYouSureModal"
-import useClickOutside from "../../components/clicksOutside"
+import useClickOutside from "../../utils/clicksOutside"
 import type { Client } from "./Clients"
 import type { Project } from "../Projects"
 
@@ -156,9 +156,11 @@ export default function ClientsDetails() {
         <div className="pageContent">
             {areYouSure && (
                 <AreYouSureModal 
-                    client={client} 
+                    itemType="client"
+                    itemName={client.companyName ? client.companyName : client.name}
+                    warningMessage="Deleting client will result in projects related with them to be deleted as well."
                     setAreYouSure={setAreYouSure} 
-                    deleteClient={deleteClient}
+                    onConfirm={deleteClient}
                 />
             )}
             {showNewProjectForm && (
@@ -273,7 +275,7 @@ export default function ClientsDetails() {
             <main>
 				<div className="projectsSectionHeader">
 					<h3>Projects</h3>
-					<button onClick={()=>setShowNewProjectForm(prev=>!prev)} className="newClientButton">
+					<button onClick={()=>setShowNewProjectForm(prev=>!prev)} className="newButton">
 						<Plus />
 						New Project
 					</button>
