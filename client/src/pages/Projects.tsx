@@ -27,7 +27,7 @@ export interface Project {
 	budget?: number | null
 	status: ProjectStatusValue
 	client: ProjectClient
-	_count?: { milestones: number }
+	progress: number
 	milestones: Milestone[]
 }
 

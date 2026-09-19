@@ -1,6 +1,6 @@
 import StatusTag from "./StatusTag"
 import StatusBar from "./StatusBar"
-// import { getProjectDisplayState } from "../utils/ProjectStatus"
+import { getProjectDisplayState } from "../utils/ProjectStatus"
 import type { Project } from "../pages/Projects"
 import { useNavigate } from "react-router-dom"
 
@@ -10,16 +10,9 @@ interface ProjectProps {
 }
 
 export default function ProjectComponent({ project, showClientLabel = false }: ProjectProps) {
-	// hardocded stuff for now.
-	const navigate = useNavigate()
-	const tag = "Pending Milestones"
-	const tagVariant: "neutral" = "neutral"
-	const deadlineText = "no deadline"
-	const isUrgent = false
-	const progressPercent = 0
 
-	// ill uncomment this when i fix routes for milestone
-	// const { tag, tagVariant, deadlineText, isUrgent, progressPercent } = getProjectDisplayState(project)
+	const navigate = useNavigate()
+	const { tag, tagVariant, deadlineText, isUrgent, progressPercent } = getProjectDisplayState(project)
 
 	function handleRowClick(){
 		navigate(`/projects/${project.id}`)

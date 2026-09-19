@@ -207,7 +207,12 @@ export async function getProjectsByClient(req: Request, res: Response) {
 			},
 			orderBy: {
 				createdAt: 'desc'
-			}
+			}, include: {
+                milestones: {
+                    orderBy: { orderIndex: 'asc' },
+                    select: { id: true, status: true, deadline: true, orderIndex: true, budget: true }
+                }
+            }
 		})
 
 		return res.status(200).json(clientProjects)
