@@ -85,23 +85,20 @@ export async function getAllMilestones(req: Request, res: Response) {
 
 export async function updateMilestone(req: Request, res: Response) {
 
-    const projectId = String(req.params.id)
-    const userId = req.user.id
-	const userRole = req.user.role
+    const id = String(req.params.id)
+    const adminId = req.user.id
     
-    const { id, title, description, budget, deadline, status, orderIndex } = req.body
+    const { title, description, budget, deadline, status, orderIndex } = req.body
 
 
     try {
-        
-        const typeOfUser = userRole==="admin" ? {adminId: userId} : {clientId: userId} 
 
         const existingMilestone = await db.milestone.findFirst({
             where: {
                 id,
                 isActive: true,
                 project: {
-                    ...typeOfUser,
+                    adminId,
                     isActive: true
                 }
             }
@@ -142,29 +139,29 @@ export async function updateMilestone(req: Request, res: Response) {
 
 export async function deactivateMilestone(req: Request, res: Response) {
 
+    const id = String(req.params.id)
     const adminId = req.user.id
-    const projectId = String(req.params.id)
 
     try {
 
-        const existingProject = await db.project.findFirst({
+        const existingMilestone = await db.milestone.findFirst({
             where: {
-                id: projectId,
+                id,
                 isActive: true,
-                client: {
-                    adminId: adminId,
+                project: {
+                    adminId,
                     isActive: true
                 }
             }
         })
 
-        if (!existingProject) {
-            return res.status(404).json({error: "Project does not exist."})
+        if (!existingMilestone) {
+            return res.status(404).json({error: "Milestone does not exist."})
         } 
 
-        const deactivateProject = await db.project.update({
+        const deactivateMilestone = await db.milestone.update({
             where: {
-                id: projectId,
+                id,
 				isActive: true
             },
             data: {
@@ -172,11 +169,11 @@ export async function deactivateMilestone(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json({deactivateProject})
+        return res.status(200).json({deactivateMilestone})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not deactivate project with id ${projectId}.`})
+        return res.status(500).json({error: `Could not deactivate milestone with id ${id}.`})
     }
 
 }
