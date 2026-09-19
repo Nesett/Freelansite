@@ -1,4 +1,4 @@
-import type { Project, Milestone } from "../pages/Projects"
+import type { Project, Milestone, ProjectStatusValue } from "../pages/Projects"
 
 export type TagVariant = "neutral" | "warning" | "success" | "hold"
 
@@ -6,8 +6,21 @@ export interface ProjectDisplayState {
 	tag: string | null
 	tagVariant: TagVariant
 	deadlineText: string | null
+	deadlineDay: string
 	isUrgent: boolean
 	progressPercent: number
+}
+
+const PROJECT_TAGS: Record<ProjectStatusValue, { label: string, variant: TagVariant }> = {
+	NOT_STARTED: { label: "Not started", variant: "neutral" },
+	IN_PROGRESS: { label: "In progress", variant: "neutral" },
+	AWAITING_APPROVAL: { label: "Awaiting approval", variant: "warning" },
+	COMPLETED: { label: "Completed", variant: "success" },
+	ON_HOLD: { label: "On hold", variant: "hold" }
+}
+
+export function getProjectTag(status: ProjectStatusValue) {
+	return PROJECT_TAGS[status]
 }
 
 // active milestone is the first in order that doesnt have "active" as status.
@@ -44,7 +57,7 @@ export function getProjectDisplayState(project: Project): ProjectDisplayState {
 
 	const progressPercent = project.progress
 
-	const base = { progressPercent, deadlineText: null, isUrgent: false }
+	const base = { progressPercent, deadlineText: null, deadlineDay: "", isUrgent: false }
 
 	if (project.status === "NOT_STARTED") {
 		return { ...base, tag: "Not started", tagVariant: "neutral" }
@@ -78,7 +91,7 @@ export function getProjectDisplayState(project: Project): ProjectDisplayState {
 	}
 
 	// in-progress case (or the very first milestone, not yet started) has no tag just deadline
-	const { text, isUrgent } = getDeadlineText(activeMilestone.deadline)
+	const { text, deadlineDay, isUrgent } = getDeadlineText(activeMilestone.deadline)
 
-	return { tag: null, tagVariant: "neutral", deadlineText: text, isUrgent, progressPercent }
+	return { tag: null, tagVariant: "neutral", deadlineText: text, deadlineDay, isUrgent, progressPercent }
 }

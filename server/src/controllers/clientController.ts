@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
 import validator from 'validator'
+import countProgressPercent from '../utils/milestoneProgress.js'
 
 export async function createClient(req: Request, res: Response) {
 
@@ -215,7 +216,12 @@ export async function getProjectsByClient(req: Request, res: Response) {
             }
 		})
 
-		return res.status(200).json(clientProjects)
+        const clientProjectsWithProgress = clientProjects.map(project => ({
+            ...project,
+            progress: countProgressPercent(project.milestones)
+        }))
+
+        return res.status(200).json(clientProjectsWithProgress)
 	} catch (err) {
 		console.log(err)
 		return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })

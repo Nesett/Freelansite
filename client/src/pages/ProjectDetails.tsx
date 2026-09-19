@@ -6,6 +6,9 @@ import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
+import { getProjectTag } from "../utils/ProjectStatus"
+
+
 
 export default function ProjectDetails() {
 	const { id } = useParams<{ id: string }>()
@@ -80,6 +83,8 @@ export default function ProjectDetails() {
 		return <p>{errorMessage || "Project not found."}</p>
 	}
 
+    const { label, variant } = getProjectTag(project.status)
+
 	return (
 		<div className="pageContent">
             {areYouSure && (
@@ -95,7 +100,7 @@ export default function ProjectDetails() {
                 <div>
                     <p>{project.client.companyName ? project.client.companyName : project.client.name}</p>
                     <h1>{project.title}</h1>
-                    <StatusBar percent={20}/>
+                    <StatusBar percent={project.progress}/>
                 </div>
                 <div>
                     <div className="projectOptionsWrapper" ref={projectOptionsRef}>
@@ -107,7 +112,7 @@ export default function ProjectDetails() {
                             </div>
                         )}
                     </div>
-                    <StatusTag label="hardcoded"/>
+                    <StatusTag label={label} variant={variant} />
                 </div>
 
 			</header>
