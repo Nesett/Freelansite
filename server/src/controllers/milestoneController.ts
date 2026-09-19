@@ -108,8 +108,8 @@ export async function updateMilestone(req: Request, res: Response) {
             return res.status(404).json({error: "Milestone does not exist."})
         } 
 
-        if (existingMilestone.status === "APPROVED") {
-            return res.status(400).json({error: "Approved milestones cannot be modified"})
+        if (existingMilestone.status === "APPROVED" || "AWAITING_APPROVAL") {
+            return res.status(400).json({error: "Milestones that are awaiting approval or are approved cannot be modified"})
         }
 
         const updatedMilestone = await db.milestone.update({
@@ -131,7 +131,7 @@ export async function updateMilestone(req: Request, res: Response) {
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not update project with id ${projectId}.`})
+        return res.status(500).json({error: `Could not update milestone with id ${id}.`})
     }
 
 }
@@ -178,6 +178,50 @@ export async function deactivateMilestone(req: Request, res: Response) {
 
 }
 
-export async function approveMilestone() {
+export async function approveMilestone(req: Request, res: Response) {
+
+    const id = String(req.params.id)
+    const clientId = req.user.id
+    
+    const { status } = req.body
+
+
+    try {
+
+        const existingMilestone = await db.milestone.findFirst({
+            where: {
+                id,
+                isActive: true,
+                project: {
+                    clientId,
+                    isActive: true
+                }
+            }
+        })
+
+        if (!existingMilestone) {
+            return res.status(404).json({error: "Milestone does not exist."})
+        } 
+
+        if (existingMilestone.status !== "AWAITING_APPROVAL") {
+            return res.status(400).json({error: "Cannot approve milestones, which are not ready to be approved."})
+        }
+
+        const approvedMilestone = await db.milestone.update({
+            where: {
+                id,
+                isActive: true
+            },
+            data: {
+				status: "APPROVED"
+            }
+        })
+
+        return res.status(200).json({approvedMilestone})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not update milestone with id ${id}.`})
+    }
 
 }
