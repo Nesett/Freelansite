@@ -1,12 +1,11 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
-import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 
 export async function createMilestone(req: Request, res: Response) {
 
     const id = String(req.params.id)
 
-    const { projectId, clientId, title, description, budget, deadline, MilestoneStatus, orderIndex } = req.body
+    const { projectId, clientId, title, description, budget, deadline, status, orderIndex } = req.body
 
     const adminId = req.user.id
 
@@ -29,15 +28,14 @@ export async function createMilestone(req: Request, res: Response) {
             return res.status(404).json({error: "Project does not exist."})
         } 
 
-        const milestoneBudget = budget !== undefined && budget !== null ? Number(budget) : null
 
         const newMilestone = await db.milestone.create({
                 data: {
                     projectId,
                     title,
                     description,
-                    budget: milestoneBudget,
-                    status: MilestoneStatus,
+                    budget,
+                    status: status,
                     deadline,
                     orderIndex
                 }
@@ -87,47 +85,52 @@ export async function getAllMilestones(req: Request, res: Response) {
 
 export async function updateMilestone(req: Request, res: Response) {
 
-	const adminId = req.user.id
-	const projectId = String(req.params.id)
+    const projectId = String(req.params.id)
+    const userId = req.user.id
+	const userRole = req.user.role
+    
+    const { id, title, description, budget, deadline, status, orderIndex } = req.body
 
-    const {title, description, budget, status, notes} = req.body
-
-    if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
-        return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
-    }
 
     try {
+        
+        const typeOfUser = userRole==="admin" ? {adminId: userId} : {clientId: userId} 
 
-        const existingProject = await db.project.findFirst({
+        const existingMilestone = await db.milestone.findFirst({
             where: {
-                id: projectId,
+                id,
                 isActive: true,
-                client: {
-                    adminId: adminId,
+                project: {
+                    ...typeOfUser,
                     isActive: true
                 }
             }
         })
 
-        if (!existingProject) {
-            return res.status(404).json({error: "Project does not exist."})
+        if (!existingMilestone) {
+            return res.status(404).json({error: "Milestone does not exist."})
         } 
 
-        const updatedProject = await db.project.update({
+        if (existingMilestone.status === "APPROVED") {
+            return res.status(400).json({error: "Approved milestones cannot be modified"})
+        }
+
+        const updatedMilestone = await db.milestone.update({
             where: {
-                id: projectId,
+                id,
                 isActive: true
             },
             data: {
-                title: title !== undefined ? title : existingProject.title,
-				description: description !== undefined ? description : existingProject.description,
-				budget: budget !== undefined ? Number(budget) : existingProject.budget,
-				status: status !== undefined ? status : existingProject.status,
-				notes: notes !== undefined ? notes : existingProject.notes
+                title: title !== undefined ? title : existingMilestone.title,
+				description: description !== undefined ? description : existingMilestone.description,
+				budget: budget !== undefined ? Number(budget) : existingMilestone.budget,
+                deadline: deadline !== undefined ? deadline : existingMilestone.deadline,
+				status: status !== undefined ? status : existingMilestone.status,
+                orderIndex: orderIndex !== undefined ? Number(orderIndex) : existingMilestone.orderIndex
             }
         })
 
-        return res.status(200).json({updatedProject})
+        return res.status(200).json({updatedMilestone})
 
     } catch(err) {
         console.log(err)
