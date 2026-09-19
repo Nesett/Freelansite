@@ -7,6 +7,7 @@ import pg from 'pg'
 import authRoutes from './routes/authRoutes.js'
 import clientRoutes from './routes/clientRoutes.js'
 import projectRoutes from './routes/projectRoutes.js'
+import milestoneRoutes from './routes/milestoneRoutes.js'
 
 
 const app = express()
@@ -28,6 +29,7 @@ app.use(cookieParser())
 app.use('/api/auth', authRoutes)
 app.use('/api/clients', clientRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/milestones', milestoneRoutes)
 
 
 app.get('/api/health', async (req: Request, res: Response) => {
@@ -40,11 +42,6 @@ app.get('/api/health', async (req: Request, res: Response) => {
   }
 })
 
-
-app.get("/", (req: Request, res: Response) => {
-  console.log("Main page")
-  res.send("idk")
-})
 
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}!`)

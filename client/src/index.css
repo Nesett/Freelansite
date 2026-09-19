@@ -843,14 +843,19 @@ hr {
 	gap: 10px;
 }
 
-.statusBarHolder > div {
+.statusBarTrack {
 	flex: 1;
 	height: 8px;
 	border-radius: 999px;
-	background-color: #1D7A6B;
+	background-color: #DADADA;
 	overflow: hidden;
-	color: transparent;
-	font-size: 0;
+}
+
+.statusBarFill {
+	height: 100%;
+	border-radius: 999px;
+	background-color: #1D7A6B;
+	transition: width 0.3s ease;
 }
 
 .statusBarHolder p {
