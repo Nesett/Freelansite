@@ -46,6 +46,8 @@ model Client {
   createdAt   DateTime @default(now()) @map("created_at")
   lastActive  DateTime @default(now()) @map("last_active")
   isActive    Boolean  @default(true) @map("is_active")
+  inviteToken         String?   @unique
+	inviteTokenExpires  DateTime?
 
   admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
   projects Project[]

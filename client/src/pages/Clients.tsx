@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
-import ClientEntry from '../../components/ClientEntry'
-import { useSortableClients } from '../../utils/useSortableClients'
+import ClientEntry from '../components/ClientEntry'
+import { useSortableClients } from '../utils/useSortableClients'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -70,7 +70,7 @@ export default function Clients() {
 			}
 
 			console.log("Added new client.")
-			navigate(`/clients/${data.newClient.id}`)
+			navigate(`/clients/${data.user.client.id}`)
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {

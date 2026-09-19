@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { User, Mail, Plus, EllipsisVertical, X } from 'lucide-react'
-import ProjectComponent from "../../components/ProjectEntry"
-import AreYouSureModal from "../../components/AreYouSureModal"
-import useClickOutside from "../../utils/clicksOutside"
+import ProjectComponent from "../components/ProjectEntry"
+import AreYouSureModal from "../components/AreYouSureModal"
+import useClickOutside from "../utils/clicksOutside"
 import type { Client } from "./Clients"
-import type { Project } from "../Projects"
+import type { Project } from "./Projects"
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)

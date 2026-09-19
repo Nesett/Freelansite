@@ -2,13 +2,14 @@ import { Request, Response } from 'express'
 import db from '../db/db.js'
 import validator from 'validator'
 import countProgressPercent from '../utils/milestoneProgress.js'
+import bcrypt from 'bcrypt'
 
 export async function createClient(req: Request, res: Response) {
 
     const { name, email, phone, companyName } = req.body
     const adminId = req.user.id
 
-    if (!name || !companyName) {
+    if (!name && !companyName) {
         return res.status(400).json({message:"Enter at least name or company name of your client."})
     } else {
         if (!email) {
@@ -25,6 +26,26 @@ export async function createClient(req: Request, res: Response) {
 
 
     try{
+        let client = {}
+        const isExistingUser = await db.client.findUnique({where: {email}})
+        if (isExistingUser) {
+            if (isExistingUser.password === null || isExistingUser.password === undefined) {
+                client = await db.client.update({
+                    where: { email },
+                    data: {
+                        name: name,
+                        email: email,
+                        phone: phone || null,
+                        companyName: companyName || null,
+                        adminId: adminId
+                    }
+                })
+                return res.status(200).json({user: client})
+            } else {
+                client = isExistingUser
+                return res.status(200).json({message: "This user already exists.", user: client})
+            }
+        } 
 
         const newClient = await db.client.create({
             data: {
@@ -35,8 +56,8 @@ export async function createClient(req: Request, res: Response) {
                 adminId: adminId
             }
         })
-
-        return res.status(201).json({newClient})
+        client = newClient
+        return res.status(201).json({user: client})
 
 
     } catch(err) {
@@ -226,4 +247,67 @@ export async function getProjectsByClient(req: Request, res: Response) {
 		console.log(err)
 		return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })
 	}
+}
+
+export async function setClientPassword(req: Request, res: Response) {
+    
+    const id = String(req.params.id)
+    const { token, password } = req.body
+
+    if (!password) {
+        return res.status(400).json({error: "Please enter your password."})
+    }
+
+	const client = await db.client.findUnique({
+		where: { inviteToken: token }
+	})
+
+
+	if (!client || !client.inviteTokenExpires) {
+		return res.status(400).json({ error: 'Invalid or missing invite link.' })
+	}
+
+	const rightNow = new Date()
+	const isExpired = rightNow > client.inviteTokenExpires
+
+	if (isExpired) {
+		return res.status(400).json({ error: 'This invite link has expired. Please ask for a new one.' })
+	}
+
+
+
+    const salt = 10
+
+    try {
+
+        const hashedPassword = await bcrypt.hash(password, salt)
+
+        const client = await db.client.update({
+            where: {
+                inviteToken: token
+            },
+            data: {
+                password: hashedPassword,
+                inviteToken: null,
+                inviteTokenExpires: null
+            }
+        })
+
+        return res.status(200).json({id:client.id, name:client.name, companyName:client.companyName})
+        
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Failed to set up a password for client ${id}`})
+    }
+}
+
+export async function loginClient(req: Request, res: Response) {
+    
+    try {
+
+    }  catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Failed to login client.`})
+    }
+
 }
