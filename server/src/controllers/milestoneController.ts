@@ -5,11 +5,11 @@ export async function createMilestone(req: Request, res: Response) {
 
     const id = String(req.params.id)
 
-    const { projectId, clientId, title, description, budget, deadline, status, orderIndex } = req.body
+    const { clientId, title, description, budget, deadline, status, orderIndex } = req.body
 
     const adminId = req.user.id
 
-    if (!projectId || !title || !orderIndex) {
+    if (!id || !title || !orderIndex) {
         return res.status(400).json({message:"Enter all necessary information."})
     } 
 
@@ -31,7 +31,7 @@ export async function createMilestone(req: Request, res: Response) {
 
         const newMilestone = await db.milestone.create({
                 data: {
-                    projectId,
+                    projectId: id,
                     title,
                     description,
                     budget,
@@ -108,7 +108,7 @@ export async function updateMilestone(req: Request, res: Response) {
             return res.status(404).json({error: "Milestone does not exist."})
         } 
 
-        if (existingMilestone.status === "APPROVED" || "AWAITING_APPROVAL") {
+        if (existingMilestone.status === "APPROVED" || existingMilestone.status === "AWAITING_APPROVAL") {
             return res.status(400).json({error: "Milestones that are awaiting approval or are approved cannot be modified"})
         }
 
