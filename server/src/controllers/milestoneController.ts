@@ -56,54 +56,32 @@ export async function createMilestone(req: Request, res: Response) {
 
 export async function getAllMilestones(req: Request, res: Response) {
     
-    const adminId = req.user.id
+    const projectId = String(req.params.id)
+    const userId = req.user.id
+	const userRole = req.user.role
     
     try {
 
-        const allProjects = await db.project.findMany({
+        const typeOfUser = userRole==="admin" ? {adminId: userId} : {clientId: userId} 
+
+        const allMilestones = await db.milestone.findMany({
             where: {
+                projectId,
                 isActive: true,
-                client: {
-                    adminId,
+                project: {
+                    ...typeOfUser,
                     isActive: true
-                }
-            }, // all projects belonging to clients of an admin.
-            include: {
-                client: {
-                    select: {
-                        id: true,
-                        name: true,
-                        companyName: true
-                    }
-                }, // and their id, name and companyName
-                _count: {
-                    select: { milestones: true }
-                }, // total milestone count, for the progress-bar math
-                milestones: {
-                    where: {
-                        status: { not: MilestoneStatus.APPROVED }
-                    },
-                    orderBy: { orderIndex: 'asc' },
-                    take: 1,
-                    select: {
-                        id: true,
-                        status: true,
-                        deadline: true,
-                        orderIndex: true,
-                        budget: true
-                    }
                 }
             }
         })
         
 
-        return res.status(200).json(allProjects)
+        return res.status(200).json(allMilestones)
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: "Could not fetch all projects."})
+        return res.status(500).json({error: "Could not fetch all milestones."})
     }
-
 }
 
 

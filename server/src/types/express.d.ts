@@ -1,11 +1,10 @@
-import { Admin } from '@prisma/client'
-import { UserRole } from './auth.js'
+import { Admin, Client } from "@prisma/client"
+import { TokenPayload } from "./auth"
 
 declare global {
-    namespace Express {
-        interface Request {
-            user?: Admin
-            userRole?: UserRole
-        }
-    }
+	namespace Express {
+		interface Request {
+            user?: TokenPayload
+		}
+	}
 }
