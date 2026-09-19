@@ -1,64 +1,55 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 
 export async function createMilestone(req: Request, res: Response) {
 
-    const { clientId, title, description, budget, notes } = req.body
+    const id = String(req.params.id)
+
+    const { projectId, clientId, title, description, budget, deadline, MilestoneStatus, orderIndex } = req.body
 
     const adminId = req.user.id
 
-    if (!clientId || !title) {
+    if (!projectId || !title || !orderIndex) {
         return res.status(400).json({message:"Enter all necessary information."})
     } 
 
     try{
 
-        const existingProject = await db.client.findFirst({
+        const existingProject = await db.project.findFirst({
             where: {
-                id: clientId,
+                id: id,
                 adminId: adminId,
+                clientId: clientId,
                 isActive: true
             }
         })
 
-        if (!existingClient) {
-            return res.status(404).json({error: "Client does not exist."})
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
         } 
 
-        const projectBudget = budget !== undefined && budget !== null ? Number(budget) : null
+        const milestoneBudget = budget !== undefined && budget !== null ? Number(budget) : null
 
-        // every project starts with exactly one milestone, same as project.
-        const newProject = await db.$transaction(async (tx) => {
-            const project = await tx.project.create({
+        const newMilestone = await db.milestone.create({
                 data: {
-                    clientId,
-                    adminId,
+                    projectId,
                     title,
                     description,
-                    budget: projectBudget,
-                    notes
+                    budget: milestoneBudget,
+                    status: MilestoneStatus,
+                    deadline,
+                    orderIndex
                 }
             })
 
-            await tx.milestone.create({
-                data: {
-                    projectId: project.id,
-                    title: project.title,
-                    budget: projectBudget,
-                    orderIndex: 0,
-                    status: MilestoneStatus.NOT_STARTED
-                }
-            })
 
-            return project
-        })
-
-        return res.status(201).json({newProject})
+        return res.status(201).json({newMilestone})
 
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: "Could not create the project."})
+        return res.status(500).json({error: "Could not create the milestone."})
     }
 }
 
