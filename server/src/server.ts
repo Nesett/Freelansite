@@ -43,11 +43,6 @@ app.get('/api/health', async (req: Request, res: Response) => {
 })
 
 
-app.get("/", (req: Request, res: Response) => {
-  console.log("Main page")
-  res.send("idk")
-})
-
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}!`)
 })

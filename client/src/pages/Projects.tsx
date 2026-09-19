@@ -16,7 +16,6 @@ export interface Milestone {
 	deadline?: string | null
 	orderIndex: number
 	budget?: number | null
-	// title/description are only present on the full milestone list returned.
 	title?: string
 	description?: string | null
 }
