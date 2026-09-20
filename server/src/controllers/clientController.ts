@@ -3,6 +3,9 @@ import db from '../db/db.js'
 import validator from 'validator'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
+import { sendInviteEmail } from '../services/email.service.js'
 
 export async function createClient(req: Request, res: Response) {
 
@@ -22,7 +25,9 @@ export async function createClient(req: Request, res: Response) {
         
         }
     }
-
+    const inviteToken = crypto.randomBytes(32).toString('hex')
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    const inviteLink = `${process.env.FRONTEND_URL}/set-password?token=${inviteToken}`
 
 
     try{
@@ -53,7 +58,8 @@ export async function createClient(req: Request, res: Response) {
                 email: email,
                 phone: phone || null,
                 companyName: companyName || null,
-                adminId: adminId
+                adminId: adminId,
+                inviteToken
             }
         })
         client = newClient
@@ -302,12 +308,60 @@ export async function setClientPassword(req: Request, res: Response) {
 }
 
 export async function loginClient(req: Request, res: Response) {
+
+    let { password, email } = req.body
+
+    if (!email) {
+        return res.status(400).json({error: "Please enter email."})
+
+    } else {
+
+        email = email.trim().toLowerCase()
+
+        if (!password) {
+
+            return res.status(400).json({error: "Please enter password."})
+
+        } else if (!validator.isEmail(email)) {
+
+            return res.status(400).json({error: "The email is invalid."})
+
+        }
+    }
     
     try {
+        const client = await db.client.findUnique({where: { email }})
+        
+        if (!client) {
+            return res.status(401).json({error: "Invalid credentials."})
+        } else {
+            const passwordMatch = await bcrypt.compare(password, client.password)
+            if (!passwordMatch) {
+                return res.status(401).json({error: "Invalid credentials."})
+            } else {
 
-    }  catch(err) {
+                const token = jwt.sign(
+                { id: client.id, role: 'client' }, 
+                process.env.JWT_SECRET as string, 
+                { expiresIn: '1d' }
+                )
+
+                res.cookie('auth_token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 24 * 60 * 60 * 1000
+                })
+
+                return res.status(200).json({client})
+            }
+        }
+        
+
+
+    } catch(err){
         console.log(err)
-        return res.status(500).json({error: `Failed to login client.`})
+        return res.status(500).json({error: 'Internal server error.'})
     }
 
 }
