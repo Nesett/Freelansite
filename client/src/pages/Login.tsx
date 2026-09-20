@@ -2,7 +2,15 @@ import loginImg from '../images/loginImg.png'
 import { useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 
+type Role = 'admin' | 'client'
+
+const LOGIN_ENDPOINTS: Record<Role, string> = {
+	admin: '/api/auth/login',
+	client: '/api/clients/login'
+}
+
 export default function LoginPage() {
+	const [ role, setRole ] = useState<Role>('admin')
 	const [ showPassword, setShowPassword ] = useState(false)
 	const [ password, setPassword ] = useState("")
 	const [ email, setEmail ] = useState("")
@@ -14,7 +22,7 @@ export default function LoginPage() {
 
 		try {
 
-			const response = await fetch(`/api/auth/login`, {
+			const response = await fetch(LOGIN_ENDPOINTS[role], {
 				method: "POST",
 				headers: {"Content-Type": "application/json"},
 				credentials: "include",
@@ -28,7 +36,7 @@ export default function LoginPage() {
 			}
 
 			console.log("logged in!")
-			navigate("/dashboard")
+			navigate(role === "admin" ? "/dashboard" : "/client-dashboard")
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
@@ -38,6 +46,11 @@ export default function LoginPage() {
 			}
 		}
 
+	}
+
+	function switchRole(newRole: Role) {
+		setRole(newRole)
+		setErrorMessage("")
 	}
 
 	function togglePassword() {
@@ -50,6 +63,26 @@ export default function LoginPage() {
 		<main className="signPagesMain">
 			<div className="brandName">
 				<h1>Freelansite</h1>
+			</div>
+
+			<div className="signInWrapper">
+			<div className="roleTabs" role="tablist">
+				<button
+					type="button"
+					role="tab"
+					aria-selected={role === 'admin'}
+					className={`roleTab ${role === 'admin' ? 'roleTab--active' : ''}`}
+					onClick={() => switchRole('admin')}>
+					Admin
+				</button>
+				<button
+					type="button"
+					role="tab"
+					aria-selected={role === 'client'}
+					className={`roleTab ${role === 'client' ? 'roleTab--active' : ''}`}
+					onClick={() => switchRole('client')}>
+					Client
+				</button>
 			</div>
 
 			<div className="signInContainer">
@@ -98,11 +131,15 @@ export default function LoginPage() {
 						<span>Remember me</span>
 					</label>
 
+					{errorMessage && <p className="errorMessage">{errorMessage}</p>}
+
 					<button type="submit" className="signInButton">
 						Sign in
 					</button>
 				</form>
 
+				{role === 'admin' && (
+					<>
 				<div className="orDivider">
 					<span>Or</span>
 				</div>
@@ -126,6 +163,9 @@ export default function LoginPage() {
 					<p>Don't have an account?</p>
 					<a href="#">Sign Up</a>
 				</div>
+					</>
+				)}
+			</div>
 			</div>
 
 			<div className="signInSideImg">
