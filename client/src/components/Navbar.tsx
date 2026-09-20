@@ -22,8 +22,7 @@ export default function Navbar() {
 	]
 
 	const links = user?.role === 'admin' ? adminLinks : clientLinks
-	
-	console.log('navbar user:', user)
+
 
 	return (
 		<nav className={collapsed ? 'sidebar collapsed' : 'sidebar'}>

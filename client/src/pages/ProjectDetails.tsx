@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
-import type { Project } from "./Projects"
+import type { Project, Milestone } from "./Projects"
 import { Plus, EllipsisVertical } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
 import { getProjectTag } from "../utils/ProjectStatus"
+import MilestoneEntry from "../components/MilestoneEntry"
 
 
 
@@ -18,21 +19,31 @@ export default function ProjectDetails() {
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
 	const [loading, setLoading] = useState<boolean>(true)
 	const [errorMessage, setErrorMessage] = useState<string>("")
+    const [milestones, setMilestones] = useState<Milestone[]>([])
+    const [showAddMilestones, setShowAddMilestone] = useState<boolean>(false)
     const navigate = useNavigate()
 
 	useEffect(() => {
-		async function fetchProjectDetails() {
-			try {
-				const res = await fetch(`/api/projects/${id}`, {
-					credentials: "include"
-				})
+        let isFinished = true
 
-				if (!res.ok) {
-					throw new Error("Failed to fetch project")
+		async function fetchProjectDetails() {
+            
+			try {
+				const [projectsRes, milestonesRes] = await Promise.all([
+					fetch(`/api/projects/${id}`, { credentials: 'include' }),
+					fetch(`/api/milestones?projectId=${id}`, { credentials: 'include' })
+				])
+				if (!milestonesRes.ok || !projectsRes.ok) {
+					throw new Error("Request failed.")
 				}
 
-				const data = await res.json()
-				setProject(data)
+				const milestonesJson = await milestonesRes.json()
+				const projectsJson = await projectsRes.json()
+
+				if (isFinished) {
+					setMilestones(milestonesJson)
+					setProject(projectsJson)
+				}
 
 			} catch (err) {
 				if (err instanceof Error) {
@@ -41,11 +52,18 @@ export default function ProjectDetails() {
 					setErrorMessage("An unexpected error occurred")
 				}
 			} finally {
-				setLoading(false)
+				if (isFinished) {
+					setLoading(false)
+				}
 			}
 		}
 
 		fetchProjectDetails()
+
+		return () => {
+			isFinished = false
+		}
+
 	}, [id])
 
 
@@ -121,14 +139,17 @@ export default function ProjectDetails() {
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
-                        <button className="newButton">
+                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton">
                             <Plus />
                             Add Milestone
                         </button>
                     </div>
                     <div className="projectMilestones">
-                        
-
+                        {milestones.length > 0 ? (
+                        milestones.map(milestone => (
+                                <MilestoneEntry key={milestone.id} milestone={milestone} />
+                            ))
+                        ) : (<p>No milestones found for this project.</p>)}
                     </div>
                     
                 </div>
