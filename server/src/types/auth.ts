@@ -1,5 +1,3 @@
-import { Admin } from '@prisma/client'
-
 export type UserRole = 'admin' | 'client' | 'link'
 
 export interface TokenPayload {

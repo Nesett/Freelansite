@@ -5,7 +5,12 @@ import countProgressPercent from '../utils/milestoneProgress.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { sendInviteEmail } from '../services/email.service.js'
+import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
+
+
+// const dashboardLink = `http://localhost:5173/login`
+// await sendAdminAddedYouEmail(email, dashboardLink, name)
+
 
 export async function createClient(req: Request, res: Response) {
 
@@ -26,12 +31,21 @@ export async function createClient(req: Request, res: Response) {
         }
     }
     const inviteToken = crypto.randomBytes(32).toString('hex')
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
     const inviteLink = `${process.env.FRONTEND_URL}/set-password?token=${inviteToken}`
 
 
     try{
         let client = {}
+        let adminName = ''
+        const admin = await db.admin.findFirst({where: {id: adminId}})
+
+        if (admin.businessName !== null && admin.businessName !== undefined){
+            adminName = admin.businessName
+        } else {
+            adminName = admin.name
+        }
+
         const isExistingUser = await db.client.findUnique({where: {email}})
         if (isExistingUser) {
             if (isExistingUser.password === null || isExistingUser.password === undefined) {
@@ -42,12 +56,16 @@ export async function createClient(req: Request, res: Response) {
                         email: email,
                         phone: phone || null,
                         companyName: companyName || null,
-                        adminId: adminId
+                        adminId: adminId,
+                        inviteToken,
+                        inviteTokenExpires
                     }
                 })
-                return res.status(200).json({user: client})
+                await sendInviteEmail(email, inviteLink, adminName)
+                return res.status(200).json({message: "Successfully created client account.", user: client})
             } else {
                 client = isExistingUser
+                await sendAdminAddedYouEmail(email, adminName)
                 return res.status(200).json({message: "This user already exists.", user: client})
             }
         } 
@@ -59,11 +77,13 @@ export async function createClient(req: Request, res: Response) {
                 phone: phone || null,
                 companyName: companyName || null,
                 adminId: adminId,
-                inviteToken
+                inviteToken,
+                inviteTokenExpires
             }
         })
+        await sendInviteEmail(email, inviteLink, adminName)
         client = newClient
-        return res.status(201).json({user: client})
+        return res.status(201).json({message: "Successfully created client account.", user: client})
 
 
     } catch(err) {
@@ -257,7 +277,6 @@ export async function getProjectsByClient(req: Request, res: Response) {
 
 export async function setClientPassword(req: Request, res: Response) {
     
-    const id = String(req.params.id)
     const { token, password } = req.body
 
     if (!password) {
@@ -303,7 +322,7 @@ export async function setClientPassword(req: Request, res: Response) {
         
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Failed to set up a password for client ${id}`})
+        return res.status(500).json({error: `Failed to set up a password.`})
     }
 }
 
