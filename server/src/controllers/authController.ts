@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
 import bcrypt from 'bcrypt'
-import validator from 'validator';
+import validator from 'validator'
 import jwt from 'jsonwebtoken'
-import { toClientSafe } from '../utils/sanitizer.js';
+import { toClientSafe } from '../utils/sanitizer.js'
 
 
 export async function signUp(req: Request, res: Response) {
@@ -104,7 +104,7 @@ export async function login(req: Request, res: Response) {
                     maxAge: 24 * 60 * 60 * 1000
                 })
 
-                return res.status(200).json({message: "Successfully logged in!"})
+                return res.status(200).json({admin})
             }
         }
         
