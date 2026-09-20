@@ -3,6 +3,21 @@ import db from '../db/db.js'
 import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 
+function projectAccessFilter(req: Request) {
+	if (req.userRole === 'admin') {
+		return {
+			isActive: true,
+			client: { adminId: req.user.id, isActive: true }
+		}
+	}
+
+	return {
+		isActive: true,
+		clientId: req.user.id,
+		client: { isActive: true }
+	}
+}
+
 export async function createProject(req: Request, res: Response) {
 
     const { clientId, title, description, budget, notes } = req.body
@@ -66,17 +81,10 @@ export async function createProject(req: Request, res: Response) {
 
 
 export async function getAllProjects(req: Request, res: Response) {
-    const adminId = req.user.id
-    
     try {
         const allProjects = await db.project.findMany({
-            where: {
-                isActive: true,
-                client: {
-                    adminId,
-                    isActive: true
-                }
-            }, // all projects belonging to clients of an admin.
+            where: projectAccessFilter(req),
+            orderBy: { createdAt: 'desc' },
             include: {
                 client: {
                     select: {
@@ -84,7 +92,13 @@ export async function getAllProjects(req: Request, res: Response) {
                         name: true,
                         companyName: true
                     }
-                }, // and their id, name and companyName
+                },
+                admin: {
+                    select: {
+                        name: true,
+                        businessName: true
+                    }
+                },
                 milestones: {
                     orderBy: { orderIndex: 'asc' },
                     select: {
@@ -113,18 +127,13 @@ export async function getAllProjects(req: Request, res: Response) {
 
 
 export async function getProject(req: Request, res: Response) {
-	const adminId = req.user.id
 	const projectId = String(req.params.id)
 
 	try {
 		const project = await db.project.findFirst({
 			where: {
 				id: projectId,
-                isActive: true,
-				client: {
-					adminId: adminId,
-                    isActive: true
-				}
+				...projectAccessFilter(req)
 			},
 			include: {
 				client: {
@@ -132,6 +141,12 @@ export async function getProject(req: Request, res: Response) {
 						id: true,
 						name: true,
 						companyName: true
+					}
+				},
+				admin: {
+					select: {
+						name: true,
+						businessName: true
 					}
 				},
 				milestones: {
@@ -155,7 +170,6 @@ export async function getProject(req: Request, res: Response) {
 	}
 }
 
-
 export async function updateProject(req: Request, res: Response) {
 
 	const adminId = req.user.id
@@ -163,10 +177,6 @@ export async function updateProject(req: Request, res: Response) {
 
     const {title, description, budget, status, notes} = req.body
 
-    // COMPLETED and AWAITING_APPROVAL are only reachable through milestone
-    // actions (submitForReview / approveMilestone on the last milestone) -
-    // this endpoint is for the manual states (NOT_STARTED, IN_PROGRESS,
-    // ON_HOLD), set by the admin (or ON_HOLD requested by the client).
     if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
         return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
     }

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import LandingPage from './pages/Landing'
 import LoginPage from './pages/Login'
 import DashboardPage from './pages/Dashboard'
@@ -11,26 +12,34 @@ import ClientsDetails from './pages/ClientsDetails'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import ProjectDetails from './pages/ProjectDetails'
 import Layout from './components/Layout'
+import ClientSetPassword from './pages/ClientSetPassword'
 
 export function App() {
 	return (
 		<BrowserRouter>
-			<Routes>
-				<Route path="/" element={<LandingPage />} />
-				<Route path="/login" element={<LoginPage />} />
-				<Route element={<ProtectedRoute />}>
-					<Route element={<Layout/>}>
-						<Route path="/dashboard" element={<DashboardPage />} />
-						<Route path="/clients" element={<Clients />} />
-						<Route path="/projects" element={<Projects />} />
-						<Route path="/invoices" element={<Invoices />} />
-						<Route path="/team" element={<Team />} />
-						<Route path="/settings" element={<Settings />} />
-						<Route path="/clients/:id" element={<ClientsDetails />} />
-						<Route path="/projects/:id" element={<ProjectDetails />} />
+			<AuthProvider>
+				<Routes>
+					<Route path="/" element={<LandingPage />} />
+					<Route path="/login" element={<LoginPage />} />
+					<Route path='/set-password' element={<ClientSetPassword />}/>
+
+					<Route element={<ProtectedRoute />}>
+						<Route element={<Layout />}>
+							<Route path="/dashboard" element={<DashboardPage />} />
+							<Route path="/projects" element={<Projects />} />
+							<Route path="/projects/:id" element={<ProjectDetails />} />
+							<Route path="/invoices" element={<Invoices />} />
+
+							<Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+								<Route path="/clients" element={<Clients />} />
+								<Route path="/clients/:id" element={<ClientsDetails />} />
+								<Route path="/team" element={<Team />} />
+								<Route path="/settings" element={<Settings />} />
+							</Route>
+						</Route>
 					</Route>
-				</Route>
-			</Routes>
+				</Routes>
+			</AuthProvider>
 		</BrowserRouter>
 	)
 }

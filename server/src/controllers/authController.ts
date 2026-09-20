@@ -130,18 +130,20 @@ export async function logout(req: Request, res: Response) {
 }
 
 export async function mySession(req: Request, res: Response) {
-
-    try {
-        if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' })
-        }
+	try {
+		if (!req.user) {
+			return res.status(401).json({ error: 'Unauthorized' })
+		}
 
         // run user through sanitizer
-        const safeUser = toClientSafe(req.user)
+		const safeUser = { ...toClientSafe(req.user), role: req.userRole }
 
-        return res.status(200).json({message: 'Session verified', user: safeUser })
-    } catch(err){
-        console.log(err)
-        return res.status(500).json({error: 'Internal server error.'})
-    }
+		return res.status(200).json({
+			message: 'Session verified',
+			user: safeUser
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({ error: 'Internal server error.' })
+	}
 }

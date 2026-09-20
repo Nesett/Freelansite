@@ -1,44 +1,26 @@
-import { Navigate, Outlet } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { Navigate, Outlet } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
-export default function ProtectedRoute() {
-    const [isLoading, setIsLoading] = useState(true)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
+type Props = {
+	allowedRoles?: ('admin' | 'client')[]
+}
 
-    useEffect(()=> {
-        async function verifyAuth(){
-            try {
-                const apiUrl = import.meta.env.VITE_API_URL
-                const res = await fetch(`${apiUrl}/api/auth/me`, {
-                    method: 'GET',
-                    credentials: 'include'
-                }) 
+export default function ProtectedRoute({ allowedRoles }: Props) {
+	const { user, isLoading } = useAuth()
 
-                if (res.ok) {
-                    setIsAuthenticated(true)
-                } else {
-                    setIsAuthenticated(false)
-                }
-            } catch(err) {
-                setIsAuthenticated(false)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-        verifyAuth()
-    }, [])
+	if (isLoading) {
+		return (
+			<div className="loading">
+				<h1>Checking Auth</h1>
+			</div>
+		)
+	}
 
-    if (isLoading) {
-        return (
-        <div>
-            <h1>Checking Auth</h1>
-        </div>
-        )
-    }
+	if (!user) return <Navigate to="/login" replace />
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />
-    }
+	if (allowedRoles && !allowedRoles.includes(user.role)) {
+		return <Navigate to="/dashboard" replace />
+	}
 
-    return <Outlet />
+	return <Outlet />
 }

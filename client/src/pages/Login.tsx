@@ -1,6 +1,7 @@
 import loginImg from '../images/loginImg.png'
 import { useState} from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 type Role = 'admin' | 'client'
 
@@ -16,6 +17,7 @@ export default function LoginPage() {
 	const [ email, setEmail ] = useState("")
 	const [ errorMessage, setErrorMessage] = useState("")
 	const navigate = useNavigate()
+	const { refreshUser } = useAuth()
 
 	async function handleSubmit() {
 		
@@ -35,8 +37,9 @@ export default function LoginPage() {
 				throw new Error(data.error || "Something went wrong")
 			}
 
+			await refreshUser()
 			console.log("logged in!")
-			navigate(role === "admin" ? "/dashboard" : "/client-dashboard")
+			navigate(role === "admin" ? "/dashboard" : "/projects")
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
