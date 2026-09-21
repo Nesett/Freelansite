@@ -107,7 +107,7 @@ export default function ProjectDetails() {
 					description: milestoneDescription,
 					budget: milestoneBudget,
 					deadline: milestoneDeadline,
-                    orderIndex: milestones.length + 1
+                    orderIndex: milestones.length
                 })
             })
 
@@ -222,12 +222,13 @@ export default function ProjectDetails() {
                     </div>
                     <div className="projectMilestones">
                         {milestones.length > 0 ? (
-                        milestones.map(milestone => (
-                                <MilestoneEntry key={milestone.id} milestone={milestone} />
-                            ))
+                            [...milestones]
+                                .sort((a, b) => a.orderIndex - b.orderIndex)
+                                .map(milestone => (
+                                    <MilestoneEntry key={milestone.id} milestone={milestone} />
+                                ))
                         ) : (<p>No milestones found for this project.</p>)}
                     </div>
-                    
                 </div>
                 <div className="projectInfo">
                     <div className="summaryAndInfo"></div>
