@@ -21,6 +21,10 @@ export default function ProjectDetails() {
 	const [errorMessage, setErrorMessage] = useState<string>("")
     const [milestones, setMilestones] = useState<Milestone[]>([])
     const [showAddMilestones, setShowAddMilestone] = useState<boolean>(false)
+    const [ milestoneTitle, setMilestoneTitle ] = useState<string>("")
+    const [ milestoneDescription, setMilestoneDescription] = useState<string>("")
+    const [ milestoneBudget, setMilestoneBudget ] = useState<number | "">("")
+    const [ milestoneDeadline, setMilestoneDeadline ] = useState<string>("")
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -89,6 +93,43 @@ export default function ProjectDetails() {
         }
     }
 
+    async function handleAddNewMilestone(e: React.FormEvent) {
+        e.preventDefault()
+
+        try {
+            const res = await fetch(`/api/milestones`, {
+                method: "POST",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    projectId: id,
+					title: milestoneTitle,
+					description: milestoneDescription,
+					budget: milestoneBudget,
+					deadline: milestoneDeadline,
+                    orderIndex: milestones.length + 1
+                })
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to create milestone.")
+            }
+
+            const successData = await res.json()
+
+			setMilestones(prev => [...prev, successData.newMilestone])
+
+            setShowAddMilestone(prev => !prev)
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while deleting project.")
+            }
+        }
+    }
+
     function showProjectOptions() {
         setEditOptions(prev => !prev)
     }
@@ -105,6 +146,41 @@ export default function ProjectDetails() {
 
 	return (
 		<div className="pageContent">
+            {showAddMilestones && (
+            <div className="addMilestonesForm">
+                <form onSubmit={handleAddNewMilestone}>
+                    <label htmlFor='title'>Title</label>
+                    <input 
+                        id='title' 
+                        name='title' 
+                        type='textarea'
+                        placeholder="Dashboard"
+                        onChange={(e) => setMilestoneTitle(e.target.value)}
+                        required
+                    />
+                    <label htmlFor='description'>Description</label>
+                    <textarea 
+                        id='description' 
+                        name='description' 
+                        onChange={(e) => setMilestoneDescription(e.target.value)}
+                    ></textarea>
+                    <label htmlFor='budget'>Budget</label>
+                        <input 
+                            id='budget' 
+                            name='budget' 
+                            type='number' 
+                            onChange={(e) => setMilestoneBudget(e.target.value ? Number(e.target.value) : "")}
+                        />
+                    <label htmlFor='deadline'>Deadline</label>
+                    <input 
+                        id='deadline' 
+                        name='deadline' 
+                        type='date' 
+                        onChange={(e) => setMilestoneDeadline(e.target.value)}
+                    />
+                    <button> Add new milestone </button>
+                </form>
+            </div>)}
             {areYouSure && (
                 <AreYouSureModal 
                     itemType="project"

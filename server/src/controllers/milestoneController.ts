@@ -2,9 +2,7 @@ import { Request, Response } from 'express'
 import db from '../db/db.js'
 
 export async function createMilestone(req: Request, res: Response) {
-
-    const { projectId, clientId, title, description, budget, deadline, status, orderIndex } = req.body
-
+    const { projectId, title, description, budget, deadline, status, orderIndex } = req.body
     const adminId = req.user.id
 
     if (!projectId || !title || orderIndex===undefined) {
@@ -17,7 +15,6 @@ export async function createMilestone(req: Request, res: Response) {
             where: {
                 id: projectId,
                 adminId: adminId,
-                clientId: clientId,
                 isActive: true
             }
         })
@@ -26,29 +23,25 @@ export async function createMilestone(req: Request, res: Response) {
             return res.status(404).json({error: "Project does not exist."})
         } 
 
-
         const newMilestone = await db.milestone.create({
-                data: {
-                    projectId,
-                    title,
-                    description,
-                    budget,
-                    status: status,
-                    deadline,
-                    orderIndex
-                }
-            })
-
+            data: {
+                projectId,
+                title,
+                description: description || undefined,
+                budget: budget ? Number(budget) : undefined,
+                status: status || undefined,
+                deadline: deadline ? new Date(deadline) : undefined,
+                orderIndex
+            }
+        })
 
         return res.status(201).json({newMilestone})
-
 
     } catch(err) {
         console.log(err)
         return res.status(500).json({error: "Could not create the milestone."})
     }
 }
-
 
 export async function getAllMilestones(req: Request, res: Response) {
 
