@@ -6,7 +6,7 @@ import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
-import { getProjectTag } from "../utils/ProjectStatus"
+import { getProjectTag, getActiveMilestone } from "../utils/ProjectStatus"
 import MilestoneEntry from "../components/MilestoneEntry"
 
 
@@ -143,6 +143,8 @@ export default function ProjectDetails() {
 	}
 
     const { label, variant } = getProjectTag(project.status)
+    const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
+    const activeMilestone = getActiveMilestone(sortedMilestones)
 
 	return (
 		<div className="pageContent">
@@ -221,12 +223,14 @@ export default function ProjectDetails() {
                         </button>
                     </div>
                     <div className="projectMilestones">
-                        {milestones.length > 0 ? (
-                            [...milestones]
-                                .sort((a, b) => a.orderIndex - b.orderIndex)
-                                .map(milestone => (
-                                    <MilestoneEntry key={milestone.id} milestone={milestone} />
-                                ))
+                        {sortedMilestones.length > 0 ? (
+                            sortedMilestones.map(milestone => (
+                                <MilestoneEntry
+                                    key={milestone.id}
+                                    milestone={milestone}
+                                    isActive={milestone.id === activeMilestone?.id}
+                                />
+                            ))
                         ) : (<p>No milestones found for this project.</p>)}
                     </div>
                 </div>

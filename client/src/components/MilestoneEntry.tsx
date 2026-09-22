@@ -1,32 +1,47 @@
 import type { Milestone } from "../pages/Projects"
 import { Lock, Calendar, Edit } from "lucide-react"
+import StatusTag from "./StatusTag"
+import {
+    getMilestoneTag,
+    isMilestoneEditable,
+    getMilestoneBorderVariant,
+    formatMilestoneDeadline,
+    formatMilestoneBudget
+} from "../utils/ProjectStatus"
 
 interface MilestoneProps {
     milestone: Milestone
-    showEditOptions?: boolean
+    isActive?: boolean
 }
 
-export default function MilestoneEntry({milestone, showEditOptions=false}: MilestoneProps) {
+export default function MilestoneEntry({ milestone, isActive = false }: MilestoneProps) {
+
+    const { label, variant } = getMilestoneTag(milestone.status)
+    const editable = isMilestoneEditable(milestone.status)
+    const borderVariant = getMilestoneBorderVariant(milestone, isActive)
+    const formattedDeadline = formatMilestoneDeadline(milestone.deadline)
+    const formattedBudget = formatMilestoneBudget(milestone.budget)
+
     return (
-    <div className="milestoneHolder">
+    <div className={`milestoneHolder${borderVariant !== "none" ? ` milestoneHolder--${borderVariant}` : ""}`}>
         <div className="milestoneHeaderRow">
             <h4>{milestone.title}</h4>
-            <p>status</p>
-            {!showEditOptions && (<Lock />)}
+            <StatusTag label={label} variant={variant} />
+            {!editable && (<Lock />)}
         </div>
         <div className="milestoneDateAndBudget">
-        {milestone.deadline !== null && (
+        {formattedDeadline && (
             <div className="milestoneDate">
                 <Calendar />
-                <span>{milestone.deadline}</span>
+                <span>{formattedDeadline}</span>
             </div>)
         }
-        {milestone.budget !== null && (<span>{milestone.budget}</span>)}
+        {formattedBudget && (<span>{formattedBudget}</span>)}
         </div>
         <hr/>
         <div className="milestoneEditArea">
             <Edit />
-            <span>{showEditOptions ? 'Edit' : 'Locked'}</span>
+            <span>{editable ? 'Edit' : 'Locked'}</span>
         </div>
     </div>
     )

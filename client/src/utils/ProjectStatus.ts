@@ -23,9 +23,72 @@ export function getProjectTag(status: ProjectStatusValue) {
 	return PROJECT_TAGS[status]
 }
 
-// active milestone is the first in order that doesnt have "active" as status.
-function getActiveMilestone(project: Project): Milestone | undefined {
-	return project.milestones.find(m => m.status !== "APPROVED")
+// active milestone is the first in order (sorted by orderIndex) that isn't approved yet.
+export function getActiveMilestone(milestones: Milestone[]): Milestone | undefined {
+	return [...milestones]
+		.sort((a, b) => a.orderIndex - b.orderIndex)
+		.find(m => m.status !== "APPROVED")
+}
+
+const MILESTONE_TAGS: Record<Milestone["status"], { label: string, variant: TagVariant }> = {
+	NOT_STARTED: { label: "Pending", variant: "neutral" },
+	CURRENTLY_WORKED_ON: { label: "In progress", variant: "neutral" },
+	AWAITING_APPROVAL: { label: "Awaiting approval", variant: "warning" },
+	APPROVED: { label: "Approved", variant: "success" }
+}
+
+export function getMilestoneTag(status: Milestone["status"]) {
+	return MILESTONE_TAGS[status]
+}
+
+// editable while it hasn't been sent off for approval yet
+export function isMilestoneEditable(status: Milestone["status"]): boolean {
+	return status === "NOT_STARTED" || status === "CURRENTLY_WORKED_ON"
+}
+
+export type MilestoneBorderVariant = "green" | "red" | "black" | "yellow" | "none"
+
+export function getMilestoneBorderVariant(milestone: Milestone, isActive: boolean): MilestoneBorderVariant {
+	if (!isActive) {
+		return "none"
+	}
+
+	if (milestone.status === "AWAITING_APPROVAL") {
+		return "yellow"
+	}
+
+	if (!milestone.deadline) {
+		return "green"
+	}
+
+	const diffMs = new Date(milestone.deadline).getTime() - Date.now()
+	const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+	if (days < 0 && milestone.status === "CURRENTLY_WORKED_ON") {
+		return "black"
+	}
+
+	return days < 7 ? "red" : "green"
+}
+
+export function formatMilestoneDeadline(deadline: string | null): string | null {
+	if (!deadline) {
+		return null
+	}
+
+	return new Date(deadline).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric"
+	})
+}
+
+export function formatMilestoneBudget(budget: number | null): string | null {
+	if (budget === null) {
+		return null
+	}
+
+	return `$${budget.toLocaleString("en-US")}`
 }
 
 export function getDeadlineText(deadline?: string | null): { text: string, deadlineDay:string, isUrgent: boolean } {
@@ -75,8 +138,7 @@ export function getProjectDisplayState(project: Project): ProjectDisplayState {
 		return { ...base, tag: "Awaiting approval", tagVariant: "warning" }
 	}
 
-	// for project status being "IN_PROGRESS"
-	const activeMilestone = getActiveMilestone(project)
+	const activeMilestone = getActiveMilestone(project.milestones)
 
 	if (!activeMilestone) {
 		return { ...base, tag: "Completed", tagVariant: "success" }
