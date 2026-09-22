@@ -1,6 +1,8 @@
 import type { Milestone } from "../pages/Projects"
 import { Lock, Calendar, Edit } from "lucide-react"
 import StatusTag from "./StatusTag"
+import { useAuth } from "../context/AuthContext"
+
 import {
     getMilestoneTag,
     isMilestoneEditable,
@@ -11,11 +13,15 @@ import {
 
 interface MilestoneProps {
     milestone: Milestone
-    isActive?: boolean
+    isActive: boolean
+    onApprove: (milestoneId: string) => void
 }
 
-export default function MilestoneEntry({ milestone, isActive = false }: MilestoneProps) {
 
+
+export default function MilestoneEntry({ milestone, isActive, onApprove }: MilestoneProps) {
+
+    const { user } = useAuth()
     const { label, variant } = getMilestoneTag(milestone.status)
     const editable = isMilestoneEditable(milestone.status)
     const borderVariant = getMilestoneBorderVariant(milestone, isActive)
@@ -40,8 +46,17 @@ export default function MilestoneEntry({ milestone, isActive = false }: Mileston
         </div>
         <hr/>
         <div className="milestoneEditArea">
-            <Edit />
-            <span>{editable ? 'Edit' : 'Locked'}</span>
+            {user?.role === 'admin' && (
+            <>
+                <Edit />
+                <span>{editable ? 'Edit' : 'Locked'}</span>
+            </>)}
+
+            {milestone.status === 'AWAITING_APPROVAL' && user?.role === 'client' && (
+            <button className="newButton" onClick={() => onApprove(milestone.id)}>
+                Approve milestone
+            </button>
+            )}
         </div>
     </div>
     )

@@ -31,9 +31,9 @@ export function getActiveMilestone(milestones: Milestone[]): Milestone | undefin
 }
 
 const MILESTONE_TAGS: Record<Milestone["status"], { label: string, variant: TagVariant }> = {
-	NOT_STARTED: { label: "Pending", variant: "neutral" },
-	CURRENTLY_WORKED_ON: { label: "In progress", variant: "neutral" },
-	AWAITING_APPROVAL: { label: "Awaiting approval", variant: "warning" },
+	NOT_STARTED: { label: "Not Started", variant: "neutral" },
+	CURRENTLY_WORKED_ON: { label: "In Progress", variant: "neutral" },
+	AWAITING_APPROVAL: { label: "Awaiting Approval", variant: "warning" },
 	APPROVED: { label: "Approved", variant: "success" }
 }
 

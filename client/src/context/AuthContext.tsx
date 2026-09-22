@@ -42,23 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		refreshUser()
 	}, [])
 
-	useEffect(() => {
-		async function loadUser() {
-			try {
-				const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-					credentials: 'include'
-				})
-				const data = await res.json()
-				setUser(res.ok ? data.user : null)
-			} catch {
-				setUser(null)
-			} finally {
-				setIsLoading(false)
-			}
-		}
-		loadUser()
-	}, [])
-	
 
 	return (
 		<AuthContext.Provider value={{ user, isLoading, setUser, refreshUser }}>

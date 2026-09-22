@@ -174,8 +174,6 @@ export async function approveMilestone(req: Request, res: Response) {
 
     const id = String(req.params.id)
     const clientId = req.user.id
-    
-    const { status } = req.body
 
 
     try {

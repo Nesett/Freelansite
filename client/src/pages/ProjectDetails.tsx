@@ -115,9 +115,9 @@ export default function ProjectDetails() {
                 throw new Error("Failed to create milestone.")
             }
 
-            const successData = await res.json()
+            const data = await res.json()
 
-			setMilestones(prev => [...prev, successData.newMilestone])
+			setMilestones(prev => [...prev, data.newMilestone])
 
             setShowAddMilestone(prev => !prev)
 
@@ -129,6 +129,35 @@ export default function ProjectDetails() {
             }
         }
     }
+
+    async function approveMilestone( milestoneId: string) {
+
+        try {
+            const res = await fetch(`/api/milestones/${milestoneId}/approve`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to create milestone.")
+            }
+
+            const data = await res.json()
+
+        setMilestones(prev =>
+            prev.map(m => m.id === milestoneId ? data.updatedMilestone : m)
+        )
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while deleting project.")
+            }
+        }
+    }
+
 
     function showProjectOptions() {
         setEditOptions(prev => !prev)
@@ -229,6 +258,7 @@ export default function ProjectDetails() {
                                     key={milestone.id}
                                     milestone={milestone}
                                     isActive={milestone.id === activeMilestone?.id}
+                                    onApprove={approveMilestone}
                                 />
                             ))
                         ) : (<p>No milestones found for this project.</p>)}
