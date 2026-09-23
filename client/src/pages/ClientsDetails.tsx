@@ -191,7 +191,6 @@ export default function ClientsDetails() {
                                     id='budget' 
                                     name='budget' 
                                     type='number' 
-                                    value={projectBudget}
                                     onChange={(e) => setProjectBudget(e.target.value ? Number(e.target.value) : "")}
                                 />
 							<label htmlFor='deadline'>Deadline</label>

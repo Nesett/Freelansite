@@ -1,16 +1,14 @@
 import { Router } from "express";
 import { createProject, getAllProjects, getProject, updateProject, deactivateProject } from "../controllers/projectController.js"
-import { requireAuth } from '../middleware/authMiddleware.js'
+import { requireAuth, requireAnyAuth } from '../middleware/authMiddleware.js'
 
 const router = Router()
 
-router.use(requireAuth)
-
-router.post("/", createProject)
-router.get("/", getAllProjects)
-router.get("/:id", getProject)
-router.put("/:id", updateProject)
-router.delete("/:id", deactivateProject)
+router.post("/", requireAuth, createProject)
+router.get("/", requireAnyAuth, getAllProjects)
+router.get("/:id", requireAnyAuth, getProject)
+router.put("/:id", requireAuth, updateProject)
+router.delete("/:id", requireAuth, deactivateProject)
 
 
 export default router

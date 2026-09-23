@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
-import type { Project } from "./Projects"
+import type { Project, Milestone } from "./Projects"
 import { Plus, EllipsisVertical } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
-import { getProjectTag } from "../utils/ProjectStatus"
+import { getProjectTag, getActiveMilestone, countProgressPercent } from "../utils/ProjectStatus"
+import MilestoneEntry from "../components/MilestoneEntry"
 
 
 
@@ -18,21 +19,35 @@ export default function ProjectDetails() {
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
 	const [loading, setLoading] = useState<boolean>(true)
 	const [errorMessage, setErrorMessage] = useState<string>("")
+    const [milestones, setMilestones] = useState<Milestone[]>([])
+    const [showAddMilestones, setShowAddMilestone] = useState<boolean>(false)
+    const [ milestoneTitle, setMilestoneTitle ] = useState<string>("")
+    const [ milestoneDescription, setMilestoneDescription] = useState<string>("")
+    const [ milestoneBudget, setMilestoneBudget ] = useState<number | "">("")
+    const [ milestoneDeadline, setMilestoneDeadline ] = useState<string>("")
     const navigate = useNavigate()
 
 	useEffect(() => {
-		async function fetchProjectDetails() {
-			try {
-				const res = await fetch(`/api/projects/${id}`, {
-					credentials: "include"
-				})
+        let isFinished = true
 
-				if (!res.ok) {
-					throw new Error("Failed to fetch project")
+		async function fetchProjectDetails() {
+            
+			try {
+				const [projectsRes, milestonesRes] = await Promise.all([
+					fetch(`/api/projects/${id}`, { credentials: 'include' }),
+					fetch(`/api/milestones?projectId=${id}`, { credentials: 'include' })
+				])
+				if (!milestonesRes.ok || !projectsRes.ok) {
+					throw new Error("Request failed.")
 				}
 
-				const data = await res.json()
-				setProject(data)
+				const milestonesJson = await milestonesRes.json()
+				const projectsJson = await projectsRes.json()
+
+				if (isFinished) {
+					setMilestones(milestonesJson)
+					setProject(projectsJson)
+				}
 
 			} catch (err) {
 				if (err instanceof Error) {
@@ -41,11 +56,18 @@ export default function ProjectDetails() {
 					setErrorMessage("An unexpected error occurred")
 				}
 			} finally {
-				setLoading(false)
+				if (isFinished) {
+					setLoading(false)
+				}
 			}
 		}
 
 		fetchProjectDetails()
+
+		return () => {
+			isFinished = false
+		}
+
 	}, [id])
 
 
@@ -71,6 +93,72 @@ export default function ProjectDetails() {
         }
     }
 
+    async function handleAddNewMilestone(e: React.FormEvent) {
+        e.preventDefault()
+
+        try {
+            const res = await fetch(`/api/milestones`, {
+                method: "POST",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    projectId: id,
+					title: milestoneTitle,
+					description: milestoneDescription,
+					budget: milestoneBudget,
+					deadline: milestoneDeadline,
+                    orderIndex: milestones.length
+                })
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to create milestone.")
+            }
+
+            const data = await res.json()
+
+			setMilestones(prev => [...prev, data.newMilestone])
+
+            setShowAddMilestone(prev => !prev)
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while deleting project.")
+            }
+        }
+    }
+
+    async function approveMilestone( milestoneId: string) {
+
+        try {
+            const res = await fetch(`/api/milestones/${milestoneId}/approve`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to create milestone.")
+            }
+
+            const data = await res.json()
+
+        setMilestones(prev =>
+            prev.map(m => m.id === milestoneId ? data.approvedMilestone : m)
+        )
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while deleting project.")
+            }
+        }
+    }
+
+
     function showProjectOptions() {
         setEditOptions(prev => !prev)
     }
@@ -84,9 +172,47 @@ export default function ProjectDetails() {
 	}
 
     const { label, variant } = getProjectTag(project.status)
+    const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
+    const activeMilestone = getActiveMilestone(sortedMilestones)
+    const currentProgress = countProgressPercent(milestones)
 
 	return (
 		<div className="pageContent">
+            {showAddMilestones && (
+            <div className="addMilestonesForm">
+                <form onSubmit={handleAddNewMilestone}>
+                    <label htmlFor='title'>Title</label>
+                    <input 
+                        id='title' 
+                        name='title' 
+                        type='textarea'
+                        placeholder="Dashboard"
+                        onChange={(e) => setMilestoneTitle(e.target.value)}
+                        required
+                    />
+                    <label htmlFor='description'>Description</label>
+                    <textarea 
+                        id='description' 
+                        name='description' 
+                        onChange={(e) => setMilestoneDescription(e.target.value)}
+                    ></textarea>
+                    <label htmlFor='budget'>Budget</label>
+                        <input 
+                            id='budget' 
+                            name='budget' 
+                            type='number' 
+                            onChange={(e) => setMilestoneBudget(e.target.value ? Number(e.target.value) : "")}
+                        />
+                    <label htmlFor='deadline'>Deadline</label>
+                    <input 
+                        id='deadline' 
+                        name='deadline' 
+                        type='date' 
+                        onChange={(e) => setMilestoneDeadline(e.target.value)}
+                    />
+                    <button> Add new milestone </button>
+                </form>
+            </div>)}
             {areYouSure && (
                 <AreYouSureModal 
                     itemType="project"
@@ -100,7 +226,7 @@ export default function ProjectDetails() {
                 <div>
                     <p>{project.client.companyName ? project.client.companyName : project.client.name}</p>
                     <h1>{project.title}</h1>
-                    <StatusBar percent={project.progress}/>
+                    <StatusBar percent={currentProgress}/>
                 </div>
                 <div>
                     <div className="projectOptionsWrapper" ref={projectOptionsRef}>
@@ -121,16 +247,23 @@ export default function ProjectDetails() {
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
-                        <button className="newButton">
+                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton">
                             <Plus />
                             Add Milestone
                         </button>
                     </div>
                     <div className="projectMilestones">
-                        
-
+                        {sortedMilestones.length > 0 ? (
+                            sortedMilestones.map(milestone => (
+                                <MilestoneEntry
+                                    key={milestone.id}
+                                    milestone={milestone}
+                                    isActive={milestone.id === activeMilestone?.id}
+                                    onApprove={approveMilestone}
+                                />
+                            ))
+                        ) : (<p>No milestones found for this project.</p>)}
                     </div>
-                    
                 </div>
                 <div className="projectInfo">
                     <div className="summaryAndInfo"></div>

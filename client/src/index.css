@@ -137,16 +137,16 @@ h1, h2, h3, h4, p, a {
 .signPagesMain {
 	display: grid;
 	grid-template-columns: 55% 45%;
-	grid-template-rows: auto 1fr;
-	grid-template-areas:
-		"brand side"
-		"form  side";
+	grid-template-rows: 1fr;
+	grid-template-areas: "main side";
 	min-height: 100vh;
 	background-color: var(--bg-color);
 }
 
 .brandName {
-	grid-area: brand;
+	grid-area: main;
+	align-self: start;
+	justify-self: start;
 	padding: 40px 48px;
 }
 
@@ -171,13 +171,48 @@ h1, h2, h3, h4, p, a {
 	object-fit: cover;
 	object-position: center 45%;
 }
-
-.signInContainer {
-	grid-area: form;
-	background-color: var(--elements-color);
+/* ---- Admin / Client tabs ---- */
+.signInWrapper {
+	grid-area: main;
 	align-self: center;
 	justify-self: center;
+	min-width: 68%;
+	display: flex;
+	flex-direction: column;
+}
+ 
+.roleTabs {
+	display: flex;
+}
+ 
+.roleTab {
+	flex: 1;
+	padding: 16px;
+	font-size: 1.25rem;
+	font-weight: 700;
+	cursor: pointer;
+	background-color: var(--input-color);
+	color: var(--muted-text-color);
 	border: 1px solid var(--border-color);
+	border-bottom: none;
+	border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.roleTab--active {
+	background-color: var(--elements-color);
+	color: var(--text-color);
+}
+
+.errorMessage {
+	color: #c0392b;
+	font-size: 0.875rem;
+	text-align: center;
+}
+
+.signInContainer {
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-top: none;
 	border-radius: var(--radius-md);
 	display: flex;
 	flex-direction: column;
@@ -185,7 +220,8 @@ h1, h2, h3, h4, p, a {
 	padding: 40px;
     min-height: 550px;
     max-height: 550px;
-    min-width: 68%;
+	border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 
 .signInContainer h2 {
@@ -837,6 +873,84 @@ hr {
 	color: #A9752A;
 }
 
+.milestoneHolder {
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	padding: 20px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.milestoneHeaderRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.milestoneHeaderRow h4 {
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.milestoneHeaderRow svg {
+	width: 16px;
+	height: 16px;
+	color: var(--muted-text-color);
+}
+
+.milestoneDateAndBudget {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	color: var(--muted-text-color);
+	font-size: 0.9rem;
+}
+
+.milestoneDate {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.milestoneDate svg {
+	width: 16px;
+	height: 16px;
+}
+
+.milestoneEditArea {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	font-size: 0.85rem;
+	color: var(--muted-text-color);
+}
+
+.milestoneEditArea svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* border colors for the active (in-progress) milestone, per its deadline/status */
+.milestoneHolder--green {
+	border-color: #2F9E58;
+}
+
+.milestoneHolder--red {
+	border-color: #D64545;
+}
+
+.milestoneHolder--black {
+	border-color: #1D1D1D;
+}
+
+.milestoneHolder--yellow {
+	border-color: #D9A62E;
+}
+
 .statusBarHolder {
 	display: flex;
 	align-items: center;
@@ -1290,7 +1404,7 @@ hr {
 		grid-template-rows: auto auto;
 		grid-template-areas:
 			"side"
-			"form";
+			"main";
 	}
 
 	.signInSideImg {
@@ -1316,14 +1430,30 @@ hr {
 		font-size: 1.75rem;
 	}
 
-	.signInContainer {
+	.signInWrapper {
 		position: relative;
 		width: 88%;
-		height: auto;
+		min-width: 0;
 		margin: -28px auto 40px;
+		align-self: auto;
+		justify-self: center;
+		z-index: 3;
+	}
+
+	.roleTab {
+		padding: 14px 8px;
+		font-size: 1.1rem;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	}
+
+	.signInContainer {
+		height: auto;
+		min-height: 0;
+		max-height: none;
 		padding: 32px 24px;
 		border-radius: var(--radius-sm);
-		z-index: 3;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
 	}
 }
 

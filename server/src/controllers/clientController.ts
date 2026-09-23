@@ -239,6 +239,8 @@ export async function deactivateClient(req: Request, res: Response) {
 
 }
 
+
+
 export async function getProjectsByClient(req: Request, res: Response) {
 	const adminId = req.user.id
 	const clientId = String(req.params.id)
@@ -259,6 +261,11 @@ export async function getProjectsByClient(req: Request, res: Response) {
                 milestones: {
                     orderBy: { orderIndex: 'asc' },
                     select: { id: true, status: true, deadline: true, orderIndex: true, budget: true }
+                },
+                admin: {
+                    select: {
+                        name: true, businessName: true
+                    }
                 }
             }
 		})
@@ -274,6 +281,8 @@ export async function getProjectsByClient(req: Request, res: Response) {
 		return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })
 	}
 }
+
+
 
 export async function setClientPassword(req: Request, res: Response) {
     
@@ -298,8 +307,6 @@ export async function setClientPassword(req: Request, res: Response) {
 	if (isExpired) {
 		return res.status(400).json({ error: 'This invite link has expired. Please ask for a new one.' })
 	}
-
-
 
     const salt = 10
 

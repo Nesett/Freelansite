@@ -2,14 +2,10 @@ import { Request, Response } from 'express'
 import db from '../db/db.js'
 
 export async function createMilestone(req: Request, res: Response) {
-
-    const id = String(req.params.id)
-
-    const { clientId, title, description, budget, deadline, status, orderIndex } = req.body
-
+    const { projectId, title, description, budget, deadline, status, orderIndex } = req.body
     const adminId = req.user.id
 
-    if (!id || !title || !orderIndex) {
+    if (!projectId || !title || orderIndex===undefined) {
         return res.status(400).json({message:"Enter all necessary information."})
     } 
 
@@ -17,9 +13,8 @@ export async function createMilestone(req: Request, res: Response) {
 
         const existingProject = await db.project.findFirst({
             where: {
-                id: id,
+                id: projectId,
                 adminId: adminId,
-                clientId: clientId,
                 isActive: true
             }
         })
@@ -28,22 +23,19 @@ export async function createMilestone(req: Request, res: Response) {
             return res.status(404).json({error: "Project does not exist."})
         } 
 
-
         const newMilestone = await db.milestone.create({
-                data: {
-                    projectId: id,
-                    title,
-                    description,
-                    budget,
-                    status: status,
-                    deadline,
-                    orderIndex
-                }
-            })
-
+            data: {
+                projectId,
+                title,
+                description: description || undefined,
+                budget: budget ? Number(budget) : undefined,
+                status: status || undefined,
+                deadline: deadline ? new Date(deadline) : undefined,
+                orderIndex
+            }
+        })
 
         return res.status(201).json({newMilestone})
-
 
     } catch(err) {
         console.log(err)
@@ -51,17 +43,19 @@ export async function createMilestone(req: Request, res: Response) {
     }
 }
 
-
 export async function getAllMilestones(req: Request, res: Response) {
-    
-    const projectId = String(req.params.id)
-    const userId = req.user.id
-	const userRole = req.user.role
-    
+
+    const projectId = String(req.query.projectId)
+
+    if (!req.query.projectId) {
+        return res.status(400).json({error: "projectId is required."})
+    }
+
+    const typeOfUser = "adminId" in req.user
+        ? { clientId: req.user.id }
+        : { adminId: req.user.id }
+
     try {
-
-        const typeOfUser = userRole==="admin" ? {adminId: userId} : {clientId: userId} 
-
         const allMilestones = await db.milestone.findMany({
             where: {
                 projectId,
@@ -72,7 +66,6 @@ export async function getAllMilestones(req: Request, res: Response) {
                 }
             }
         })
-        
 
         return res.status(200).json(allMilestones)
 
@@ -81,7 +74,6 @@ export async function getAllMilestones(req: Request, res: Response) {
         return res.status(500).json({error: "Could not fetch all milestones."})
     }
 }
-
 
 export async function updateMilestone(req: Request, res: Response) {
 
@@ -182,8 +174,6 @@ export async function approveMilestone(req: Request, res: Response) {
 
     const id = String(req.params.id)
     const clientId = req.user.id
-    
-    const { status } = req.body
 
 
     try {
