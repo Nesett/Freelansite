@@ -29,12 +29,12 @@ export function App() {
 							<Route path="/projects" element={<Projects />} />
 							<Route path="/projects/:id" element={<ProjectDetails />} />
 							<Route path="/invoices" element={<Invoices />} />
+							<Route path="/settings" element={<Settings />} />
 
 							<Route element={<ProtectedRoute allowedRoles={['admin']} />}>
 								<Route path="/clients" element={<Clients />} />
 								<Route path="/clients/:id" element={<ClientsDetails />} />
 								<Route path="/team" element={<Team />} />
-								<Route path="/settings" element={<Settings />} />
 							</Route>
 						</Route>
 					</Route>

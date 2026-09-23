@@ -21,6 +21,12 @@ enum MilestoneStatus {
   APPROVED
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+}
+
 model Admin {
   id           String   @id @default(uuid())
   name         String
@@ -28,26 +34,28 @@ model Admin {
   password     String
   businessName String?  @map("business_name")
   createdAt    DateTime @default(now()) @map("created_at")
+  address      String?
 
-  clients Client[]
+  clients  Client[]
   projects Project[]
 
   @@map("admins")
 }
 
 model Client {
-  id          String   @id @default(uuid())
-  adminId     String   @map("admin_id")
-  name        String?
-  email       String   @unique
-  phone       String?
-  companyName String?
-  password    String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  lastActive  DateTime @default(now()) @map("last_active")
-  isActive    Boolean  @default(true) @map("is_active")
-  inviteToken         String?   @unique
-	inviteTokenExpires  DateTime?
+  id                 String    @id @default(uuid())
+  adminId            String    @map("admin_id")
+  name               String?
+  email              String    @unique
+  phone              String?
+  companyName        String?
+  password           String?
+  address            String?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  lastActive         DateTime  @default(now()) @map("last_active")
+  isActive           Boolean   @default(true) @map("is_active")
+  inviteToken        String?   @unique
+  inviteTokenExpires DateTime?
 
   admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
   projects Project[]
@@ -67,25 +75,56 @@ model Project {
   isActive    Boolean       @default(true) @map("is_active")
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  admin    Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  admin      Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
   milestones Milestone[]
+  invoices   Invoice[]
 
   @@map("projects")
 }
 
 model Milestone {
-  id          String          @id @default(uuid())
-  projectId   String          @map("project_id")
-  title       String
-  description String?
-  budget      Int?
-  status      MilestoneStatus @default(NOT_STARTED)
-  deadline    DateTime?
-  orderIndex  Int             @map("order_index")
-  isActive    Boolean         @default(true) @map("is_active")
+  id               String          @id @default(uuid())
+  projectId        String          @map("project_id")
+  title            String
+  description      String?
+  budget           Float?
+  status           MilestoneStatus @default(NOT_STARTED)
+  deadline         DateTime?
+  orderIndex       Int             @map("order_index")
+  isActive         Boolean         @default(true) @map("is_active")
+  generatedInvoice Boolean         @default(false) @map("generated_invoice")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("milestones")
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  projectId     String        @map("project_id")
+  status        InvoiceStatus @default(UNPAID)
+  deadline      DateTime
+  issueDate     DateTime      @default(now())
+  adminName     String
+  adminAddress  String
+  clientName    String
+  clientAddress String
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items   InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String  @map("invoice_id")
+  title       String
+  description String?
+  amount      Float
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoiceItems")
 }
