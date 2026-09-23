@@ -6,7 +6,7 @@ import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
-import { getProjectTag, getActiveMilestone } from "../utils/ProjectStatus"
+import { getProjectTag, getActiveMilestone, countProgressPercent } from "../utils/ProjectStatus"
 import MilestoneEntry from "../components/MilestoneEntry"
 
 
@@ -146,7 +146,7 @@ export default function ProjectDetails() {
             const data = await res.json()
 
         setMilestones(prev =>
-            prev.map(m => m.id === milestoneId ? data.updatedMilestone : m)
+            prev.map(m => m.id === milestoneId ? data.approvedMilestone : m)
         )
 
         } catch (err) {
@@ -174,6 +174,7 @@ export default function ProjectDetails() {
     const { label, variant } = getProjectTag(project.status)
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
     const activeMilestone = getActiveMilestone(sortedMilestones)
+    const currentProgress = countProgressPercent(milestones)
 
 	return (
 		<div className="pageContent">
@@ -225,7 +226,7 @@ export default function ProjectDetails() {
                 <div>
                     <p>{project.client.companyName ? project.client.companyName : project.client.name}</p>
                     <h1>{project.title}</h1>
-                    <StatusBar percent={project.progress}/>
+                    <StatusBar percent={currentProgress}/>
                 </div>
                 <div>
                     <div className="projectOptionsWrapper" ref={projectOptionsRef}>

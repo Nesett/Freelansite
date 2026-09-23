@@ -19,6 +19,23 @@ const PROJECT_TAGS: Record<ProjectStatusValue, { label: string, variant: TagVari
 	ON_HOLD: { label: "On hold", variant: "hold" }
 }
 
+export const MILESTONE_PROGRESS: Record<string, number> = {
+	NOT_STARTED: 0,
+	CURRENTLY_WORKED_ON: 10,
+	AWAITING_APPROVAL: 80,
+	APPROVED: 100
+}
+
+export function countProgressPercent(milestones: { status: string }[]): number {
+	if (milestones.length === 0) {
+		return 0
+	}
+
+	const sum = milestones.reduce((amount, currentMilestone) => amount + (MILESTONE_PROGRESS[currentMilestone.status] || 0), 0)
+
+	return Math.round(sum / milestones.length)
+}
+
 export function getProjectTag(status: ProjectStatusValue) {
 	return PROJECT_TAGS[status]
 }
