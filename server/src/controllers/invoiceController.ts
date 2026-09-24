@@ -98,8 +98,7 @@ export async function getAllInvoices(req: Request, res: Response) {
     try {
         const invoices = await db.invoice.findMany({
             where: {
-                projectId,
-                ...projectAccessFilter(req)
+                projectId
             },
             orderBy: { issueDate: 'desc' },
             include: {
@@ -125,46 +124,37 @@ export async function getAllInvoices(req: Request, res: Response) {
 
 
 export async function getInvoice(req: Request, res: Response) {
-	const projectId = String(req.params.id)
+
+    const invoiceId = String(req.params.id)
 
 	try {
-		const project = await db.project.findFirst({
-			where: {
-				id: projectId,
-				...projectAccessFilter(req)
-			},
-			include: {
-				client: {
-					select: {
-						id: true,
-						name: true,
-						companyName: true
-					}
-				},
-				admin: {
-					select: {
-						name: true,
-						businessName: true
-					}
-				},
-				milestones: {
-					orderBy: { orderIndex: 'asc' }
-				}
-			}
-		})
+		const invoice = await db.invoice.findFirst({
+            where: {
+                id: invoiceId
+            },
+            orderBy: { issueDate: 'desc' },
+            include: {
+                items: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        amount: true,
+                        quantity: true
+                    }
+                }
+            }
+        })
 
-        if (!project) {
-            return res.status(404).json({ error: "Project not found." })
+        if (!invoice) {
+            return res.status(404).json({ error: "Invoice not found." })
         }
 
-        return res.status(200).json({
-            ...project,
-            progress: countProgressPercent(project.milestones)
-        })
+        return res.status(200).json({invoice})
 
 	} catch(err) {
 		console.log(err)
-		return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
+		return res.status(500).json({ error: `Could not fetch project with id ${invoiceId}.` })
 	}
 }
 
