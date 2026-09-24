@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createProject, getAllProjects, getProject, updateProject, deactivateProject } from "../controllers/projectController.js"
 import { requireAuth, requireAnyAuth } from '../middleware/authMiddleware.js'
+import { createInvoice, getAllInvoices } from "../controllers/invoiceController.js";
 
 const router = Router()
 
@@ -9,6 +10,8 @@ router.get("/", requireAnyAuth, getAllProjects)
 router.get("/:id", requireAnyAuth, getProject)
 router.put("/:id", requireAuth, updateProject)
 router.delete("/:id", requireAuth, deactivateProject)
+router.post("/:id/invoices", requireAuth, createInvoice)
+router.get("/:id/invoices", requireAnyAuth, getAllInvoices)
 
 
 export default router

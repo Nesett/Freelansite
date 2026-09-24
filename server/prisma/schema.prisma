@@ -106,6 +106,7 @@ model Invoice {
   status        InvoiceStatus @default(UNPAID)
   deadline      DateTime
   issueDate     DateTime      @default(now())
+  total         Float
   adminName     String
   adminAddress  String
   clientName    String
@@ -123,6 +124,7 @@ model InvoiceItem {
   title       String
   description String?
   amount      Float
+  quantity    Float   @default(1)
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
