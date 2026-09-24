@@ -92,47 +92,34 @@ export async function createInvoice(req: Request, res: Response) {
 
 
 export async function getAllInvoices(req: Request, res: Response) {
+
+    const projectId = String(req.params.id)
+
     try {
-        const allProjects = await db.project.findMany({
-            where: projectAccessFilter(req),
-            orderBy: { createdAt: 'desc' },
+        const invoices = await db.invoice.findMany({
+            where: {
+                projectId,
+                ...projectAccessFilter(req)
+            },
+            orderBy: { issueDate: 'desc' },
             include: {
-                client: {
+                items: {
                     select: {
                         id: true,
-                        name: true,
-                        companyName: true
-                    }
-                },
-                admin: {
-                    select: {
-                        name: true,
-                        businessName: true
-                    }
-                },
-                milestones: {
-                    orderBy: { orderIndex: 'asc' },
-                    select: {
-                        id: true,
-                        status: true,
-                        deadline: true,
-                        orderIndex: true,
-                        budget: true
+                        title: true,
+                        description: true,
+                        amount: true,
+                        quantity: true
                     }
                 }
             }
         })
 
-        const projectsWithProgress = allProjects.map(project => ({
-            ...project,
-            progress: countProgressPercent(project.milestones)
-        }))
-
-        return res.status(200).json(projectsWithProgress)
+        return res.status(200).json(invoices)
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: "Could not fetch all projects."})
+        return res.status(500).json({error: "Could not fetch all invoices."})
     }
 }
 
