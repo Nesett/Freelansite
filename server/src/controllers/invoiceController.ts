@@ -201,41 +201,46 @@ export async function updateInvoice(req: Request, res: Response) {
 
 export async function deactivateInvoice(req: Request, res: Response) {
 
-    const adminId = req.user.id
-    const projectId = String(req.params.id)
+    const invoiceId = String(req.params.id)
+
+    const userRole = req.userRole
+
+	const existingDeleteData = userRole === 'admin' 
+		? { deletedByAdmin: false } 
+		: { deletedByClient: false }
+
+	const updateDeleteData = userRole === 'admin' 
+		? { deletedByAdmin: true } 
+		: { deletedByClient: true }
 
     try {
 
-        const existingProject = await db.project.findFirst({
+        const existingInvoice = await db.invoice.findFirst({
             where: {
-                id: projectId,
-                isActive: true,
-                client: {
-                    adminId: adminId,
-                    isActive: true
-                }
+                id: invoiceId,
+                ...existingDeleteData
             }
         })
 
-        if (!existingProject) {
-            return res.status(404).json({error: "Project does not exist."})
+        if (!existingInvoice) {
+            return res.status(404).json({error: "Invoice does not exist."})
         } 
 
-        const deactivateProject = await db.project.update({
+        const deactivatedInvoice = await db.project.update({
             where: {
-                id: projectId,
-				isActive: true
+                id: invoiceId,
+				...existingDeleteData
             },
             data: {
-                isActive: false
+                ...updateDeleteData
             }
         })
 
-        return res.status(200).json({deactivateProject})
+        return res.status(200).json({deactivatedInvoice})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not deactivate project with id ${projectId}.`})
+        return res.status(500).json({error: `Could not deactivate invoice with id ${invoiceId}.`})
     }
 
 }
