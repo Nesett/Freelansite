@@ -1,26 +1,12 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import { InvoiceStatus } from '@prisma/client'
 
 interface invoiceItems {
     title: string
     description?: string
     amount: number
     quantity: number
-}
-
-function projectAccessFilter(req: Request) {
-	if (req.userRole === 'admin') {
-		return {
-			isActive: true,
-			client: { adminId: req.user.id, isActive: true }
-		}
-	}
-
-	return {
-		isActive: true,
-		clientId: req.user.id,
-		client: { isActive: true }
-	}
 }
 
 
@@ -161,50 +147,53 @@ export async function getInvoice(req: Request, res: Response) {
 export async function updateInvoice(req: Request, res: Response) {
 
 	const adminId = req.user.id
-	const projectId = String(req.params.id)
+	const id = String(req.params.id)
 
-    const {title, description, budget, status, notes} = req.body
+    const {status, deadline, total, adminName, adminAddress, clientName, clientAddress} = req.body
 
-    if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
-        return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
+    if (status !== undefined && [InvoiceStatus.PAID].includes(status)) {
+        return res.status(400).json({error: "This invoice cannot be edited anymore, since it has been paid for."})
     }
 
     try {
 
-        const existingProject = await db.project.findFirst({
+        const existingInvoice = await db.invoice.findFirst({
             where: {
-                id: projectId,
+                id,
                 isActive: true,
-                client: {
+                project: {
                     adminId: adminId,
                     isActive: true
                 }
             }
         })
 
-        if (!existingProject) {
-            return res.status(404).json({error: "Project does not exist."})
+        if (!existingInvoice) {
+            return res.status(404).json({error: "Invoice does not exist."})
         } 
 
-        const updatedProject = await db.project.update({
+        const updatedInvoice = await db.invoice.update({
             where: {
-                id: projectId,
+                id,
                 isActive: true
             },
             data: {
-                title: title !== undefined ? title : existingProject.title,
-				description: description !== undefined ? description : existingProject.description,
-				budget: budget !== undefined ? Number(budget) : existingProject.budget,
-				status: status !== undefined ? status : existingProject.status,
-				notes: notes !== undefined ? notes : existingProject.notes
+                status: status !== undefined ? status : existingInvoice.status,
+				deadline: deadline !== undefined ? deadline : existingInvoice.deadline,
+				total: total !== undefined ? Number(total) : existingInvoice.total,
+				adminName: adminName !== undefined ? adminName : existingInvoice.adminName,
+				adminAddress: adminAddress !== undefined ? adminAddress : existingInvoice.adminAddress,
+				clientName: clientName !== undefined ? clientName : existingInvoice.clientName,
+				clientAddress: clientAddress !== undefined ? clientAddress : existingInvoice.clientAddress,
+
             }
         })
 
-        return res.status(200).json({updatedProject})
+        return res.status(200).json({updatedInvoice})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not update project with id ${projectId}.`})
+        return res.status(500).json({error: `Could not update invoice with id ${id}.`})
     }
 
 }

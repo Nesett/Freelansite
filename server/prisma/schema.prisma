@@ -111,6 +111,7 @@ model Invoice {
   adminAddress  String
   clientName    String
   clientAddress String
+  isActive      Boolean       @default(false) @map("is_active")
 
   project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   items   InvoiceItem[]
