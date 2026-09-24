@@ -9,6 +9,17 @@ interface invoiceItems {
     quantity: number
 }
 
+function deletedFilter(req: Request) {
+	if (req.userRole === 'admin') {
+		return {
+			deletedByAdmin: false
+		}
+	}
+	return {
+		deletedByClient: false 
+	}
+}
+
 
 export async function createInvoice(req: Request, res: Response) {
 
@@ -31,7 +42,7 @@ export async function createInvoice(req: Request, res: Response) {
             where: {
                 id: projectId,
                 adminId: adminId,
-                isActive: true
+                deletedFilter
             }
         })
 
@@ -84,7 +95,8 @@ export async function getAllInvoices(req: Request, res: Response) {
     try {
         const invoices = await db.invoice.findMany({
             where: {
-                projectId
+                projectId,
+                deletedFilter
             },
             orderBy: { issueDate: 'desc' },
             include: {
@@ -116,7 +128,8 @@ export async function getInvoice(req: Request, res: Response) {
 	try {
 		const invoice = await db.invoice.findFirst({
             where: {
-                id: invoiceId
+                id: invoiceId,
+                deletedFilter
             },
             orderBy: { issueDate: 'desc' },
             include: {
@@ -160,7 +173,7 @@ export async function updateInvoice(req: Request, res: Response) {
         const existingInvoice = await db.invoice.findFirst({
             where: {
                 id,
-                isActive: true,
+                deletedFilter,
                 project: {
                     adminId: adminId,
                     isActive: true
@@ -175,7 +188,7 @@ export async function updateInvoice(req: Request, res: Response) {
         const updatedInvoice = await db.invoice.update({
             where: {
                 id,
-                isActive: true
+                deletedFilter
             },
             data: {
                 status: status !== undefined ? status : existingInvoice.status,
@@ -205,10 +218,6 @@ export async function deactivateInvoice(req: Request, res: Response) {
 
     const userRole = req.userRole
 
-	const existingDeleteData = userRole === 'admin' 
-		? { deletedByAdmin: false } 
-		: { deletedByClient: false }
-
 	const updateDeleteData = userRole === 'admin' 
 		? { deletedByAdmin: true } 
 		: { deletedByClient: true }
@@ -218,7 +227,7 @@ export async function deactivateInvoice(req: Request, res: Response) {
         const existingInvoice = await db.invoice.findFirst({
             where: {
                 id: invoiceId,
-                ...existingDeleteData
+                deletedFilter
             }
         })
 
@@ -229,10 +238,10 @@ export async function deactivateInvoice(req: Request, res: Response) {
         const deactivatedInvoice = await db.project.update({
             where: {
                 id: invoiceId,
-				...existingDeleteData
+				deletedFilter
             },
             data: {
-                ...updateDeleteData
+                updateDeleteData
             }
         })
 
