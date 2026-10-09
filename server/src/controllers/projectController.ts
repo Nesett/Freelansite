@@ -2,21 +2,8 @@ import { Request, Response } from 'express'
 import db from '../db/db.js'
 import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
+import { projectAccessFilter } from '../utils/accessByUser.js'
 
-function projectAccessFilter(req: Request) {
-	if (req.userRole === 'admin') {
-		return {
-			isActive: true,
-			client: { adminId: req.user.id, isActive: true }
-		}
-	}
-
-	return {
-		isActive: true,
-		clientId: req.user.id,
-		client: { isActive: true }
-	}
-}
 
 export async function createProject(req: Request, res: Response) {
 
@@ -100,6 +87,7 @@ export async function getAllProjects(req: Request, res: Response) {
                     }
                 },
                 milestones: {
+                    where: { deletedByAdmin: false },
                     orderBy: { orderIndex: 'asc' },
                     select: {
                         id: true,
@@ -150,6 +138,7 @@ export async function getProject(req: Request, res: Response) {
 					}
 				},
 				milestones: {
+                    where: { deletedByAdmin: false },
 					orderBy: { orderIndex: 'asc' }
 				}
 			}
@@ -185,12 +174,7 @@ export async function updateProject(req: Request, res: Response) {
 
         const existingProject = await db.project.findFirst({
             where: {
-                id: projectId,
-                isActive: true,
-                client: {
-                    adminId: adminId,
-                    isActive: true
-                }
+                id: projectId, ...projectAccessFilter(req)
             }
         })
 
@@ -200,8 +184,7 @@ export async function updateProject(req: Request, res: Response) {
 
         const updatedProject = await db.project.update({
             where: {
-                id: projectId,
-                isActive: true
+                id: projectId
             },
             data: {
                 title: title !== undefined ? title : existingProject.title,
@@ -224,19 +207,17 @@ export async function updateProject(req: Request, res: Response) {
 
 export async function deactivateProject(req: Request, res: Response) {
 
-    const adminId = req.user.id
     const projectId = String(req.params.id)
+    const userDelete = req.userRole === 'admin'
+        ? { deletedByAdmin: true }
+        : { deletedByClient: true }
 
     try {
 
         const existingProject = await db.project.findFirst({
             where: {
                 id: projectId,
-                isActive: true,
-                client: {
-                    adminId: adminId,
-                    isActive: true
-                }
+                ...projectAccessFilter(req)
             }
         })
 
@@ -244,21 +225,18 @@ export async function deactivateProject(req: Request, res: Response) {
             return res.status(404).json({error: "Project does not exist."})
         } 
 
-        const deactivateProject = await db.project.update({
+        const deactivatedProject = await db.project.update({
             where: {
-                id: projectId,
-				isActive: true
+                id: projectId
             },
-            data: {
-                isActive: false
-            }
+            data: userDelete
         })
 
-        return res.status(200).json({deactivateProject})
+        return res.status(200).json({deactivatedProject})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not deactivate project with id ${projectId}.`})
+        return res.status(500).json({error: `Could not delete project with id ${projectId}.`})
     }
 
 }

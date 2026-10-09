@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
 import { InvoiceStatus } from '@prisma/client'
+import { deletedFilter, projectAccessFilter } from '../utils/accessByUser.js'
 
 interface invoiceItems {
     title: string
@@ -9,16 +10,6 @@ interface invoiceItems {
     quantity: number
 }
 
-function deletedFilter(req: Request) {
-	if (req.userRole === 'admin') {
-		return {
-			deletedByAdmin: false
-		}
-	}
-	return {
-		deletedByClient: false 
-	}
-}
 
 
 export async function createInvoice(req: Request, res: Response) {
@@ -40,9 +31,9 @@ export async function createInvoice(req: Request, res: Response) {
 
         const existingProject = await db.project.findFirst({
             where: {
-                id: projectId,
-                adminId: adminId,
-                deletedFilter
+                projectId,
+                ...deletedFilter(req),
+                project: projectAccessFilter(req)
             }
         })
 
@@ -128,8 +119,9 @@ export async function getInvoice(req: Request, res: Response) {
 	try {
 		const invoice = await db.invoice.findFirst({
             where: {
-                id: invoiceId,
-                deletedFilter
+                invoiceId,
+                ...deletedFilter(req),
+                project: projectAccessFilter(req)
             },
             orderBy: { issueDate: 'desc' },
             include: {
@@ -173,11 +165,8 @@ export async function updateInvoice(req: Request, res: Response) {
         const existingInvoice = await db.invoice.findFirst({
             where: {
                 id,
-                deletedFilter,
-                project: {
-                    adminId: adminId,
-                    isActive: true
-                }
+                deletedByAdmin: false,
+                project: { adminId, deletedByAdmin: false }
             }
         })
 
@@ -187,8 +176,7 @@ export async function updateInvoice(req: Request, res: Response) {
 
         const updatedInvoice = await db.invoice.update({
             where: {
-                id,
-                deletedFilter
+                id
             },
             data: {
                 status: status !== undefined ? status : existingInvoice.status,
@@ -227,7 +215,8 @@ export async function deactivateInvoice(req: Request, res: Response) {
         const existingInvoice = await db.invoice.findFirst({
             where: {
                 id: invoiceId,
-                deletedFilter
+                ...deletedFilter(req),
+                project: projectAccessFilter(req)
             }
         })
 
@@ -237,8 +226,7 @@ export async function deactivateInvoice(req: Request, res: Response) {
 
         const deactivatedInvoice = await db.project.update({
             where: {
-                id: invoiceId,
-				deletedFilter
+                id: invoiceId
             },
             data: {
                 updateDeleteData

@@ -53,7 +53,8 @@ model Client {
   address            String?
   createdAt          DateTime  @default(now()) @map("created_at")
   lastActive         DateTime  @default(now()) @map("last_active")
-  isActive           Boolean   @default(true) @map("is_active")
+  deletedByAdmin     Boolean   @default(false) @map("deleted_by_admin")
+  deletedByClient    Boolean   @default(false) @map("deleted_by_client")
   inviteToken        String?   @unique
   inviteTokenExpires DateTime?
 
@@ -94,7 +95,6 @@ model Milestone {
   deadline         DateTime?
   orderIndex       Int             @map("order_index")
   deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
-	deletedByClient Boolean       @default(false) @map("deleted_by_client")
   generatedInvoice Boolean         @default(false) @map("generated_invoice")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
