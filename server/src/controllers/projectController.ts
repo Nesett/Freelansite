@@ -271,7 +271,7 @@ export async function createMagicLink(req: Request, res: Response) {
         })
 
         if (exsistingMagicLink && exsistingMagicLink.expiresAt > new Date()) {
-            return res.status(404).json({error: "Magic Link for this project already exists."})
+            return res.status(409).json({error: "Magic Link for this project already exists."})
         }
         if (exsistingMagicLink) {
             await db.magicLink.delete({ 
@@ -291,7 +291,7 @@ export async function createMagicLink(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json({ url:`${process.env.CLIENT_URL}/project/${token}`, expiresAt: link.expiresAt, message:"created Magic Link."})
+        return res.status(200).json({ url:`${process.env.CLIENT_URL}/p/${token}`, expiresAt: link.expiresAt, message:"Created Magic Link."})
 
     } catch(err) {
         console.log(err)
@@ -381,4 +381,3 @@ export async function getMagicLink(req: Request, res: Response) {
         return res.status(500).json({error: `Could not get Magic Link.`})
     }
 }
-//createMagicLink, getMagicLink, deleteMagicLink
