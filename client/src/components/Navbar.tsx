@@ -12,8 +12,8 @@ export default function Navbar() {
 		{ to: '/clients', label: 'Clients', icon: Users },
 		{ to: '/projects', label: 'Projects', icon: FolderKanban },
 		{ to: '/invoices', label: 'Invoices', icon: Receipt },
-		{ to: '/team', label: 'Team', icon: UsersRound },
-		{ to: '/settings', label: 'Settings', icon: Settings }
+		//{ to: '/team', label: 'Team', icon: UsersRound },
+		//{ to: '/settings', label: 'Settings', icon: Settings }
 	]
 
 	const clientLinks = [

@@ -65,22 +65,23 @@ model Client {
 }
 
 model Project {
-  id          String        @id @default(uuid())
-  clientId    String        @map("client_id")
-  adminId     String        @map("admin_id")
-  title       String
-  description String?
-  budget      Int?
-  status      ProjectStatus @default(NOT_STARTED)
-  notes       String?
+  id              String        @id @default(uuid())
+  clientId        String        @map("client_id")
+  adminId         String        @map("admin_id")
+  title           String
+  description     String?
+  budget          Int?
+  status          ProjectStatus @default(NOT_STARTED)
+  notes           String?
   deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
-	deletedByClient Boolean       @default(false) @map("deleted_by_client")
-  createdAt   DateTime      @default(now()) @map("created_at")
+  deletedByClient Boolean       @default(false) @map("deleted_by_client")
+  createdAt       DateTime      @default(now()) @map("created_at")
 
   client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   admin      Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
   milestones Milestone[]
   invoices   Invoice[]
+  magicLinks MagicLink[]
 
   @@map("projects")
 }
@@ -94,7 +95,7 @@ model Milestone {
   status           MilestoneStatus @default(NOT_STARTED)
   deadline         DateTime?
   orderIndex       Int             @map("order_index")
-  deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
+  deletedByAdmin   Boolean         @default(false) @map("deleted_by_admin")
   generatedInvoice Boolean         @default(false) @map("generated_invoice")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -103,18 +104,18 @@ model Milestone {
 }
 
 model Invoice {
-  id            String        @id @default(uuid())
-  projectId     String        @map("project_id")
-  status        InvoiceStatus @default(UNPAID)
-  deadline      DateTime
-  issueDate     DateTime      @default(now())
-  total         Float
-  adminName     String
-  adminAddress  String
-  clientName    String
-  clientAddress String
+  id              String        @id @default(uuid())
+  projectId       String        @map("project_id")
+  status          InvoiceStatus @default(UNPAID)
+  deadline        DateTime
+  issueDate       DateTime      @default(now())
+  total           Float
+  adminName       String
+  adminAddress    String
+  clientName      String
+  clientAddress   String
   deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
-	deletedByClient Boolean       @default(false) @map("deleted_by_client")
+  deletedByClient Boolean       @default(false) @map("deleted_by_client")
 
   project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   items   InvoiceItem[]
@@ -133,4 +134,15 @@ model InvoiceItem {
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@map("invoiceItems")
+}
+
+model MagicLink {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("magicLinks")
 }

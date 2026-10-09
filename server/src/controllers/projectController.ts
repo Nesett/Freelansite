@@ -3,6 +3,7 @@ import db from '../db/db.js'
 import { MilestoneStatus, ProjectStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
+import crypto from "crypto"
 
 
 export async function createProject(req: Request, res: Response) {
@@ -239,4 +240,155 @@ export async function deactivateProject(req: Request, res: Response) {
         return res.status(500).json({error: `Could not delete project with id ${projectId}.`})
     }
 
+}
+
+export async function createMagicLink(req: Request, res: Response) {
+
+    const projectId = String(req.params.id)
+
+    const {expiresAt} = req.body
+
+    if (req.userRole !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' })
+    }
+
+    if (!expiresAt) {
+        return res.status(400).json({error: "Expiry date not specified."})
+    }
+
+    const parsedExpiry = new Date(expiresAt)
+
+	if (Number.isNaN(parsedExpiry.getTime()) || parsedExpiry <= new Date()) {
+		return res.status(400).json({ error: 'Expiry date must be a valid date in the future.' })
+	}
+
+    try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
+
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+
+        const exsistingMagicLink = await db.magicLink.findUnique({ 
+            where: {
+                projectId
+            }
+        })
+
+        if (exsistingMagicLink && exsistingMagicLink.expiresAt > new Date()) {
+            return res.status(409).json({error: "Magic Link for this project already exists."})
+        }
+        if (exsistingMagicLink) {
+            await db.magicLink.delete({ 
+                where: { 
+                    id: exsistingMagicLink.id 
+                } 
+            })
+        }
+
+        const token = crypto.randomBytes(32).toString("base64url")
+
+        const link = await db.magicLink.create({
+            data: { 
+                token, 
+                projectId, 
+                expiresAt: parsedExpiry
+            }
+        })
+
+        return res.status(200).json({ url:`${process.env.CLIENT_URL}/p/${token}`, expiresAt: link.expiresAt, message:"Created Magic Link."})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not create Magic Link.`})
+    }
+}
+
+export async function getMagicLink(req: Request, res: Response) {
+
+    const projectId = String(req.params.id)
+
+    try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
+
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+        
+        const link = await db.magicLink.findUnique({ 
+            where: {
+                projectId 
+            } 
+        })
+
+        if (!link) {
+            return res.status(404).json({ error: "Not found" })
+        }
+
+        if (link.expiresAt <= new Date()) {
+            await db.magicLink.delete({ 
+                where: { 
+                    id: link.id 
+                } 
+            })
+            return res.status(404).json({ error: "Not found" })
+        }
+
+        return res.status(200).json({ url: `${process.env.CLIENT_URL}/p/${link.token}`, expiresAt: link.expiresAt })
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not get Magic Link.`})
+    }
+}
+
+
+export async function deleteMagicLink(req: Request, res: Response) {
+
+    const projectId = String(req.params.id)
+
+    try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
+
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+        
+        const link = await db.magicLink.findUnique({ 
+            where: {
+                projectId 
+            } 
+        })
+
+        if (!link) {
+            return res.status(404).json({ error: "Not found" })
+        }
+
+        await db.magicLink.delete({ 
+            where: { 
+                projectId
+            } 
+        })
+
+        return res.status(204).json({message: "Successfully deleted Magic Link"})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not delete Magic Link.`})
+    }
 }
