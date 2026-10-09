@@ -301,11 +301,11 @@ export async function createMagicLink(req: Request, res: Response) {
 
 export async function deleteMagicLink(req: Request, res: Response) {
 
-        try {
+    const projectId = String(req.params.id)
+
+    try {
 
 
-
-        return res.status(200).json({message: "created Magic Link."})
 
     } catch(err) {
         console.log(err)
@@ -315,8 +315,42 @@ export async function deleteMagicLink(req: Request, res: Response) {
 
 export async function getMagicLink(req: Request, res: Response) {
 
-        try {
+    const projectId = String(req.params.id)
 
+    try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
+
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+
+        const exsistingMagicLink = await db.magicLink.findUnique({ 
+            where: {
+                projectId
+            }
+        })
+        const link = await db.magicLink.findUnique({ 
+            where: {
+                projectId 
+            } 
+        })
+        if (!link) {
+            return res.status(404).json({ error: "Not found" })
+        }
+        if (link.expiresAt <= new Date()) {
+            await db.magicLink.delete({ 
+                where: { 
+                    id: link.id 
+                } 
+            })
+            return res.status(404).json({ error: "Not found" })
+        }
+        return res.status(200).json({ url: `${process.env.CLIENT_URL}/p/${link.token}`, expiresAt: link.expiresAt })
 
 
         return res.status(200).json({message:"created Magic Link."})
