@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import { deletedFilter } from '../utils/accessByUser.js'
+import { error } from 'node:console'
 
 export async function createMilestone(req: Request, res: Response) {
     const { projectId, title, description, budget, deadline, status, orderIndex } = req.body
@@ -15,7 +17,7 @@ export async function createMilestone(req: Request, res: Response) {
             where: {
                 id: projectId,
                 adminId: adminId,
-                isActive: true
+                deletedByAdmin: false
             }
         })
 
@@ -51,18 +53,17 @@ export async function getAllMilestones(req: Request, res: Response) {
         return res.status(400).json({error: "projectId is required."})
     }
 
-    const typeOfUser = "adminId" in req.user
-        ? { clientId: req.user.id }
-        : { adminId: req.user.id }
+    const typeOfUser = req.userRole === 'admin'
+        ? { adminId: req.user.id, deletedByAdmin: false }
+        : { clientId: req.user.id, deletedByClient: false }
 
     try {
         const allMilestones = await db.milestone.findMany({
             where: {
                 projectId,
-                isActive: true,
+                deletedByAdmin: false,
                 project: {
-                    ...typeOfUser,
-                    isActive: true
+                    ...typeOfUser
                 }
             }
         })
@@ -88,10 +89,10 @@ export async function updateMilestone(req: Request, res: Response) {
         const existingMilestone = await db.milestone.findFirst({
             where: {
                 id,
-                isActive: true,
+                deletedByAdmin: false,
                 project: {
                     adminId,
-                    isActive: true
+                    deletedByAdmin: false
                 }
             }
         })
@@ -107,7 +108,7 @@ export async function updateMilestone(req: Request, res: Response) {
         const updatedMilestone = await db.milestone.update({
             where: {
                 id,
-                isActive: true
+                deletedByAdmin: false,
             },
             data: {
                 title: title !== undefined ? title : existingMilestone.title,
@@ -139,25 +140,27 @@ export async function deactivateMilestone(req: Request, res: Response) {
         const existingMilestone = await db.milestone.findFirst({
             where: {
                 id,
-                isActive: true,
+                deletedByAdmin: false,
                 project: {
                     adminId,
-                    isActive: true
+                    deletedByAdmin: false
                 }
             }
         })
 
         if (!existingMilestone) {
             return res.status(404).json({error: "Milestone does not exist."})
-        } 
+        } else if (existingMilestone.status === "AWAITING_APPROVAL" || existingMilestone.status === "APPROVED" ) {
+            return res.status(404).json({error: "Cannot delete milestone thats sent for approval or completed."})
+        }
 
         const deactivateMilestone = await db.milestone.update({
             where: {
                 id,
-				isActive: true
+				deletedByAdmin: false
             },
             data: {
-                isActive: false
+                deletedByAdmin: true
             }
         })
 
@@ -181,11 +184,8 @@ export async function approveMilestone(req: Request, res: Response) {
         const existingMilestone = await db.milestone.findFirst({
             where: {
                 id,
-                isActive: true,
-                project: {
-                    clientId,
-                    isActive: true
-                }
+                deletedByAdmin: false,
+                project: { clientId, deletedByClient: false }
             }
         })
 

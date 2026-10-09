@@ -102,7 +102,7 @@ export async function getAllClients(req: Request, res: Response) {
         const clients = await db.client.findMany({
             where: {
                 adminId: adminId,
-				isActive: true
+				deletedByAdmin: false
             }
         })
 
@@ -128,8 +128,7 @@ export async function getClient(req: Request, res: Response) {
             where: {
                 id: clientId,
                 adminId: adminId,
-				isActive: true
-                
+				deletedByAdmin: false
             }
         })
 
@@ -156,24 +155,27 @@ export async function updateClient(req: Request, res: Response) {
 
     const {name, email, phone, companyName} = req.body
 
+
     try {
 
         const existingClient = await db.client.findFirst({
             where: {
                 id: clientId,
                 adminId: adminId,
-				isActive: true
+				deletedByAdmin: false
             }
         })
 
         if (!existingClient) {
             return res.status(404).json({error: "Client does not exist."})
-        } 
+        } else if (existingClient.password != null || existingClient.password != undefined) {
+            return res.status(404).json({error: "This is a logged in client. You cannot edit their data anymore."})
+        }
 
         const updatedClient = await db.client.update({
             where: {
                 id: clientId,
-				isActive: true
+				deletedByAdmin: false
             },
             data: {
                 name: name !== undefined ? name : existingClient.name,
@@ -203,7 +205,7 @@ export async function deactivateClient(req: Request, res: Response) {
             where: {
                 id: clientId,
                 adminId: adminId,
-				isActive: true
+				deletedByAdmin: false
             }
         })
 
@@ -211,30 +213,22 @@ export async function deactivateClient(req: Request, res: Response) {
             return res.status(404).json({error: "Client does not exist."})
         } 
 
-        const [deactivatedClient] = await db.$transaction([
-			db.client.update({
-				where: {
-                    id: clientId 
-                },
-				data: { 
-                    isActive: false
-                }
-			}),
-			db.project.updateMany({
-				where: { 
-                    clientId: clientId 
-                },
-				data: { 
-                    isActive: false 
-                }
-			})
-		])
+        await db.$transaction([
+            db.client.update({
+                where: { id: clientId },
+                data: { deletedByAdmin: true }
+            }),
+            db.project.updateMany({
+                where: { clientId, adminId },
+                data: { deletedByAdmin: true }
+            })
+        ])
 
-        return res.status(200).json({message: "Client and their projects have been deactivated.", deletedUser: deactivatedClient})
+        return res.status(200).json({message: "Client and their projects have been removed from your view."})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not deactivate client with id ${clientId}.`})
+        return res.status(500).json({error: `Could not delete client with id ${clientId}.`})
     }
 
 }
@@ -247,14 +241,12 @@ export async function getProjectsByClient(req: Request, res: Response) {
 
 	try {
 		const clientProjects = await db.project.findMany({
-			where: {
-				clientId: clientId,
-				isActive: true,
-				client: {
-					adminId: adminId,
-					isActive: true
-				}
-			},
+            where: {
+                clientId,
+                adminId,
+                deletedByAdmin: false,
+                client: { deletedByAdmin: false }
+            },
 			orderBy: {
 				createdAt: 'desc'
 			}, include: {
