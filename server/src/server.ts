@@ -53,7 +53,10 @@ app.get("/api/public/:token", publicLimiter, async (req: Request, res: Response)
     include: { 
       project: { 
         include: { 
-          milestones: true 
+          milestones: {
+            where: { deletedByAdmin: false },
+            orderBy: { orderIndex: 'asc' }
+          }
         } 
       } 
     }

@@ -252,6 +252,16 @@ export async function createMagicLink(req: Request, res: Response) {
         return res.status(403).json({ error: 'Forbidden' })
     }
 
+    if (!expiresAt) {
+        return res.status(400).json({error: "Expiry date not specified."})
+    }
+
+    const parsedExpiry = new Date(expiresAt)
+
+	if (Number.isNaN(parsedExpiry.getTime()) || parsedExpiry <= new Date()) {
+		return res.status(400).json({ error: 'Expiry date must be a valid date in the future.' })
+	}
+
     try {
         const existingProject = await db.project.findFirst({
             where: {
@@ -287,7 +297,7 @@ export async function createMagicLink(req: Request, res: Response) {
             data: { 
                 token, 
                 projectId, 
-                expiresAt 
+                expiresAt: parsedExpiry
             }
         })
 
@@ -296,46 +306,6 @@ export async function createMagicLink(req: Request, res: Response) {
     } catch(err) {
         console.log(err)
         return res.status(500).json({error: `Could not create Magic Link.`})
-    }
-}
-
-export async function deleteMagicLink(req: Request, res: Response) {
-
-    const projectId = String(req.params.id)
-
-    try {
-        const existingProject = await db.project.findFirst({
-            where: {
-                id: projectId,
-                adminId: req.user.id
-            }
-        })
-
-        if (!existingProject) {
-            return res.status(404).json({error: "Project does not exist."})
-        }
-        
-        const link = await db.magicLink.findUnique({ 
-            where: {
-                projectId 
-            } 
-        })
-
-        if (!link) {
-            return res.status(404).json({ error: "Not found" })
-        }
-
-        await db.magicLink.delete({ 
-            where: { 
-                projectId
-            } 
-        })
-
-        return res.status(204).json({message: "Successfully deleted Magic Link"})
-
-    } catch(err) {
-        console.log(err)
-        return res.status(500).json({error: `Could not delete Magic Link.`})
     }
 }
 
@@ -379,5 +349,46 @@ export async function getMagicLink(req: Request, res: Response) {
     } catch(err) {
         console.log(err)
         return res.status(500).json({error: `Could not get Magic Link.`})
+    }
+}
+
+
+export async function deleteMagicLink(req: Request, res: Response) {
+
+    const projectId = String(req.params.id)
+
+    try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
+
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+        
+        const link = await db.magicLink.findUnique({ 
+            where: {
+                projectId 
+            } 
+        })
+
+        if (!link) {
+            return res.status(404).json({ error: "Not found" })
+        }
+
+        await db.magicLink.delete({ 
+            where: { 
+                projectId
+            } 
+        })
+
+        return res.status(204).json({message: "Successfully deleted Magic Link"})
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: `Could not delete Magic Link.`})
     }
 }

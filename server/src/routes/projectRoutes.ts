@@ -14,7 +14,7 @@ router.post("/:id/invoices", requireAuth, createInvoice)
 router.get("/:id/invoices", requireAnyAuth, getAllInvoices)
 router.post("/:id/magic-links", requireAuth, createMagicLink)
 router.get("/:id/magic-links", requireAuth, getMagicLink)
-router.delete("/:id/magic-links/:id", requireAuth, deleteMagicLink)
+router.delete("/:id/magic-links", requireAuth, deleteMagicLink)
 
 
 
