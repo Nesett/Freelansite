@@ -32,6 +32,8 @@ app.use('/api/clients', clientRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/milestones', milestoneRoutes)
 app.use('/api/invoices', invoiceRoutes)
+//app.get("/api/public/:token", getPublicProject)
+
 
 
 app.get('/api/health', async (req: Request, res: Response) => {
