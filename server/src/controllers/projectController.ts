@@ -304,12 +304,38 @@ export async function deleteMagicLink(req: Request, res: Response) {
     const projectId = String(req.params.id)
 
     try {
+        const existingProject = await db.project.findFirst({
+            where: {
+                id: projectId,
+                adminId: req.user.id
+            }
+        })
 
+        if (!existingProject) {
+            return res.status(404).json({error: "Project does not exist."})
+        }
+        
+        const link = await db.magicLink.findUnique({ 
+            where: {
+                projectId 
+            } 
+        })
 
+        if (!link) {
+            return res.status(404).json({ error: "Not found" })
+        }
+
+        await db.magicLink.delete({ 
+            where: { 
+                projectId
+            } 
+        })
+
+        return res.status(204).json({message: "Successfully deleted Magic Link"})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not create Magic Link.`})
+        return res.status(500).json({error: `Could not delete Magic Link.`})
     }
 }
 
@@ -328,20 +354,17 @@ export async function getMagicLink(req: Request, res: Response) {
         if (!existingProject) {
             return res.status(404).json({error: "Project does not exist."})
         }
-
-        const exsistingMagicLink = await db.magicLink.findUnique({ 
-            where: {
-                projectId
-            }
-        })
+        
         const link = await db.magicLink.findUnique({ 
             where: {
                 projectId 
             } 
         })
+
         if (!link) {
             return res.status(404).json({ error: "Not found" })
         }
+
         if (link.expiresAt <= new Date()) {
             await db.magicLink.delete({ 
                 where: { 
@@ -350,14 +373,12 @@ export async function getMagicLink(req: Request, res: Response) {
             })
             return res.status(404).json({ error: "Not found" })
         }
+
         return res.status(200).json({ url: `${process.env.CLIENT_URL}/p/${link.token}`, expiresAt: link.expiresAt })
-
-
-        return res.status(200).json({message:"created Magic Link."})
 
     } catch(err) {
         console.log(err)
-        return res.status(500).json({error: `Could not create Magic Link.`})
+        return res.status(500).json({error: `Could not get Magic Link.`})
     }
 }
 //createMagicLink, getMagicLink, deleteMagicLink
