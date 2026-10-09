@@ -241,3 +241,47 @@ export async function deactivateInvoice(req: Request, res: Response) {
     }
 
 }
+
+export async function getAdminInvoices(req: Request, res: Response) {
+
+    const adminId = req.user.id
+
+    try {
+        const invoices = await db.invoice.findMany({
+            where: {
+                deletedByAdmin: false,
+                project: {
+                    adminId,
+                    deletedByAdmin: false
+                }
+            },
+            orderBy: { issueDate: 'desc' },
+            select: {
+                id: true,
+                status: true,
+                deadline: true,
+                issueDate: true,
+                total: true,
+                clientName: true,
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        client: {
+                            select: {
+                                id: true,
+                                email: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        return res.status(200).json(invoices)
+
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({error: "Could not fetch invoices."})
+    }
+}
