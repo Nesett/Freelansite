@@ -16,14 +16,16 @@ export async function createInvoice(req: Request, res: Response) {
 
     const projectId = String(req.params.id)
 
-    const adminId = req.user.id
-    
+    if (req.userRole !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' })
+    }
+
 
     const { deadline, adminName, adminAddress, clientName, clientAddress } = req.body
     const {items} = req.body as {items: invoiceItems[]}
 
 
-    if (!deadline || !adminName || !adminAddress || !clientName || !clientAddress || !items) {
+    if (!deadline || !adminName || !adminAddress || !clientName || !clientAddress || !items || !items.length) {
         return res.status(400).json({message:"Enter all necessary information."})
     } 
 
@@ -31,17 +33,22 @@ export async function createInvoice(req: Request, res: Response) {
 
         const existingProject = await db.project.findFirst({
             where: {
-                projectId,
+                id: projectId,
                 ...deletedFilter(req),
-                project: projectAccessFilter(req)
+                adminId: req.user.id,
+                deletedByAdmin: false
             }
         })
 
         if (!existingProject) {
             return res.status(404).json({error: "Project does not exist."})
-        } 
-
-        const totalAmount = items.reduce((acc, item) => acc + item.quantity * item.amount, 0)
+        }
+        
+        const totalAmount = items.reduce((acc, item) => {
+                    const qty = Number(item.quantity) || 1
+                    const amt = Number(item.amount) || 0
+                    return acc + qty * amt
+                }, 0)
 
         // every project starts with exactly one milestone, same as project.
         const invoice = await db.invoice.create({
@@ -57,8 +64,8 @@ export async function createInvoice(req: Request, res: Response) {
                     create: items.map(item=> ({
                         title: item.title,
                         description: item.description,
-                        amount: item.amount,
-                        quantity: item.quantity
+                        amount: Number(item.amount),
+                        quantity: Number(item.quantity) || 1
                     }))
                 }
                 

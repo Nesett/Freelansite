@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import type { Client } from '../pages/clients/Clients'
+import type { Client } from '../pages/Clients'
 
 interface ClientEntryProps {
 	client: Client

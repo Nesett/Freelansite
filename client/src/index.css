@@ -978,6 +978,72 @@ hr {
 	color: var(--text-color);
 	white-space: nowrap;
 }
+
+/* -------------------------------------------- Invoices Page -------------------------------------------- */
+
+.invoiceTabs {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.invoiceTab {
+	padding: 9px 16px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: rgba(29, 53, 87, 0.75);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.invoiceTab:hover {
+	background-color: var(--input-color);
+}
+
+.invoiceTab--active,
+.invoiceTab--active:hover {
+	background-color: var(--primary-color);
+	color: var(--elements-color);
+	font-weight: 700;
+}
+
+.invoiceNumber {
+	font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+	font-size: 0.8rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceAmount {
+	font-weight: 700;
+}
+
+.statusPill {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.statusPill--paid {
+	background-color: #DFF5E6;
+	color: #1E7A3C;
+}
+
+.statusPill--unpaid {
+	background-color: #FDF0C8;
+	color: #8A6100;
+}
+
+.statusPill--overdue {
+	background-color: #FBE0E0;
+	color: #B3261E;
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {
