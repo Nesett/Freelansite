@@ -25,6 +25,7 @@ export default function ProjectDetails() {
     const [ milestoneDescription, setMilestoneDescription] = useState<string>("")
     const [ milestoneBudget, setMilestoneBudget ] = useState<number | "">("")
     const [ milestoneDeadline, setMilestoneDeadline ] = useState<string>("")
+    const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -171,6 +172,10 @@ export default function ProjectDetails() {
 		return <p>{errorMessage || "Project not found."}</p>
 	}
 
+    if (editProjectForm) {
+        
+    }
+
     const { label, variant } = getProjectTag(project.status)
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
     const activeMilestone = getActiveMilestone(sortedMilestones)
@@ -234,7 +239,7 @@ export default function ProjectDetails() {
                         {editOptions && (
                             <div className="clientOptionsMenu">
                                 <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete project</button>
-                                <button className="clientOptionsMenuItem">Edit project</button>
+                                <button onClick={()=>setEditProjectForm(prev=>!prev)} className="clientOptionsMenuItem">Edit project</button>
                             </div>
                         )}
                     </div>

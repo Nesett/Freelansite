@@ -22,7 +22,7 @@ export async function createProject(req: Request, res: Response) {
             where: {
                 id: clientId,
                 adminId: adminId,
-                isActive: true
+                deletedByAdmin: false
             }
         })
 
@@ -165,11 +165,7 @@ export async function updateProject(req: Request, res: Response) {
 	const adminId = req.user.id
 	const projectId = String(req.params.id)
 
-    const {title, description, budget, status, notes} = req.body
-
-    if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
-        return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
-    }
+    const {title, description} = req.body
 
     try {
 
@@ -189,10 +185,7 @@ export async function updateProject(req: Request, res: Response) {
             },
             data: {
                 title: title !== undefined ? title : existingProject.title,
-				description: description !== undefined ? description : existingProject.description,
-				budget: budget !== undefined ? Number(budget) : existingProject.budget,
-				status: status !== undefined ? status : existingProject.status,
-				notes: notes !== undefined ? notes : existingProject.notes
+				description: description !== undefined ? description : existingProject.description
             }
         })
 
