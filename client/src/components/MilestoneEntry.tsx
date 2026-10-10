@@ -15,11 +15,10 @@ interface MilestoneProps {
     milestone: Milestone
     isActive: boolean
     onApprove: (milestoneId: string) => void
+    onEdit: (milestone: Milestone) => void
 }
 
-
-
-export default function MilestoneEntry({ milestone, isActive, onApprove }: MilestoneProps) {
+export default function MilestoneEntry({ milestone, isActive, onApprove, onEdit }: MilestoneProps) {
 
     const { user } = useAuth()
     const { label, variant } = getMilestoneTag(milestone.status)
@@ -47,10 +46,15 @@ export default function MilestoneEntry({ milestone, isActive, onApprove }: Miles
         <hr/>
         <div className="milestoneEditArea">
             {user?.role === 'admin' && (
-            <>
+            <button
+                type="button"
+                className="milestoneEditButton"
+                disabled={!editable}
+                onClick={() => onEdit(milestone)}
+            >
                 <Edit />
                 <span>{editable ? 'Edit' : 'Locked'}</span>
-            </>)}
+            </button>)}
 
             {milestone.status === 'AWAITING_APPROVAL' && user?.role === 'client' && (
             <button className="newButton" onClick={() => onApprove(milestone.id)}>

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom"
 import { getProjectTag, getActiveMilestone, countProgressPercent } from "../utils/ProjectStatus"
 import MilestoneEntry from "../components/MilestoneEntry"
 import ProjectFormModal from "../components/ProjectFormModal"
+import MilestoneFormModal from "../components/MilestoneFormModal"
 
 
 
@@ -21,12 +22,9 @@ export default function ProjectDetails() {
 	const [loading, setLoading] = useState<boolean>(true)
 	const [errorMessage, setErrorMessage] = useState<string>("")
     const [milestones, setMilestones] = useState<Milestone[]>([])
-    const [showAddMilestones, setShowAddMilestone] = useState<boolean>(false)
-    const [ milestoneTitle, setMilestoneTitle ] = useState<string>("")
-    const [ milestoneDescription, setMilestoneDescription] = useState<string>("")
-    const [ milestoneBudget, setMilestoneBudget ] = useState<number | "">("")
-    const [ milestoneDeadline, setMilestoneDeadline ] = useState<string>("")
+    const [showAddMilestone, setShowAddMilestone] = useState<boolean>(false)
     const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
+    const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -95,42 +93,6 @@ export default function ProjectDetails() {
         }
     }
 
-    async function handleAddNewMilestone(e: React.FormEvent) {
-        e.preventDefault()
-
-        try {
-            const res = await fetch(`/api/milestones`, {
-                method: "POST",
-                credentials: "include",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    projectId: id,
-					title: milestoneTitle,
-					description: milestoneDescription,
-					budget: milestoneBudget,
-					deadline: milestoneDeadline,
-                    orderIndex: milestones.length
-                })
-            })
-
-            if (!res.ok) {
-                throw new Error("Failed to create milestone.")
-            }
-
-            const data = await res.json()
-
-			setMilestones(prev => [...prev, data.newMilestone])
-
-            setShowAddMilestone(prev => !prev)
-
-        } catch (err) {
-            if (err instanceof Error) {
-                setErrorMessage(err.message)
-            } else {
-                setErrorMessage("An unexpected error occurred while deleting project.")
-            }
-        }
-    }
 
     async function approveMilestone( milestoneId: string) {
 
@@ -160,10 +122,30 @@ export default function ProjectDetails() {
         }
     }
 
+
     function handleProjectUpdated(data: unknown) {
         const { updatedProject } = data as { updatedProject: Project }
         setProject(prev => prev ? { ...prev, ...updatedProject } : prev)
         setEditProjectForm(false)
+    }
+
+    function closeMilestoneModal() {
+        setShowAddMilestone(false)
+        setEditingMilestone(null)
+    }
+
+    function handleMilestoneSaved(data: unknown) {
+        if (editingMilestone) {
+            const { updatedMilestone } = data as { updatedMilestone: Milestone }
+            setMilestones(prev =>
+                prev.map(m => m.id === updatedMilestone.id ? updatedMilestone : m)
+            )
+        } else {
+            const { newMilestone } = data as { newMilestone: Milestone }
+            setMilestones(prev => [...prev, newMilestone])
+        }
+
+        closeMilestoneModal()
     }
 
     function showProjectOptions() {
@@ -193,41 +175,6 @@ export default function ProjectDetails() {
                     onSaved={handleProjectUpdated}
                 />
             )}
-            {showAddMilestones && (
-            <div className="addMilestonesForm">
-                <form onSubmit={handleAddNewMilestone}>
-                    <label htmlFor='title'>Title</label>
-                    <input 
-                        id='title' 
-                        name='title' 
-                        type='textarea'
-                        placeholder="Dashboard"
-                        onChange={(e) => setMilestoneTitle(e.target.value)}
-                        required
-                    />
-                    <label htmlFor='description'>Description</label>
-                    <textarea 
-                        id='description' 
-                        name='description' 
-                        onChange={(e) => setMilestoneDescription(e.target.value)}
-                    ></textarea>
-                    <label htmlFor='budget'>Budget</label>
-                        <input 
-                            id='budget' 
-                            name='budget' 
-                            type='number' 
-                            onChange={(e) => setMilestoneBudget(e.target.value ? Number(e.target.value) : "")}
-                        />
-                    <label htmlFor='deadline'>Deadline</label>
-                    <input 
-                        id='deadline' 
-                        name='deadline' 
-                        type='date' 
-                        onChange={(e) => setMilestoneDeadline(e.target.value)}
-                    />
-                    <button> Add new milestone </button>
-                </form>
-            </div>)}
             {areYouSure && (
                 <AreYouSureModal 
                     itemType="project"
@@ -235,6 +182,15 @@ export default function ProjectDetails() {
                     warningMessage="Deleting this project will permanently remove all associated milestones, invoices etc."
                     setAreYouSure={setAreYouSure} 
                     onConfirm={deleteProject}
+                />
+            )}
+            {(showAddMilestone || editingMilestone) && (
+                <MilestoneFormModal
+                    milestone={editingMilestone ?? undefined}
+                    projectId={id}
+                    orderIndex={milestones.length}
+                    onClose={closeMilestoneModal}
+                    onSaved={handleMilestoneSaved}
                 />
             )}
 			<header>
@@ -275,6 +231,7 @@ export default function ProjectDetails() {
                                     milestone={milestone}
                                     isActive={milestone.id === activeMilestone?.id}
                                     onApprove={approveMilestone}
+                                    onEdit={setEditingMilestone}
                                 />
                             ))
                         ) : (<p>No milestones found for this project.</p>)}
