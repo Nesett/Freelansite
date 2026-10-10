@@ -8,6 +8,7 @@ import StatusTag from "../components/StatusTag"
 import { useNavigate } from "react-router-dom"
 import { getProjectTag, getActiveMilestone, countProgressPercent } from "../utils/ProjectStatus"
 import MilestoneEntry from "../components/MilestoneEntry"
+import ProjectFormModal from "../components/ProjectFormModal"
 
 
 
@@ -159,6 +160,11 @@ export default function ProjectDetails() {
         }
     }
 
+    function handleProjectUpdated(data: unknown) {
+        const { updatedProject } = data as { updatedProject: Project }
+        setProject(prev => prev ? { ...prev, ...updatedProject } : prev)
+        setEditProjectForm(false)
+    }
 
     function showProjectOptions() {
         setEditOptions(prev => !prev)
@@ -172,9 +178,6 @@ export default function ProjectDetails() {
 		return <p>{errorMessage || "Project not found."}</p>
 	}
 
-    if (editProjectForm) {
-        
-    }
 
     const { label, variant } = getProjectTag(project.status)
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
@@ -183,6 +186,13 @@ export default function ProjectDetails() {
 
 	return (
 		<div className="pageContent">
+            {editProjectForm && (
+                <ProjectFormModal
+                    project={project}
+                    onClose={() => setEditProjectForm(false)}
+                    onSaved={handleProjectUpdated}
+                />
+            )}
             {showAddMilestones && (
             <div className="addMilestonesForm">
                 <form onSubmit={handleAddNewMilestone}>

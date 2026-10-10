@@ -36,10 +36,9 @@ export default function ProjectFormModal({
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({
-                    ...(isEdit ? {} : { clientId }),
                     title,
                     description,
-                    budget: budget === "" ? null : budget
+                    ...(isEdit ? {} : { clientId, budget: budget === "" ? null : budget })
                 })
             })
 
@@ -88,14 +87,18 @@ export default function ProjectFormModal({
                 onChange={(e) => setDescription(e.target.value)}
             />
 
-            <label htmlFor="budget">Budget</label>
-            <input
-                id="budget"
-                name="budget"
-                type="number"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value ? Number(e.target.value) : "")}
-            />
+            {!isEdit && (
+                <>
+                    <label htmlFor="budget">Budget</label>
+                    <input
+                        id="budget"
+                        name="budget"
+                        type="number"
+                        value={budget}
+                        onChange={(e) => setBudget(e.target.value ? Number(e.target.value) : "")}
+                    />
+                </>
+            )}
         </Modal>
     )
 }
