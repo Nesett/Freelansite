@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import type { Project, Milestone } from "./Projects"
-import { Plus, EllipsisVertical } from "lucide-react"
+import { Plus, EllipsisVertical, Link as LinkIcon } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
@@ -193,15 +193,19 @@ export default function ProjectDetails() {
                     onSaved={handleMilestoneSaved}
                 />
             )}
-			<header>
-                <div>
-                    <p>{project.client.companyName ? project.client.companyName : project.client.name}</p>
+			<header className="projectHeader">
+                <div className="projectHeaderInfo">
+                    <p className="projectHeaderClient">{project.client.companyName ? project.client.companyName : project.client.name}</p>
                     <h1>{project.title}</h1>
+                    {project.description && (
+                        <p className="projectDescription">{project.description}</p>
+                    )}
                     <StatusBar percent={currentProgress}/>
                 </div>
-                <div>
+                <div className="projectHeaderActions">
+                    <StatusTag label={label} variant={variant} />
                     <div className="projectOptionsWrapper" ref={projectOptionsRef}>
-                        <button onClick={showProjectOptions}><EllipsisVertical /></button>
+                        <button onClick={showProjectOptions} className="projectOptionsButton"><EllipsisVertical /></button>
                         {editOptions && (
                             <div className="clientOptionsMenu">
                                 <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete project</button>
@@ -209,12 +213,10 @@ export default function ProjectDetails() {
                             </div>
                         )}
                     </div>
-                    <StatusTag label={label} variant={variant} />
                 </div>
-
-			</header>
+            </header>
             <hr />
-			<main>
+			<main className="projectBody">
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
@@ -237,11 +239,16 @@ export default function ProjectDetails() {
                         ) : (<p>No milestones found for this project.</p>)}
                     </div>
                 </div>
-                <div className="projectInfo">
-                    <div className="summaryAndInfo"></div>
-                    <div className="activityLog"></div>
-                </div>
-
+                <section className="magicLinksCard">
+                    <div className="magicLinksHeader">
+                        <LinkIcon />
+                        <h3>Magic Links</h3>
+                        <span>Read-only access for stakeholders</span>
+                    </div>
+                    <div className="magicLinksBody">
+                        <p>No active magic links for this project.</p>
+                    </div>
+                </section>
 			</main>
 		</div>
 	)
