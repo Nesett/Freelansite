@@ -94,7 +94,8 @@ export async function getAllInvoices(req: Request, res: Response) {
         const invoices = await db.invoice.findMany({
             where: {
                 projectId,
-                deletedFilter
+                ...deletedFilter(req),
+                project: projectAccessFilter(req)
             },
             orderBy: { issueDate: 'desc' },
             include: {
@@ -126,11 +127,10 @@ export async function getInvoice(req: Request, res: Response) {
 	try {
 		const invoice = await db.invoice.findFirst({
             where: {
-                invoiceId,
+                id: invoiceId,
                 ...deletedFilter(req),
                 project: projectAccessFilter(req)
             },
-            orderBy: { issueDate: 'desc' },
             include: {
                 items: {
                     select: {
@@ -139,6 +139,22 @@ export async function getInvoice(req: Request, res: Response) {
                         description: true,
                         amount: true,
                         quantity: true
+                    }
+                },
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        admin: {
+                            select: {
+                                email: true
+                            }
+                        },
+                        client: {
+                            select: {
+                                email: true
+                            }
+                        }
                     }
                 }
             }
@@ -152,7 +168,7 @@ export async function getInvoice(req: Request, res: Response) {
 
 	} catch(err) {
 		console.log(err)
-		return res.status(500).json({ error: `Could not fetch project with id ${invoiceId}.` })
+		return res.status(500).json({ error: `Could not fetch invoice with id ${invoiceId}.` })
 	}
 }
 
@@ -162,10 +178,6 @@ export async function updateInvoice(req: Request, res: Response) {
 	const id = String(req.params.id)
 
     const {status, deadline, total, adminName, adminAddress, clientName, clientAddress} = req.body
-
-    if (status !== undefined && [InvoiceStatus.PAID].includes(status)) {
-        return res.status(400).json({error: "This invoice cannot be edited anymore, since it has been paid for."})
-    }
 
     try {
 
@@ -180,6 +192,10 @@ export async function updateInvoice(req: Request, res: Response) {
         if (!existingInvoice) {
             return res.status(404).json({error: "Invoice does not exist."})
         } 
+
+        if (existingInvoice.status === InvoiceStatus.PAID) {
+            return res.status(400).json({error: "This invoice cannot be edited anymore, since it has been paid for."})
+        }
 
         const updatedInvoice = await db.invoice.update({
             where: {
@@ -231,13 +247,11 @@ export async function deactivateInvoice(req: Request, res: Response) {
             return res.status(404).json({error: "Invoice does not exist."})
         } 
 
-        const deactivatedInvoice = await db.project.update({
+        const deactivatedInvoice = await db.invoice.update({
             where: {
                 id: invoiceId
             },
-            data: {
-                updateDeleteData
-            }
+            data: updateDeleteData
         })
 
         return res.status(200).json({deactivatedInvoice})

@@ -13,6 +13,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import ProjectDetails from './pages/ProjectDetails'
 import Layout from './components/Layout'
 import ClientSetPassword from './pages/ClientSetPassword'
+import InvoiceDetails from './pages/InvoiceDetails'
 
 export function App() {
 	return (
@@ -30,6 +31,7 @@ export function App() {
 							<Route path="/projects/:id" element={<ProjectDetails />} />
 							<Route path="/invoices" element={<Invoices />} />
 							<Route path="/settings" element={<Settings />} />
+							<Route path="/invoices/:id" element={<InvoiceDetails />} />
 
 							<Route element={<ProtectedRoute allowedRoles={['admin']} />}>
 								<Route path="/clients" element={<Clients />} />

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import type { Invoice, InvoiceStatus } from '../pages/Invoices'
 
 interface InvoiceEntryProps {
@@ -16,20 +17,25 @@ const amountFormatter = new Intl.NumberFormat('en-US', {
 	maximumFractionDigits: 2,
 })
 
-const STATUS_LABELS: Record<InvoiceStatus, string> = {
+export const STATUS_LABELS: Record<InvoiceStatus, string> = {
 	PAID: 'Paid',
 	UNPAID: 'Unpaid',
 	OVERDUE: 'Overdue',
 }
 
 // placeholder, i dont know yet how i want to solve the invoice numbers
-function formatInvoiceNumber(id: string) {
+export function formatInvoiceNumber(id: string) {
 	return `#${id.slice(0, 6)}`
 }
 
 export default function InvoiceEntry({ invoice }: InvoiceEntryProps) {
+	const navigate = useNavigate()
+
 	return (
-		<tr>
+		<tr
+			className="clickableEntry"
+			onClick={() => navigate(`/invoices/${invoice.id}`)}
+		>
 			<td>
 				<div className="clientPrimary">{invoice.clientName}</div>
 				<div className="clientSecondary">{invoice.project.client.email}</div>

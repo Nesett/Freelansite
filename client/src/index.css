@@ -1044,6 +1044,235 @@ hr {
 	color: #B3261E;
 }
 
+/* -------------------------------------------- Invoice Details Page -------------------------------------------- */
+
+.invoiceSheet {
+	max-width: 896px;
+	margin: 0 auto;
+	padding: 32px;
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	box-shadow: 0 1px 3px rgba(29, 53, 87, 0.06);
+}
+
+.invoiceSheetTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14px;
+}
+
+.invoiceBackLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.85rem;
+	color: rgba(29, 53, 87, 0.75);
+	text-decoration: none;
+}
+
+.invoiceBackLink:hover {
+	color: var(--text-color);
+}
+
+.invoiceTitleRow {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding-bottom: 28px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.invoiceTitleRow h1 {
+	font-size: 2rem;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.invoiceActions {
+	display: flex;
+	gap: 12px;
+}
+
+.invoiceActions .newButton:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.invoiceSecondaryButton {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+	background-color: var(--elements-color);
+	color: var(--text-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.invoiceSecondaryButton:hover {
+	background-color: var(--input-color);
+}
+
+.invoiceError {
+	margin-top: 12px;
+	text-align: right;
+}
+
+.invoiceParties {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 28px 32px;
+	padding: 32px 0;
+}
+
+.invoiceLabel {
+	margin-bottom: 10px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: rgba(29, 53, 87, 0.75);
+}
+
+.invoicePartyName {
+	margin-bottom: 4px;
+	font-weight: 700;
+}
+
+.invoicePartyLine {
+	font-size: 0.9rem;
+	line-height: 1.6;
+	color: var(--muted-text-color);
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+.invoiceDateValue {
+	font-size: 0.9rem;
+}
+
+.invoiceItemsWrapper {
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.invoiceItemsTable {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.invoiceItemsTable thead th {
+	padding: 14px 16px;
+	text-align: left;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: rgba(29, 53, 87, 0.75);
+	background-color: var(--input-color);
+	border-bottom: 1px solid var(--border-color);
+}
+
+.invoiceItemsTable tbody td {
+	padding: 16px;
+	font-size: 0.9rem;
+	border-bottom: 1px solid var(--border-color);
+	vertical-align: top;
+}
+
+.invoiceItemsTable tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.invoiceItemsTable th:not(:first-child),
+.invoiceItemsTable td:not(:first-child) {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.invoiceItemDescription {
+	margin-top: 2px;
+	font-size: 0.8rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceTotals {
+	width: 320px;
+	max-width: 100%;
+	margin: 24px 0 0 auto;
+	border-top: 1px solid var(--border-color);
+}
+
+.invoiceTotalRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 16px;
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+
+
+@media (max-width: 720px) {
+	.invoiceSheet {
+		padding: 24px 20px;
+	}
+
+	.invoiceTitleRow {
+		flex-direction: column;
+	}
+
+	.invoiceParties {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media print {
+	@page {
+		margin: 10mm;
+	}
+
+	body * {
+		visibility: hidden;
+	}
+
+	.invoiceSheet,
+	.invoiceSheet * {
+		visibility: visible;
+	}
+
+	.invoiceSheet {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		max-width: none;
+		padding: 0;
+		border: none;
+		box-shadow: none;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	.invoiceNoPrint {
+		display: none !important;
+	}
+
+	.invoiceSheetTop .statusPill {
+		margin-left: auto;
+	}
+
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {
