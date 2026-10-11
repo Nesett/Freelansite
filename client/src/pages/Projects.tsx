@@ -31,6 +31,12 @@ export interface Project {
 	milestones: Milestone[]
 }
 
+export interface MagicLink {
+	id: string
+	url?: string,
+	expiresAt?: string
+}
+
 
 
 export default function Projects() {

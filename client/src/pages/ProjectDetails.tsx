@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
-import type { Project, Milestone } from "./Projects"
-import { Plus, EllipsisVertical, Link as LinkIcon } from "lucide-react"
+import type { Project, Milestone, MagicLink} from "./Projects"
+import { Plus, EllipsisVertical, Link, Copy } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
@@ -10,11 +10,13 @@ import { getProjectTag, getActiveMilestone, countProgressPercent } from "../util
 import MilestoneEntry from "../components/MilestoneEntry"
 import ProjectFormModal from "../components/ProjectFormModal"
 import MilestoneFormModal from "../components/MilestoneFormModal"
+import { useAuth } from "../context/AuthContext"
 
 
 
 export default function ProjectDetails() {
 	const { id } = useParams<{ id: string }>()
+    const { user } = useAuth()
 	const [project, setProject] = useState<Project | null>(null)
     const [editOptions, setEditOptions] = useState<boolean>(false)
     const projectOptionsRef = useRef<HTMLDivElement | null>(null)
@@ -25,6 +27,7 @@ export default function ProjectDetails() {
     const [showAddMilestone, setShowAddMilestone] = useState<boolean>(false)
     const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
+    const [magicLink, setMagicLink] = useState<MagicLink | null>(null)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -33,20 +36,23 @@ export default function ProjectDetails() {
 		async function fetchProjectDetails() {
             
 			try {
-				const [projectsRes, milestonesRes] = await Promise.all([
+				const [projectsRes, milestonesRes, magicLinksRes] = await Promise.all([
 					fetch(`/api/projects/${id}`, { credentials: 'include' }),
-					fetch(`/api/milestones?projectId=${id}`, { credentials: 'include' })
+					fetch(`/api/milestones?projectId=${id}`, { credentials: 'include' }),
+                    fetch(`/api/projects/${id}/magic-links`, { credentials: 'include' })
 				])
 				if (!milestonesRes.ok || !projectsRes.ok) {
-					throw new Error("Request failed.")
+					throw new Error("Failed to fetch all necessary information.")
 				}
 
 				const milestonesJson = await milestonesRes.json()
 				const projectsJson = await projectsRes.json()
+                const magicLinksJson = magicLinksRes.ok ? await magicLinksRes.json(): null
 
 				if (isFinished) {
 					setMilestones(milestonesJson)
 					setProject(projectsJson)
+                    setMagicLink(magicLinksJson?.url ? magicLinksJson : null)
 				}
 
 			} catch (err) {
@@ -160,7 +166,6 @@ export default function ProjectDetails() {
 		return <p>{errorMessage || "Project not found."}</p>
 	}
 
-
     const { label, variant } = getProjectTag(project.status)
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
     const activeMilestone = getActiveMilestone(sortedMilestones)
@@ -241,12 +246,32 @@ export default function ProjectDetails() {
                 </div>
                 <section className="magicLinksCard">
                     <div className="magicLinksHeader">
-                        <LinkIcon />
-                        <h3>Magic Links</h3>
-                        <span>Read-only access for stakeholders</span>
+                        <div className="magicLinkHeaderElements">
+                            <Link />
+                            <h3>Magic Link</h3>
+                            <span>Read-only access for stakeholders</span>
+                        </div>
+                        <div className="magicLinkHeaderElements">
+                            {user?.role === 'admin' && (magicLink ? <button>Revoke Magic Link</button> : <button>Create Magic Link</button>)}
+                        </div>
                     </div>
                     <div className="magicLinksBody">
-                        <p>No active magic links for this project.</p>
+                        {magicLink ? (
+                            <div className="magicLinkEntry">
+                                <div>
+                                    <p>Expires At:</p>
+                                    <p>{magicLink.expiresAt}</p>
+                                </div>
+                                <div className="magicLinkTitleCopy">
+                                    <p>Link:</p>
+                                    <button> <Copy /></button>
+                                    <div>
+                                        <p>{magicLink.url}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (<p>No active magic links for this project.</p>)}
+                        
                     </div>
                 </section>
 			</main>
