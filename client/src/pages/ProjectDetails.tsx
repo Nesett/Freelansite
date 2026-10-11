@@ -11,6 +11,7 @@ import MilestoneEntry from "../components/MilestoneEntry"
 import ProjectFormModal from "../components/ProjectFormModal"
 import MilestoneFormModal from "../components/MilestoneFormModal"
 import { useAuth } from "../context/AuthContext"
+import MagicLinkFormModal from "../components/MagicLinkFormModal"
 
 
 
@@ -28,6 +29,7 @@ export default function ProjectDetails() {
     const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
     const [magicLink, setMagicLink] = useState<MagicLink | null>(null)
+    const [showMagicLinkForm, setShowMagicLinkForm] = useState<boolean>(false)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -154,6 +156,33 @@ export default function ProjectDetails() {
         closeMilestoneModal()
     }
 
+    function handleMagicLinkCreated(data: unknown) {
+        setMagicLink(data as MagicLink)
+        setShowMagicLinkForm(false)
+    }
+
+    async function deleteMagicLink() {
+        try {
+            const res = await fetch(`/api/projects/${id}/magic-links`, {
+                method: "DELETE",
+                credentials: "include"
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to revoke magic link.")
+            }
+
+            setMagicLink(null)
+            setErrorMessage("")
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while revoking magic link.")
+            }
+        }
+    }
+
     function showProjectOptions() {
         setEditOptions(prev => !prev)
     }
@@ -196,6 +225,13 @@ export default function ProjectDetails() {
                     orderIndex={milestones.length}
                     onClose={closeMilestoneModal}
                     onSaved={handleMilestoneSaved}
+                />
+            )}
+            {showMagicLinkForm && (
+                <MagicLinkFormModal
+                    projectId={project.id}
+                    onClose={() => setShowMagicLinkForm(false)}
+                    onSaved={handleMagicLinkCreated}
                 />
             )}
 			<header className="projectHeader">
@@ -252,7 +288,10 @@ export default function ProjectDetails() {
                             <span>Read-only access for stakeholders</span>
                         </div>
                         <div className="magicLinkHeaderElements">
-                            {user?.role === 'admin' && (magicLink ? <button>Revoke Magic Link</button> : <button>Create Magic Link</button>)}
+                            {user?.role === 'admin' && (magicLink
+                                ? <button onClick={deleteMagicLink}>Revoke Magic Link</button>
+                                : <button onClick={() => setShowMagicLinkForm(true)}>Create Magic Link</button>
+                            )}
                         </div>
                     </div>
                     <div className="magicLinksBody">
