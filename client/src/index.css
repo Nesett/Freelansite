@@ -1620,6 +1620,25 @@ hr {
 
 }
 
+/* -------------------------------------------- Public Magic Link Page -------------------------------------------- */
+
+.publicPage {
+	max-width: 900px;
+}
+
+.publicBody {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	margin-top: 24px;
+}
+
+.milestoneDescription {
+	color: var(--muted-text-color);
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {
