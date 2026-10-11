@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import type { Project, Milestone, MagicLink} from "./Projects"
-import { Plus, EllipsisVertical, Link, Copy, Check } from "lucide-react"
+import { Plus, EllipsisVertical, Link, Copy, Check, User, Mail, Phone } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
@@ -184,18 +184,26 @@ export default function ProjectDetails() {
         }
     }
 
-async function copyMagicLink() {
-    const url = magicLink?.url
-    if (!url) return
-
-    try {
-        await navigator.clipboard.writeText(url)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    } catch {
-        setCopied(false)
+    function formatMoney(amount: number) {
+        return amount.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
     }
-}
+
+    function formatInvoiceDate(date: string) {
+        return new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+    }
+
+    async function copyMagicLink() {
+        const url = magicLink?.url
+        if (!url) return
+
+        try {
+            await navigator.clipboard.writeText(url)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch {
+            setCopied(false)
+        }
+    }
 
     function showProjectOptions() {
         setEditOptions(prev => !prev)
@@ -213,6 +221,25 @@ async function copyMagicLink() {
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
     const activeMilestone = getActiveMilestone(sortedMilestones)
     const currentProgress = countProgressPercent(milestones)
+
+    const totalBudget = milestones.reduce((sum, m) => sum + (m.budget ?? 0), 0)
+    const invoiced = project.invoices.reduce((sum, i) => sum + i.total, 0)
+    const paid = project.invoices
+        .filter(i => i.status === "PAID")
+        .reduce((sum, i) => sum + i.total, 0)
+
+    const isAdmin = user?.role === "admin"
+    const contact = isAdmin
+        ? {
+            name: project.client.name || project.client.companyName,
+            email: project.client.email,
+            phone: project.client.phone
+        }
+        : {
+            name: project.admin.name || project.admin.businessName,
+            email: project.admin.email,
+            phone: project.admin.phone
+        }
 
 	return (
 		<div className="pageContent">
@@ -294,6 +321,56 @@ async function copyMagicLink() {
                         ) : (<p>No milestones found for this project.</p>)}
                     </div>
                 </div>
+                <section className="projectSummaryCard">
+                    <h3>Summary</h3>
+                    <div className="projectSummaryRows">
+                        <div className="projectSummaryRow">
+                            <span>Total budget</span>
+                            <span>{formatMoney(totalBudget)}</span>
+                        </div>
+                        <div className="projectSummaryRow">
+                            <span>Invoiced</span>
+                            <span>{formatMoney(invoiced)}</span>
+                        </div>
+                        <div className="projectSummaryRow">
+                            <span>Paid</span>
+                            <span>{formatMoney(paid)}</span>
+                        </div>
+                    </div>
+                    <div className="projectSummaryContact">
+                        <p className="projectSummaryContactLabel">{isAdmin ? "Client contact" : "Admin contact"}</p>
+                        <p className="projectSummaryContactItem">
+                            <User />
+                            {contact.name}
+                        </p>
+                        <p className="projectSummaryContactItem">
+                            <Mail />
+                            {contact.email}
+                        </p>
+                        {contact.phone && (
+                            <p className="projectSummaryContactItem">
+                                <Phone />
+                                {contact.phone}
+                            </p>
+                        )}
+                    </div>
+                </section>
+                <section className="projectInvoicesCard">
+                    <h3>Invoices</h3>
+                    {project.invoices.length > 0 ? (
+                        <ul className="projectInvoiceList">
+                            {project.invoices.map(invoice => (
+                                <li key={invoice.id} className="projectInvoiceItem">
+                                    <span className="projectInvoiceNumber">Invoice #{invoice.number}</span>
+                                    <span className="projectInvoiceDate">{formatInvoiceDate(invoice.issueDate)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No invoices for this project yet.</p>
+                    )}
+                </section>
+
                 <section className="magicLinksCard">
                     <div className="magicLinksHeader">
                         <div className="magicLinkHeaderElements">

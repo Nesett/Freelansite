@@ -1046,10 +1046,48 @@ hr {
 }
 
 .projectBody {
-	display: flex;
-	flex-direction: column;
-	gap: 40px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	grid-template-rows: auto auto 1fr auto;
+	grid-template-areas:
+		"milestones summary"
+		"milestones invoices"
+		"milestones ."
+		"magic magic";
+	align-items: start;
+	gap: 24px 40px;
 }
+
+.projectMilestonesDiv {
+	grid-area: milestones;
+	min-width: 0;
+}
+
+.projectSummaryCard {
+	grid-area: summary;
+}
+
+.projectInvoicesCard {
+	grid-area: invoices;
+}
+
+.projectBody .magicLinksCard {
+	grid-area: magic;
+}
+
+@media (orientation: portrait) {
+	.projectBody {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: none;
+		grid-template-areas:
+			"milestones"
+			"summary"
+			"invoices"
+			"magic";
+	}
+}
+
+/* ----- Milestones ----- */
 
 .milestoneHeader {
 	display: flex;
@@ -1067,6 +1105,99 @@ hr {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
+}
+
+/* ----- Summary ----- */
+
+.projectSummaryCard,
+.projectInvoicesCard {
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	padding: 24px;
+}
+
+.projectSummaryCard h3,
+.projectInvoicesCard h3 {
+	margin-bottom: 16px;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
+.projectSummaryRows {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--border-color);
+	font-size: 0.9rem;
+}
+
+.projectSummaryRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.projectSummaryRow span:last-child {
+	font-weight: 600;
+}
+
+.projectSummaryContact {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding-top: 20px;
+}
+
+.projectSummaryContactLabel {
+	color: var(--muted-text-color);
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.projectSummaryContactItem {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.9rem;
+	overflow-wrap: anywhere;
+}
+
+.projectSummaryContactItem svg {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: var(--muted-text-color);
+}
+
+/* ----- Invoices ----- */
+
+.projectInvoiceList {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.projectInvoiceItem {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.projectInvoiceNumber {
+	font-size: 0.9rem;
+}
+
+.projectInvoiceDate {
+	color: var(--muted-text-color);
+	font-size: 0.8rem;
 }
 
 /* ----- Magic links ----- */

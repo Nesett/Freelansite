@@ -116,34 +116,52 @@ export async function getAllProjects(req: Request, res: Response) {
 
 
 export async function getProject(req: Request, res: Response) {
-	const projectId = String(req.params.id)
+    const projectId = String(req.params.id)
 
-	try {
-		const project = await db.project.findFirst({
-			where: {
-				id: projectId,
-				...projectAccessFilter(req)
-			},
-			include: {
-				client: {
-					select: {
-						id: true,
-						name: true,
-						companyName: true
-					}
-				},
-				admin: {
-					select: {
-						name: true,
-						businessName: true
-					}
-				},
-				milestones: {
+    const invoiceVisibility = req.userRole === 'admin'
+        ? { deletedByAdmin: false }
+        : { deletedByClient: false }
+
+    try {
+        const project = await db.project.findFirst({
+            where: {
+                id: projectId,
+                ...projectAccessFilter(req)
+            },
+            include: {
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        companyName: true,
+                        email: true,
+                        phone: true
+                    }
+                },
+                admin: {
+                    select: {
+                        name: true,
+                        businessName: true,
+                        email: true,
+                        phone: true
+                    }
+                },
+                milestones: {
                     where: { deletedByAdmin: false },
-					orderBy: { orderIndex: 'asc' }
-				}
-			}
-		})
+                    orderBy: { orderIndex: 'asc' }
+                },
+                invoices: {
+                    where: invoiceVisibility,
+                    orderBy: { issueDate: 'desc' },
+                    select: {
+                        id: true,
+                        total: true,
+                        status: true,
+                        issueDate: true
+                    }
+                }
+            }
+        })
 
         if (!project) {
             return res.status(404).json({ error: "Project not found." })
@@ -154,10 +172,10 @@ export async function getProject(req: Request, res: Response) {
             progress: countProgressPercent(project.milestones)
         })
 
-	} catch(err) {
-		console.log(err)
-		return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
-	}
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
+    }
 }
 
 export async function updateProject(req: Request, res: Response) {

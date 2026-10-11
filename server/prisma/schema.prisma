@@ -31,6 +31,7 @@ model Admin {
   id           String   @id @default(uuid())
   name         String
   email        String   @unique
+  phone        String?
   password     String
   businessName String?  @map("business_name")
   createdAt    DateTime @default(now()) @map("created_at")
