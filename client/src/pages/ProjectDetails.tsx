@@ -28,6 +28,7 @@ export default function ProjectDetails() {
     const [showAddMilestone, setShowAddMilestone] = useState<boolean>(false)
     const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
+    const [milestoneToDelete, setMilestoneToDelete] = useState<Milestone | null>(null)
     const [magicLink, setMagicLink] = useState<MagicLink | null>(null)
     const [showMagicLinkForm, setShowMagicLinkForm] = useState<boolean>(false)
     const [copied, setCopied] = useState<boolean>(false)
@@ -131,6 +132,58 @@ export default function ProjectDetails() {
         }
     }
 
+    async function changeMilestoneStatus(milestoneId: string, status: Milestone["status"]) {
+        try {
+            const res = await fetch(`/api/milestones/${milestoneId}`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ status })
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to update milestone status.")
+            }
+
+            const data = await res.json()
+
+            setMilestones(prev =>
+                prev.map(m => m.id === milestoneId ? data.updatedMilestone : m)
+            )
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while updating milestone.")
+            }
+        }
+    }
+
+    async function deleteMilestone() {
+        if (!milestoneToDelete) return
+
+        try {
+            const res = await fetch(`/api/milestones/${milestoneToDelete.id}`, {
+                method: "DELETE",
+                credentials: "include"
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to delete milestone.")
+            }
+
+            setMilestones(prev => prev.filter(m => m.id !== milestoneToDelete.id))
+            setMilestoneToDelete(null)
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while deleting milestone.")
+            }
+        }
+    }
 
     function handleProjectUpdated(data: unknown) {
         const { updatedProject } = data as { updatedProject: Project }
@@ -275,6 +328,15 @@ export default function ProjectDetails() {
                     onSaved={handleMagicLinkCreated}
                 />
             )}
+            {milestoneToDelete && (
+                <AreYouSureModal
+                    itemType="milestone"
+                    itemName={milestoneToDelete.title ?? ""}
+                    warningMessage="This milestone will be removed from the project."
+                    setAreYouSure={() => setMilestoneToDelete(null)}
+                    onConfirm={deleteMilestone}
+                />
+            )}
 			<header className="projectHeader">
                 <div className="projectHeaderInfo">
                     <p className="projectHeaderClient">{project.client.companyName ? project.client.companyName : project.client.name}</p>
@@ -316,6 +378,8 @@ export default function ProjectDetails() {
                                     isActive={milestone.id === activeMilestone?.id}
                                     onApprove={approveMilestone}
                                     onEdit={setEditingMilestone}
+                                    onDelete={setMilestoneToDelete}
+                                    onChangeStatus={changeMilestoneStatus}
                                 />
                             ))
                         ) : (<p>No milestones found for this project.</p>)}
