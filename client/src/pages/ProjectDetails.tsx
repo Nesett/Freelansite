@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import type { Project, Milestone, MagicLink} from "./Projects"
-import { Plus, EllipsisVertical, Link, Copy } from "lucide-react"
+import { Plus, EllipsisVertical, Link, Copy, Check } from "lucide-react"
 import AreYouSureModal from "../components/AreYouSureModal"
 import StatusBar from "../components/StatusBar"
 import StatusTag from "../components/StatusTag"
@@ -30,6 +30,7 @@ export default function ProjectDetails() {
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
     const [magicLink, setMagicLink] = useState<MagicLink | null>(null)
     const [showMagicLinkForm, setShowMagicLinkForm] = useState<boolean>(false)
+    const [copied, setCopied] = useState<boolean>(false)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -183,6 +184,19 @@ export default function ProjectDetails() {
         }
     }
 
+async function copyMagicLink() {
+    const url = magicLink?.url
+    if (!url) return
+
+    try {
+        await navigator.clipboard.writeText(url)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    } catch {
+        setCopied(false)
+    }
+}
+
     function showProjectOptions() {
         setEditOptions(prev => !prev)
     }
@@ -284,33 +298,32 @@ export default function ProjectDetails() {
                     <div className="magicLinksHeader">
                         <div className="magicLinkHeaderElements">
                             <Link />
-                            <h3>Magic Link</h3>
+                            <h3>Magic Links</h3>
                             <span>Read-only access for stakeholders</span>
                         </div>
-                        <div className="magicLinkHeaderElements">
-                            {user?.role === 'admin' && (magicLink
-                                ? <button onClick={deleteMagicLink}>Revoke Magic Link</button>
-                                : <button onClick={() => setShowMagicLinkForm(true)}>Create Magic Link</button>
-                            )}
-                        </div>
+                        {user?.role === 'admin' && (magicLink
+                            ? <button onClick={deleteMagicLink} className="statusPill statusPill--overdue magicLinkButton">Revoke Link</button>
+                            : <button onClick={() => setShowMagicLinkForm(true)} className="statusPill statusPill--paid magicLinkButton">Create Link</button>
+                        )}
                     </div>
                     <div className="magicLinksBody">
                         {magicLink ? (
                             <div className="magicLinkEntry">
-                                <div>
+                                <div className="magicLinkExpires">
                                     <p>Expires At:</p>
-                                    <p>{magicLink.expiresAt}</p>
+                                    <p>{new Date(magicLink.expiresAt).toLocaleDateString("sv-SE")}</p>
                                 </div>
-                                <div className="magicLinkTitleCopy">
+                                <div className="magicLinkUrl">
                                     <p>Link:</p>
-                                    <button> <Copy /></button>
-                                    <div>
-                                        <p>{magicLink.url}</p>
-                                    </div>
+                                    <p className="magicLinkUrlText">{magicLink.url}</p>
+                                    <button onClick={copyMagicLink} className="projectOptionsButton magicLinkCopy" aria-label="Copy link">
+                                        {copied ? <Check /> : <Copy />}
+                                    </button>
                                 </div>
                             </div>
-                        ) : (<p>No active magic links for this project.</p>)}
-                        
+                        ) : (
+                            <p className="magicLinksEmpty">No active magic links for this project.</p>
+                        )}
                     </div>
                 </section>
 			</main>

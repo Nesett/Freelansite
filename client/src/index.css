@@ -1112,10 +1112,70 @@ hr {
 }
 
 .magicLinksBody {
-	padding: 36px 24px;
+	padding: 16px 24px;
+	font-size: 0.9rem;
+}
+
+.magicLinksEmpty {
+	padding: 20px 0;
 	text-align: center;
 	color: var(--muted-text-color);
-	font-size: 0.9rem;
+}
+
+.magicLinkButton {
+	padding: 5px 24px;
+	border: none;
+	font-family: inherit;
+	cursor: pointer;
+	transition: filter 0.15s ease;
+}
+
+.magicLinkButton:hover {
+	filter: brightness(0.95);
+}
+
+.magicLinkEntry {
+	display: flex;
+	background-color: var(--bg-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	color: var(--text-color);
+	text-align: left;
+	overflow: hidden;
+}
+
+.magicLinkExpires,
+.magicLinkUrl {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px 48px;
+}
+
+.magicLinkExpires {
+	border-right: 1px solid var(--border-color);
+	flex-shrink: 0;
+}
+
+.magicLinkUrl {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+}
+
+.magicLinkUrlText {
+	overflow-wrap: anywhere;
+}
+
+.magicLinkCopy {
+	position: absolute;
+	top: 12px;
+	right: 16px;
+}
+
+.magicLinkCopy svg {
+	width: 16px;
+	height: 16px;
 }
 
 /* -------------------------------------------- Invoices Page -------------------------------------------- */

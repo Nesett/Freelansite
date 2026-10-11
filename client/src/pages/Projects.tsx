@@ -33,8 +33,8 @@ export interface Project {
 
 export interface MagicLink {
 	id: string
-	url?: string,
-	expiresAt?: string
+	url: string,
+	expiresAt: string
 }
 
 
