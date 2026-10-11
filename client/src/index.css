@@ -1071,6 +1071,14 @@ hr {
 	grid-area: invoices;
 }
 
+.projectDetailsInvoicesHeader {
+	margin-bottom: 16px;
+}
+
+.projectInvoicesCard .projectDetailsInvoicesHeader h3 {
+	margin-bottom: 0;
+}
+
 .projectBody .magicLinksCard {
 	grid-area: magic;
 }
@@ -1179,16 +1187,25 @@ hr {
 .projectInvoiceList {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 4px;
 	list-style: none;
 	margin: 0;
 	padding: 0;
+}
+
+.projectDetailsInvoicesHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .projectInvoiceItem {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	padding: 8px 12px;
+	margin: 0 -12px;
+	border-radius: 6px;
 }
 
 .projectInvoiceNumber {

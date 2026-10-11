@@ -356,11 +356,21 @@ export default function ProjectDetails() {
                     </div>
                 </section>
                 <section className="projectInvoicesCard">
-                    <h3>Invoices</h3>
+                    <div className="projectDetailsInvoicesHeader">
+                        <h3>Invoices</h3>
+                        <button className="statusPill statusPill--paid magicLinkButton">New Invoice</button>
+                    </div>
                     {project.invoices.length > 0 ? (
                         <ul className="projectInvoiceList">
                             {project.invoices.map(invoice => (
-                                <li key={invoice.id} className="projectInvoiceItem">
+                                <li
+                                    key={invoice.id}
+                                    className="projectInvoiceItem clickableEntry"
+                                    onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                    onKeyDown={e => { if (e.key === "Enter") navigate(`/invoices/${invoice.id}`) }}
+                                    role="link"
+                                    tabIndex={0}
+                                    >
                                     <span className="projectInvoiceNumber">Invoice #{invoice.number}</span>
                                     <span className="projectInvoiceDate">{formatInvoiceDate(invoice.issueDate)}</span>
                                 </li>
