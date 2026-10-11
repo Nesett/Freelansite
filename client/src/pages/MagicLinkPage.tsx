@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { User, Mail, Phone } from "lucide-react"
+import { User, Mail, Phone, Building2 } from "lucide-react"
 import type { Milestone } from "./Projects"
 import StatusBar from "../components/StatusBar"
 import PublicMilestoneEntry from "../components/PublicMilestoneEntry"
@@ -118,9 +118,16 @@ export default function PublicProject() {
                         ) : (<p>No milestones found for this project.</p>)}
                     </div>
                 </div>
+                <hr />
                 <section className="projectSummaryCard publicManagedBy">
                     <div className="projectSummaryContact">
                         <p className="projectSummaryContactLabel">Managed by</p>
+                        {project.admin.businessName && (
+                            <p className="projectSummaryContactItem">
+                                <Building2 />
+                                {project.admin.businessName}
+                            </p>
+                        )}
                         <p className="projectSummaryContactItem">
                             <User />
                             {project.admin.name}

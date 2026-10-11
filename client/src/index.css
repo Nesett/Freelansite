@@ -1639,6 +1639,10 @@ hr {
 	line-height: 1.5;
 }
 
+.publicManagedBy .projectSummaryContact {
+	padding-top: 0;
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {

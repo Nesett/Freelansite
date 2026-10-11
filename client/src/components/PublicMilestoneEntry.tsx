@@ -17,7 +17,7 @@ export default function PublicMilestoneEntry({ milestone, isActive }: PublicMile
 
     const { label, variant } = getMilestoneTag(milestone.status)
     const borderVariant = getMilestoneBorderVariant(milestone, isActive)
-    const formattedDeadline = formatMilestoneDeadline(milestone.deadline)
+    const formattedDeadline = formatMilestoneDeadline(milestone.deadline ? milestone.deadline : null)
 
     return (
     <div className={`milestoneHolder${borderVariant !== "none" ? ` milestoneHolder--${borderVariant}` : ""}`}>
@@ -25,6 +25,9 @@ export default function PublicMilestoneEntry({ milestone, isActive }: PublicMile
             <h4>{milestone.title}</h4>
             <StatusTag label={label} variant={variant} />
         </div>
+        {milestone.description && (
+            <p className="milestoneDescription">{milestone.description}</p>
+        )}
         {formattedDeadline && (
             <div className="milestoneDateAndBudget">
                 <div className="milestoneDate">
@@ -32,9 +35,6 @@ export default function PublicMilestoneEntry({ milestone, isActive }: PublicMile
                     <span>{formattedDeadline}</span>
                 </div>
             </div>
-        )}
-        {milestone.description && (
-            <p className="milestoneDescription">{milestone.description}</p>
         )}
     </div>
     )
