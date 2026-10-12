@@ -1,6 +1,6 @@
 import type { Project, Milestone, ProjectStatusValue } from "../pages/Projects"
 
-export type TagVariant = "neutral" | "warning" | "success" | "hold"
+export type TagVariant = "neutral" | "warning" | "success" | "hold" | "progress"
 
 export interface ProjectDisplayState {
 	tag: string | null
@@ -49,7 +49,7 @@ export function getActiveMilestone(milestones: Milestone[]): Milestone | undefin
 
 const MILESTONE_TAGS: Record<Milestone["status"], { label: string, variant: TagVariant }> = {
 	NOT_STARTED: { label: "Not Started", variant: "neutral" },
-	CURRENTLY_WORKED_ON: { label: "In Progress", variant: "neutral" },
+	CURRENTLY_WORKED_ON: { label: "In Progress", variant: "progress" },
 	AWAITING_APPROVAL: { label: "Awaiting Approval", variant: "warning" },
 	APPROVED: { label: "Approved", variant: "success" }
 }

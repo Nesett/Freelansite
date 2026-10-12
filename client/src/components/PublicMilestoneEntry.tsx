@@ -20,22 +20,25 @@ export default function PublicMilestoneEntry({ milestone, isActive }: PublicMile
     const formattedDeadline = formatMilestoneDeadline(milestone.deadline ? milestone.deadline : null)
 
     return (
-    <div className={`milestoneHolder${borderVariant !== "none" ? ` milestoneHolder--${borderVariant}` : ""}`}>
-        <div className="milestoneHeaderRow">
-            <h4>{milestone.title}</h4>
-            <StatusTag label={label} variant={variant} />
-        </div>
-        {milestone.description && (
-            <p className="milestoneDescription">{milestone.description}</p>
-        )}
-        {formattedDeadline && (
-            <div className="milestoneDateAndBudget">
-                <div className="milestoneDate">
-                    <Calendar />
-                    <span>{formattedDeadline}</span>
-                </div>
+    <div className="milestoneTimelineItem">
+        <span className={`milestoneDot milestoneDot--${variant}`} />
+        <div className={`milestoneHolder${borderVariant !== "none" ? ` milestoneHolder--${borderVariant}` : ""}`}>
+            <div className="milestoneHeaderRow">
+                <h4>{milestone.title}</h4>
+                <StatusTag label={label} variant={variant} />
             </div>
-        )}
+            {milestone.description && (
+                <p className="milestoneDescription">{milestone.description}</p>
+            )}
+            {formattedDeadline && (
+                <div className="milestoneDateAndBudget">
+                    <div className="milestoneDate">
+                        <Calendar />
+                        <span>{formattedDeadline}</span>
+                    </div>
+                </div>
+            )}
+        </div>
     </div>
     )
 }
