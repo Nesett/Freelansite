@@ -186,7 +186,11 @@ export async function updateProject(req: Request, res: Response) {
 	const adminId = req.user.id
 	const projectId = String(req.params.id)
 
-    const {title, description} = req.body
+    const {title, description, isOnHold} = req.body
+
+    if (isOnHold !== undefined && typeof isOnHold !== "boolean") {
+        return res.status(400).json({error: "isOnHold must be true or false."})
+    }
 
     try {
 
@@ -206,7 +210,8 @@ export async function updateProject(req: Request, res: Response) {
             },
             data: {
                 title: title !== undefined ? title : existingProject.title,
-				description: description !== undefined ? description : existingProject.description
+				description: description !== undefined ? description : existingProject.description,
+                isOnHold: isOnHold !== undefined ? isOnHold : existingProject.isOnHold
             }
         })
 

@@ -24,6 +24,7 @@ export default function ProjectDetails() {
     const [editOptions, setEditOptions] = useState<boolean>(false)
     const projectOptionsRef = useRef<HTMLDivElement | null>(null)
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
+    const [holdConfirm, setHoldConfirm] = useState<boolean>(false)
 	const [loading, setLoading] = useState<boolean>(true)
 	const [errorMessage, setErrorMessage] = useState<string>("")
     const [milestones, setMilestones] = useState<Milestone[]>([])
@@ -107,7 +108,36 @@ export default function ProjectDetails() {
     }
 
 
+    async function setProjectHold(isOnHold: boolean) {
+        try {
+            const res = await fetch(`/api/projects/${id}`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ isOnHold })
+            })
+
+            if (!res.ok) {
+                throw new Error(isOnHold ? "Failed to put project on hold." : "Failed to resume project.")
+            }
+
+            const { updatedProject } = await res.json() as { updatedProject: Project }
+
+            setProject(prev => prev ? { ...prev, isOnHold: updatedProject.isOnHold } : prev)
+            setHoldConfirm(false)
+            setEditOptions(false)
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message)
+            } else {
+                setErrorMessage("An unexpected error occurred while updating project.")
+            }
+        }
+    }
+
+
     async function approveMilestone( milestoneId: string) {
+        if (project?.isOnHold) return
 
         try {
             const res = await fetch(`/api/milestones/${milestoneId}/approve`, {
@@ -136,6 +166,7 @@ export default function ProjectDetails() {
     }
 
     async function changeMilestoneStatus(milestoneId: string, status: Milestone["status"]) {
+        if (project?.isOnHold) return
         try {
             const res = await fetch(`/api/milestones/${milestoneId}`, {
                 method: "PUT",
@@ -164,7 +195,7 @@ export default function ProjectDetails() {
     }
 
     async function deleteMilestone() {
-        if (!milestoneToDelete) return
+        if (!milestoneToDelete || project?.isOnHold) return
 
         try {
             const res = await fetch(`/api/milestones/${milestoneToDelete.id}`, {
@@ -321,7 +352,18 @@ export default function ProjectDetails() {
                     onConfirm={deleteProject}
                 />
             )}
-            {(showAddMilestone || editingMilestone) && (
+            {holdConfirm && (
+                <AreYouSureModal
+                    itemType="project"
+                    itemName={project.title}
+                    title="Put this project on hold?"
+                    warningMessage="While this project is on hold, you won't be able to edit it, add or edit milestones, or create invoices. You can resume it at any time."
+                    confirmLabel="Put on hold"
+                    setAreYouSure={setHoldConfirm}
+                    onConfirm={() => setProjectHold(true)}
+                />
+            )}
+            {(showAddMilestone || editingMilestone) && !project.isOnHold && (
                 <MilestoneFormModal
                     milestone={editingMilestone ?? undefined}
                     projectId={id}
@@ -337,7 +379,7 @@ export default function ProjectDetails() {
                     onSaved={handleMagicLinkCreated}
                 />
             )}
-            {showInvoiceForm && (
+            {showInvoiceForm && !project.isOnHold && (
                 <InvoiceFormModal
                     projectId={project.id}
                     projectTitle={project.title}
@@ -376,7 +418,14 @@ export default function ProjectDetails() {
                         {editOptions && (
                             <div className="clientOptionsMenu">
                                 <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete project</button>
-                                <button onClick={()=>setEditProjectForm(prev=>!prev)} className="clientOptionsMenuItem">Edit project</button>
+                                {!project.isOnHold && (
+                                    <button onClick={()=>setEditProjectForm(prev=>!prev)} className="clientOptionsMenuItem">Edit project</button>
+                                )}
+                                {isAdmin && (project.isOnHold
+                                    ? <button onClick={()=>setProjectHold(false)} className="clientOptionsMenuItem">Resume project</button>
+                                    : <button onClick={()=>{ setEditOptions(false); setHoldConfirm(true) }} className="clientOptionsMenuItem">Put on hold</button>
+                                )}
+                                
                             </div>
                         )}
                     </div>
@@ -387,12 +436,12 @@ export default function ProjectDetails() {
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
-                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton">
+                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton" disabled={project.isOnHold}>
                             <Plus />
                             Add Milestone
                         </button>
                     </div>
-                    <div className="projectMilestones">
+                    <div className="projectMilestones" style={project.isOnHold ? { pointerEvents: "none", opacity: 0.55 } : undefined}>
                         {sortedMilestones.length > 0 ? (
                             sortedMilestones.map(milestone => (
                                 <MilestoneEntry
@@ -446,7 +495,7 @@ export default function ProjectDetails() {
                     <div className="projectDetailsInvoicesHeader">
                         <h3>Invoices</h3>
                         {isAdmin && (
-                            <button className="newButtonSmall" onClick={() => setShowInvoiceForm(true)}><Plus /> New Invoice</button>
+                            <button className="newButtonSmall" onClick={() => setShowInvoiceForm(true)} disabled={project.isOnHold}><Plus /> New Invoice</button>
                         )}
                     </div>
                     {project.invoices.length > 0 ? (
