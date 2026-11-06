@@ -135,7 +135,8 @@ export async function getProject(req: Request, res: Response) {
                         name: true,
                         companyName: true,
                         email: true,
-                        phone: true
+                        phone: true,
+                        address: true
                     }
                 },
                 admin: {
@@ -143,7 +144,8 @@ export async function getProject(req: Request, res: Response) {
                         name: true,
                         businessName: true,
                         email: true,
-                        phone: true
+                        phone: true,
+                        address: true
                     }
                 },
                 milestones: {
@@ -154,6 +156,7 @@ export async function getProject(req: Request, res: Response) {
                     where: invoiceVisibility,
                     orderBy: { issueDate: 'desc' },
                     select: {
+                        number: true,
                         id: true,
                         total: true,
                         status: true,

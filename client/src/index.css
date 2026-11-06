@@ -738,6 +738,204 @@ h1, h2, h3, h4, p, a {
 	opacity: 0.9;
 }
 
+/* ----- modal form invoices ----- */
+
+.newClientModal.invoiceFormModal {
+	max-width: 760px;
+}
+
+.invoiceFormParties,
+.invoiceFormMeta {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+.invoiceFormMeta {
+	margin-top: 20px;
+}
+
+.invoiceFormSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.invoiceFormSectionTitle {
+	font-weight: 700;
+	font-size: 0.9rem;
+	color: var(--text-color);
+}
+
+.invoiceFormField {
+	display: flex;
+	flex-direction: column;
+}
+
+.invoiceFormModal input:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.invoiceFormModal select {
+	background-color: var(--input-color);
+	border: none;
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	color: var(--text-color);
+	outline: none;
+	max-width: 220px;
+	cursor: pointer;
+}
+
+.invoiceFormModal select:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.invoiceFormItemsHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 28px 0 12px;
+}
+
+.invoiceFormItemsHeader h3 {
+	font-size: 1rem;
+	color: var(--text-color);
+}
+
+.invoiceFormItemActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.invoiceFormItemActions .invoiceSecondaryButton {
+	padding: 8px 14px;
+	white-space: nowrap;
+}
+
+.invoiceFormRows {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.invoiceFormRowGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.invoiceFormRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 70px 100px 100px 32px;
+	gap: 8px;
+	align-items: center;
+}
+
+.invoiceFormRowHead {
+	font-size: 0.75rem;
+}
+
+.invoiceFormModal .invoiceFormRow input,
+.invoiceFormModal .invoiceFormDescription {
+	padding: 10px 12px;
+}
+
+.invoiceFormLineAmount {
+	text-align: right;
+	font-size: 0.9rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.invoiceFormRow span.invoiceFormLineAmount {
+	color: var(--text-color);
+}
+
+.invoiceFormRowHead span.invoiceFormLineAmount {
+	font-size: 0.75rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceFormIconButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: none;
+	padding: 4px;
+	cursor: pointer;
+}
+
+.invoiceFormIconButton:hover svg {
+	color: #c0392b;
+}
+
+.invoiceFormLinkButton {
+	align-self: flex-start;
+	background: none;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	font-size: 0.8rem;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.invoiceFormEmpty {
+	font-size: 0.9rem;
+}
+
+.invoiceFormTotal {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid var(--border-color);
+	font-weight: 700;
+}
+
+.invoiceFormTotal span {
+	color: var(--text-color);
+}
+
+.invoiceFormModal .errorMessage {
+	margin-top: 16px;
+}
+
+.invoiceFormModal form > button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+	.invoiceFormParties,
+	.invoiceFormMeta {
+		grid-template-columns: 1fr;
+	}
+
+	.invoiceFormItemsHeader {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.invoiceFormItemActions {
+		flex-wrap: wrap;
+	}
+
+	.invoiceFormRow {
+		grid-template-columns: minmax(0, 1fr) 60px 80px 32px;
+	}
+
+	.invoiceFormRow span.invoiceFormLineAmount {
+		display: none;
+	}
+}
 /* -------------------------------------------- Client Details Page -------------------------------------------- */
 
 .clientPageTitle {

@@ -23,9 +23,8 @@ export const STATUS_LABELS: Record<InvoiceStatus, string> = {
 	OVERDUE: 'Overdue',
 }
 
-// placeholder, i dont know yet how i want to solve the invoice numbers
-export function formatInvoiceNumber(id: string) {
-	return `#${id.slice(0, 6)}`
+export function formatInvoiceNumber(n: number) {
+	return `INV-${String(n).padStart(4, '0')}`
 }
 
 export default function InvoiceEntry({ invoice }: InvoiceEntryProps) {
@@ -41,7 +40,7 @@ export default function InvoiceEntry({ invoice }: InvoiceEntryProps) {
 				<div className="clientSecondary">{invoice.project.client.email}</div>
 			</td>
 			<td>{invoice.project.title}</td>
-			<td className="invoiceNumber">{formatInvoiceNumber(invoice.id)}</td>
+			<td className="invoiceNumber">{formatInvoiceNumber(invoice.number)}</td>
 			<td className="invoiceAmount">{amountFormatter.format(invoice.total)}</td>
 			<td>{dateFormatter.format(new Date(invoice.deadline))}</td>
 			<td>

@@ -12,6 +12,8 @@ import ProjectFormModal from "../components/ProjectFormModal"
 import MilestoneFormModal from "../components/MilestoneFormModal"
 import { useAuth } from "../context/AuthContext"
 import MagicLinkFormModal from "../components/MagicLinkFormModal"
+import InvoiceFormModal from "../components/InvoiceFormModal"
+import { formatInvoiceNumber } from "../components/InvoiceEntry"
 
 
 
@@ -32,6 +34,7 @@ export default function ProjectDetails() {
     const [magicLink, setMagicLink] = useState<MagicLink | null>(null)
     const [showMagicLinkForm, setShowMagicLinkForm] = useState<boolean>(false)
     const [copied, setCopied] = useState<boolean>(false)
+    const [showInvoiceForm, setShowInvoiceForm] = useState<boolean>(false)
     const navigate = useNavigate()
 
 	useEffect(() => {
@@ -210,6 +213,12 @@ export default function ProjectDetails() {
         closeMilestoneModal()
     }
 
+    function handleInvoiceSaved(data: unknown) {
+        const { invoice } = data as { invoice: Project["invoices"][number] }
+        setProject(prev => prev ? { ...prev, invoices: [invoice, ...prev.invoices] } : prev)
+        setShowInvoiceForm(false)
+    }
+
     function handleMagicLinkCreated(data: unknown) {
         setMagicLink(data as MagicLink)
         setShowMagicLinkForm(false)
@@ -328,6 +337,20 @@ export default function ProjectDetails() {
                     onSaved={handleMagicLinkCreated}
                 />
             )}
+            {showInvoiceForm && (
+                <InvoiceFormModal
+                    projectId={project.id}
+                    projectTitle={project.title}
+                    defaults={{
+                        adminName: project.admin.businessName || project.admin.name || "",
+                        adminAddress: project.admin.address ?? "",
+                        clientName: project.client.companyName || project.client.name || "",
+                        clientAddress: project.client.address ?? ""
+                    }}
+                    onClose={() => setShowInvoiceForm(false)}
+                    onSaved={handleInvoiceSaved}
+                />
+            )}
             {milestoneToDelete && (
                 <AreYouSureModal
                     itemType="milestone"
@@ -422,7 +445,9 @@ export default function ProjectDetails() {
                 <section className="projectInvoicesCard">
                     <div className="projectDetailsInvoicesHeader">
                         <h3>Invoices</h3>
-                        <button className="newButtonSmall"><Plus /> New Invoice</button>
+                        {isAdmin && (
+                            <button className="newButtonSmall" onClick={() => setShowInvoiceForm(true)}><Plus /> New Invoice</button>
+                        )}
                     </div>
                     {project.invoices.length > 0 ? (
                         <ul className="projectInvoiceList">
@@ -435,7 +460,7 @@ export default function ProjectDetails() {
                                     role="link"
                                     tabIndex={0}
                                     >
-                                    <span className="projectInvoiceNumber">Invoice #{invoice.number}</span>
+                                    <span className="projectInvoiceNumber">{formatInvoiceNumber(invoice.number)}</span>
                                     <span className="projectInvoiceDate">{formatInvoiceDate(invoice.issueDate)}</span>
                                 </li>
                             ))}

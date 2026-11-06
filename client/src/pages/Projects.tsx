@@ -10,6 +10,7 @@ export interface ProjectClient {
 	companyName: string | null
 	email: string
 	phone: string | null
+	address: string
 }
 
 export interface Milestone {
@@ -27,6 +28,7 @@ export interface ProjectAdmin {
 	businessName: string | null
 	email: string
 	phone: string | null
+	address: string
 }
 
 export interface ProjectInvoice {

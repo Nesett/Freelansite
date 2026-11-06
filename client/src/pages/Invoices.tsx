@@ -12,6 +12,7 @@ export interface Invoice {
 	issueDate: string
 	total: number
 	clientName: string
+	number: number
 	project: {
 		id: string
 		title: string

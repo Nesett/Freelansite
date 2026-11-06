@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Pencil, Printer } from 'lucide-react'
 import { formatInvoiceNumber, STATUS_LABELS } from '../components/InvoiceEntry'
 import type { InvoiceStatus } from './Invoices'
+import InvoiceFormModal from '../components/InvoiceFormModal'
+import { useAuth } from '../context/AuthContext'
 
 interface InvoiceItem {
 	id: string
@@ -10,10 +12,12 @@ interface InvoiceItem {
 	description: string | null
 	amount: number
 	quantity: number
+	milestoneId: string | null
 }
 
 interface InvoiceDetail {
 	id: string
+	number: number
 	status: InvoiceStatus
 	deadline: string
 	issueDate: string
@@ -49,11 +53,13 @@ function formatMoney(value: number) {
 
 export default function InvoiceDetails() {
 	const { id } = useParams()
+	const { user } = useAuth()
 
 	const [ invoice, setInvoice ] = useState<InvoiceDetail | null>(null)
 	const [ loading, setLoading ] = useState(true)
 	const [ saving, setSaving ] = useState(false)
 	const [ error, setError ] = useState('')
+	const [ showEdit, setShowEdit ] = useState(false)
 
 	useEffect(() => {
 		let cancelled = false
@@ -90,7 +96,7 @@ export default function InvoiceDetails() {
         if (!invoice) return
 
         const previousTitle = document.title
-        document.title = `Invoice ${formatInvoiceNumber(invoice.id)}`
+        document.title = `Invoice ${formatInvoiceNumber(invoice.number)}`
 
         return () => {
             document.title = previousTitle
@@ -125,6 +131,12 @@ export default function InvoiceDetails() {
 		}
 	}
 
+	function handleSaved(data: unknown) {
+		const { updatedInvoice } = data as { updatedInvoice: Partial<InvoiceDetail> }
+		setInvoice(prev => prev ? { ...prev, ...updatedInvoice } : prev)
+		setShowEdit(false)
+	}
+
 	if (loading) {
 		return (
 			<div className="pageContent">
@@ -144,6 +156,15 @@ export default function InvoiceDetails() {
 
 	return (
 		<div className="pageContent">
+			{showEdit && (
+				<InvoiceFormModal
+					projectId={invoice.project.id}
+					projectTitle={invoice.project.title}
+					invoice={invoice}
+					onClose={() => setShowEdit(false)}
+					onSaved={handleSaved}
+				/>
+			)}
 			<div className="invoiceSheet">
 				<div className="invoiceSheetTop">
 					<Link to="/invoices" className="invoiceBackLink invoiceNoPrint">
@@ -157,11 +178,21 @@ export default function InvoiceDetails() {
 
 				<div className="invoiceTitleRow">
 					<div>
-						<p className="invoiceNumber">{formatInvoiceNumber(invoice.id)}</p>
+						<p className="invoiceNumber">{formatInvoiceNumber(invoice.number)}</p>
 						<h1>Invoice</h1>
 					</div>
 
 					<div className="invoiceActions invoiceNoPrint">
+						{user?.role === 'admin' && invoice.status !== 'PAID' && (
+							<button
+								className="invoiceSecondaryButton"
+								type="button"
+								onClick={() => setShowEdit(true)}
+							>
+								<Pencil size={16} />
+								Edit
+							</button>
+						)}
 						{invoice.status !== 'PAID' && (
 							<button
 								className="newButton"
