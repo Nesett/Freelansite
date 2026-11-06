@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
-import { MilestoneStatus, ProjectStatus } from '@prisma/client'
+import { MilestoneStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"
@@ -22,7 +22,7 @@ export async function createProject(req: Request, res: Response) {
             where: {
                 id: clientId,
                 adminId: adminId,
-                isActive: true
+                deletedByAdmin: false
             }
         })
 
@@ -116,34 +116,55 @@ export async function getAllProjects(req: Request, res: Response) {
 
 
 export async function getProject(req: Request, res: Response) {
-	const projectId = String(req.params.id)
+    const projectId = String(req.params.id)
 
-	try {
-		const project = await db.project.findFirst({
-			where: {
-				id: projectId,
-				...projectAccessFilter(req)
-			},
-			include: {
-				client: {
-					select: {
-						id: true,
-						name: true,
-						companyName: true
-					}
-				},
-				admin: {
-					select: {
-						name: true,
-						businessName: true
-					}
-				},
-				milestones: {
+    const invoiceVisibility = req.userRole === 'admin'
+        ? { deletedByAdmin: false }
+        : { deletedByClient: false }
+
+    try {
+        const project = await db.project.findFirst({
+            where: {
+                id: projectId,
+                ...projectAccessFilter(req)
+            },
+            include: {
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        companyName: true,
+                        email: true,
+                        phone: true,
+                        address: true
+                    }
+                },
+                admin: {
+                    select: {
+                        name: true,
+                        businessName: true,
+                        email: true,
+                        phone: true,
+                        address: true
+                    }
+                },
+                milestones: {
                     where: { deletedByAdmin: false },
-					orderBy: { orderIndex: 'asc' }
-				}
-			}
-		})
+                    orderBy: { orderIndex: 'asc' }
+                },
+                invoices: {
+                    where: invoiceVisibility,
+                    orderBy: { issueDate: 'desc' },
+                    select: {
+                        number: true,
+                        id: true,
+                        total: true,
+                        status: true,
+                        issueDate: true
+                    }
+                }
+            }
+        })
 
         if (!project) {
             return res.status(404).json({ error: "Project not found." })
@@ -154,10 +175,10 @@ export async function getProject(req: Request, res: Response) {
             progress: countProgressPercent(project.milestones)
         })
 
-	} catch(err) {
-		console.log(err)
-		return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
-	}
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({ error: `Could not fetch project with id ${projectId}.` })
+    }
 }
 
 export async function updateProject(req: Request, res: Response) {
@@ -165,10 +186,10 @@ export async function updateProject(req: Request, res: Response) {
 	const adminId = req.user.id
 	const projectId = String(req.params.id)
 
-    const {title, description, budget, status, notes} = req.body
+    const {title, description, isOnHold} = req.body
 
-    if (status !== undefined && [ProjectStatus.COMPLETED, ProjectStatus.AWAITING_APPROVAL].includes(status)) {
-        return res.status(400).json({error: "This status can only be set automatically through milestone actions."})
+    if (isOnHold !== undefined && typeof isOnHold !== "boolean") {
+        return res.status(400).json({error: "isOnHold must be true or false."})
     }
 
     try {
@@ -190,9 +211,7 @@ export async function updateProject(req: Request, res: Response) {
             data: {
                 title: title !== undefined ? title : existingProject.title,
 				description: description !== undefined ? description : existingProject.description,
-				budget: budget !== undefined ? Number(budget) : existingProject.budget,
-				status: status !== undefined ? status : existingProject.status,
-				notes: notes !== undefined ? notes : existingProject.notes
+                isOnHold: isOnHold !== undefined ? isOnHold : existingProject.isOnHold
             }
         })
 

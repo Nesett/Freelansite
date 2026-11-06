@@ -24,13 +24,34 @@ type ProjectWithMilestones = Prisma.ProjectGetPayload<{
 	include: { milestones: true }
 }>
 
-export const toPublicSafe = (project: ProjectWithMilestones) => ({
-	name: project.title,
-	status: project.status,
+type ProjectForPublic = Prisma.ProjectGetPayload<{
+	include: {
+		milestones: true
+		client: { select: { name: true, companyName: true } }
+		admin: { select: { name: true, businessName: true, email: true, phone: true } }
+	}
+}>
+
+export const toPublicSafe = (project: ProjectForPublic) => ({
+	title: project.title,
+	description: project.description,
 	progress: countProgressPercent(project.milestones),
+	client: {
+		name: project.client.name,
+		companyName: project.client.companyName
+	},
+	admin: {
+		name: project.admin.name,
+		businessName: project.admin.businessName,
+		email: project.admin.email,
+		phone: project.admin.phone
+	},
 	milestones: project.milestones.map((m) => ({
+		id: m.id,
 		title: m.title,
+		description: m.description,
+		status: m.status,
 		deadline: m.deadline,
-		status: m.status
+		orderIndex: m.orderIndex
 	}))
 })

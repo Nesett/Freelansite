@@ -417,7 +417,7 @@ h1, h2, h3, h4, p, a {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 10px 16px;
+	padding: 5px 16px;
 	background-color: var(--primary-color);
 	color: var(--elements-color);
 	border: none;
@@ -430,6 +430,28 @@ h1, h2, h3, h4, p, a {
 }
 
 .newButton:hover {
+	opacity: 0.9;
+}
+
+
+.newButtonSmall {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	gap: 8px;
+	padding: 1px 12px 3px 5px;
+	background-color: var(--primary-color);
+	color: var(--elements-color);
+	border: none;
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.newButtonSmall:hover {
 	opacity: 0.9;
 }
 
@@ -716,6 +738,204 @@ h1, h2, h3, h4, p, a {
 	opacity: 0.9;
 }
 
+/* ----- modal form invoices ----- */
+
+.newClientModal.invoiceFormModal {
+	max-width: 760px;
+}
+
+.invoiceFormParties,
+.invoiceFormMeta {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+.invoiceFormMeta {
+	margin-top: 20px;
+}
+
+.invoiceFormSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.invoiceFormSectionTitle {
+	font-weight: 700;
+	font-size: 0.9rem;
+	color: var(--text-color);
+}
+
+.invoiceFormField {
+	display: flex;
+	flex-direction: column;
+}
+
+.invoiceFormModal input:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.invoiceFormModal select {
+	background-color: var(--input-color);
+	border: none;
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	color: var(--text-color);
+	outline: none;
+	max-width: 220px;
+	cursor: pointer;
+}
+
+.invoiceFormModal select:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.invoiceFormItemsHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 28px 0 12px;
+}
+
+.invoiceFormItemsHeader h3 {
+	font-size: 1rem;
+	color: var(--text-color);
+}
+
+.invoiceFormItemActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.invoiceFormItemActions .invoiceSecondaryButton {
+	padding: 8px 14px;
+	white-space: nowrap;
+}
+
+.invoiceFormRows {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.invoiceFormRowGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.invoiceFormRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 70px 100px 100px 32px;
+	gap: 8px;
+	align-items: center;
+}
+
+.invoiceFormRowHead {
+	font-size: 0.75rem;
+}
+
+.invoiceFormModal .invoiceFormRow input,
+.invoiceFormModal .invoiceFormDescription {
+	padding: 10px 12px;
+}
+
+.invoiceFormLineAmount {
+	text-align: right;
+	font-size: 0.9rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.invoiceFormRow span.invoiceFormLineAmount {
+	color: var(--text-color);
+}
+
+.invoiceFormRowHead span.invoiceFormLineAmount {
+	font-size: 0.75rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceFormIconButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: none;
+	padding: 4px;
+	cursor: pointer;
+}
+
+.invoiceFormIconButton:hover svg {
+	color: #c0392b;
+}
+
+.invoiceFormLinkButton {
+	align-self: flex-start;
+	background: none;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	font-size: 0.8rem;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.invoiceFormEmpty {
+	font-size: 0.9rem;
+}
+
+.invoiceFormTotal {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid var(--border-color);
+	font-weight: 700;
+}
+
+.invoiceFormTotal span {
+	color: var(--text-color);
+}
+
+.invoiceFormModal .errorMessage {
+	margin-top: 16px;
+}
+
+.invoiceFormModal form > button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+	.invoiceFormParties,
+	.invoiceFormMeta {
+		grid-template-columns: 1fr;
+	}
+
+	.invoiceFormItemsHeader {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.invoiceFormItemActions {
+		flex-wrap: wrap;
+	}
+
+	.invoiceFormRow {
+		grid-template-columns: minmax(0, 1fr) 60px 80px 32px;
+	}
+
+	.invoiceFormRow span.invoiceFormLineAmount {
+		display: none;
+	}
+}
 /* -------------------------------------------- Client Details Page -------------------------------------------- */
 
 .clientPageTitle {
@@ -923,7 +1143,7 @@ hr {
 .milestoneEditArea {
 	display: flex;
 	align-items: center;
-	justify-content: flex-end;
+	justify-content: space-between;
 	gap: 6px;
 	font-size: 0.85rem;
 	color: var(--muted-text-color);
@@ -934,7 +1154,7 @@ hr {
 	height: 14px;
 }
 
-/* border colors for the active (in-progress) milestone, per its deadline/status */
+/* border colors for the active milestone, per its deadline/status */
 .milestoneHolder--green {
 	border-color: #2F9E58;
 }
@@ -949,6 +1169,196 @@ hr {
 
 .milestoneHolder--yellow {
 	border-color: #D9A62E;
+}
+
+/* -------------------------------------------- Milestone entry (timeline, tags, buttons) -------------------------------------------- */
+
+.milestoneHeaderRight {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.milestoneDescription {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	color: #5F5F68;
+	white-space: pre-line;
+}
+
+.milestoneHolder hr {
+	border: none;
+	border-top: 1px solid var(--border-color);
+	margin: 0;
+}
+
+/* ----- status tag (shared by project + milestone tags) ----- */
+.statusTag {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 14px;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.statusTag--neutral {
+	background-color: #EDEDF0;
+	color: #6B6B75;
+}
+
+.statusTag--progress {
+	background-color: #DDEBFA;
+	color: #2F6AA8;
+}
+
+.statusTag--warning {
+	background-color: #FBEAC4;
+	color: #8A5A12;
+}
+
+.statusTag--success {
+	background-color: #D5EDD6;
+	color: #1F6B3A;
+}
+
+.statusTag--hold {
+	background-color: #E6E1F0;
+	color: #5E5380;
+}
+
+/* ----- timeline: dot + line on the side of each milestone ----- */
+.milestoneTimelineItem {
+	position: relative;
+	padding-left: 36px;
+}
+
+/* line down to the next dot */
+.milestoneTimelineItem::before {
+	content: "";
+	position: absolute;
+	left: 5px;
+	top: 30px;
+	bottom: -46px;
+	width: 2px;
+	background-color: var(--border-color);
+}
+
+.milestoneTimelineItem:last-child::before {
+	display: none;
+}
+
+.milestoneDot {
+	position: absolute;
+	left: 0;
+	top: 24px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	z-index: 1;
+	box-shadow: 0 0 0 4px var(--bg-color);
+}
+
+.milestoneDot--neutral {
+	background-color: #B9B9C1;
+}
+
+.milestoneDot--progress {
+	background-color: #6FA8DC;
+}
+
+.milestoneDot--warning {
+	background-color: #E0A93A;
+}
+
+.milestoneDot--success {
+	background-color: #2E8B57;
+}
+
+.milestoneDot--hold {
+	background-color: #9A8FB5;
+}
+
+/* ----- action buttons ----- */
+.milestoneStatusButton {
+	padding: 8px 18px;
+	border: none;
+	border-radius: 999px;
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.milestoneStatusButton--start,
+.milestoneStatusButton--approve {
+	background-color: #D5EDD6;
+	color: #1D1D1D;
+}
+
+.milestoneStatusButton--start:hover,
+.milestoneStatusButton--approve:hover {
+	background-color: #C2E4C4;
+}
+
+.milestoneStatusButton--request {
+	background-color: #FBEAC4;
+	color: #1D1D1D;
+}
+
+.milestoneStatusButton--request:hover {
+	background-color: #F6DDA3;
+}
+
+.milestoneAdminActions {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	margin-left: auto;
+}
+
+.milestoneEditButton,
+.milestoneDeleteButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 2px;
+	background: none;
+	border: none;
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.milestoneEditButton {
+	color: #3F3F47;
+}
+
+.milestoneEditButton:hover:not(:disabled) {
+	color: #1D1D1D;
+}
+
+.milestoneEditButton:disabled {
+	color: #C4C4CB;
+	cursor: not-allowed;
+}
+
+.milestoneDeleteButton {
+	color: #B3261E;
+}
+
+.milestoneDeleteButton:hover {
+	color: #8C1D18;
+}
+
+.milestoneEditButton svg,
+.milestoneDeleteButton svg {
+	width: 16px;
+	height: 16px;
 }
 
 .statusBarHolder {
@@ -978,6 +1388,671 @@ hr {
 	color: var(--text-color);
 	white-space: nowrap;
 }
+/* -------------------------------------------- Project Details Page -------------------------------------------- */
+
+.projectHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+	margin-bottom: 24px;
+}
+
+.projectHeaderInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.projectHeaderClient {
+	color: var(--muted-text-color);
+	font-size: 0.9rem;
+}
+
+.projectHeaderInfo h1 {
+	font-size: 1.75rem;
+	font-weight: 700;
+}
+
+/* optional subtitle, same look as the subtitle on the Invoices page */
+.projectDescription {
+	color: var(--muted-text-color);
+	font-size: 0.9rem;
+	line-height: 1.5;
+	max-width: 640px;
+}
+
+.projectHeaderInfo .statusBarHolder {
+	max-width: 460px;
+	margin-top: 8px;
+}
+
+.projectHeaderActions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.projectOptionsWrapper {
+	position: relative;
+}
+
+.projectOptionsButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	background: none;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+	cursor: pointer;
+}
+
+.projectOptionsButton:hover {
+	background-color: var(--input-color);
+}
+
+.projectBody {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	grid-template-rows: auto auto 1fr auto;
+	grid-template-areas:
+		"milestones summary"
+		"milestones invoices"
+		"milestones ."
+		"magic magic";
+	align-items: start;
+	gap: 24px 40px;
+}
+
+.projectMilestonesDiv {
+	grid-area: milestones;
+	min-width: 0;
+}
+
+.projectSummaryCard {
+	grid-area: summary;
+}
+
+.projectInvoicesCard {
+	grid-area: invoices;
+}
+
+.projectDetailsInvoicesHeader {
+	margin-bottom: 16px;
+}
+
+.projectInvoicesCard .projectDetailsInvoicesHeader h3 {
+	margin-bottom: 0;
+}
+
+.projectBody .magicLinksCard {
+	grid-area: magic;
+}
+
+@media (orientation: portrait) {
+	.projectBody {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: none;
+		grid-template-areas:
+			"milestones"
+			"summary"
+			"invoices"
+			"magic";
+	}
+}
+
+/* ----- Milestones ----- */
+
+.milestoneHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 20px;
+}
+
+.milestoneHeader h2 {
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+
+.projectMilestones {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* ----- Summary ----- */
+
+.projectSummaryCard,
+.projectInvoicesCard {
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	padding: 24px;
+}
+
+.projectSummaryCard h3,
+.projectInvoicesCard h3 {
+	margin-bottom: 16px;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
+.projectSummaryRows {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--border-color);
+	font-size: 0.9rem;
+}
+
+.projectSummaryRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.projectSummaryRow span:last-child {
+	font-weight: 600;
+}
+
+.projectSummaryContact {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding-top: 20px;
+}
+
+.projectSummaryContactLabel {
+	color: var(--muted-text-color);
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.projectSummaryContactItem {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.9rem;
+	overflow-wrap: anywhere;
+}
+
+.projectSummaryContactItem svg {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: var(--muted-text-color);
+}
+
+/* ----- Invoices ----- */
+
+.projectInvoiceList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.projectDetailsInvoicesHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.projectInvoiceItem {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 8px 12px;
+	margin: 0 -12px;
+	border-radius: 6px;
+}
+
+.projectInvoiceNumber {
+	font-size: 0.9rem;
+}
+
+.projectInvoiceDate {
+	color: var(--muted-text-color);
+	font-size: 0.8rem;
+}
+
+/* ----- Magic links ----- */
+
+.magicLinksCard {
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.magicLinksHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 18px 24px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.magicLinkHeaderElements {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.magicLinksHeader svg {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: var(--muted-text-color);
+}
+
+.magicLinksHeader h3 {
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
+.magicLinksHeader span {
+	margin-left: 4px;
+	color: var(--muted-text-color);
+	font-size: 0.8rem;
+}
+
+.magicLinksBody {
+	padding: 16px 24px;
+	font-size: 0.9rem;
+}
+
+.magicLinksEmpty {
+	padding: 20px 0;
+	text-align: center;
+	color: var(--muted-text-color);
+}
+
+.magicLinkButton {
+	padding: 5px 24px;
+	border: none;
+	font-family: inherit;
+	cursor: pointer;
+	transition: filter 0.15s ease;
+}
+
+.magicLinkButton:hover {
+	filter: brightness(0.95);
+}
+
+.magicLinkEntry {
+	display: flex;
+	background-color: var(--bg-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	color: var(--text-color);
+	text-align: left;
+	overflow: hidden;
+}
+
+.magicLinkExpires,
+.magicLinkUrl {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px 48px;
+}
+
+.magicLinkExpires {
+	border-right: 1px solid var(--border-color);
+	flex-shrink: 0;
+}
+
+.magicLinkUrl {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+}
+
+.magicLinkUrlText {
+	overflow-wrap: anywhere;
+}
+
+.magicLinkCopy {
+	position: absolute;
+	top: 12px;
+	right: 16px;
+}
+
+.magicLinkCopy svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* -------------------------------------------- Invoices Page -------------------------------------------- */
+
+.invoiceTabs {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.invoiceTab {
+	padding: 9px 16px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: rgba(29, 53, 87, 0.75);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.invoiceTab:hover {
+	background-color: var(--input-color);
+}
+
+.invoiceTab--active,
+.invoiceTab--active:hover {
+	background-color: var(--primary-color);
+	color: var(--elements-color);
+	font-weight: 700;
+}
+
+.invoiceNumber {
+	font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+	font-size: 0.8rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceAmount {
+	font-weight: 700;
+}
+
+.statusPill {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.statusPill--paid {
+	background-color: #DFF5E6;
+	color: #1E7A3C;
+}
+
+.statusPill--unpaid {
+	background-color: #FDF0C8;
+	color: #8A6100;
+}
+
+.statusPill--overdue {
+	background-color: #FBE0E0;
+	color: #B3261E;
+}
+
+/* -------------------------------------------- Invoice Details Page -------------------------------------------- */
+
+.invoiceSheet {
+	max-width: 896px;
+	margin: 0 auto;
+	padding: 32px;
+	background-color: var(--elements-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	box-shadow: 0 1px 3px rgba(29, 53, 87, 0.06);
+}
+
+.invoiceSheetTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14px;
+}
+
+.invoiceBackLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.85rem;
+	color: rgba(29, 53, 87, 0.75);
+	text-decoration: none;
+}
+
+.invoiceBackLink:hover {
+	color: var(--text-color);
+}
+
+.invoiceTitleRow {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding-bottom: 28px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.invoiceTitleRow h1 {
+	font-size: 2rem;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.invoiceActions {
+	display: flex;
+	gap: 12px;
+}
+
+.invoiceActions .newButton:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.invoiceSecondaryButton {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+	background-color: var(--elements-color);
+	color: var(--text-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.invoiceSecondaryButton:hover {
+	background-color: var(--input-color);
+}
+
+.invoiceError {
+	margin-top: 12px;
+	text-align: right;
+}
+
+.invoiceParties {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 28px 32px;
+	padding: 32px 0;
+}
+
+.invoiceLabel {
+	margin-bottom: 10px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: rgba(29, 53, 87, 0.75);
+}
+
+.invoicePartyName {
+	margin-bottom: 4px;
+	font-weight: 700;
+}
+
+.invoicePartyLine {
+	font-size: 0.9rem;
+	line-height: 1.6;
+	color: var(--muted-text-color);
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+.invoiceDateValue {
+	font-size: 0.9rem;
+}
+
+.invoiceItemsWrapper {
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.invoiceItemsTable {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.invoiceItemsTable thead th {
+	padding: 14px 16px;
+	text-align: left;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: rgba(29, 53, 87, 0.75);
+	background-color: var(--input-color);
+	border-bottom: 1px solid var(--border-color);
+}
+
+.invoiceItemsTable tbody td {
+	padding: 16px;
+	font-size: 0.9rem;
+	border-bottom: 1px solid var(--border-color);
+	vertical-align: top;
+}
+
+.invoiceItemsTable tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.invoiceItemsTable th:not(:first-child),
+.invoiceItemsTable td:not(:first-child) {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.invoiceItemDescription {
+	margin-top: 2px;
+	font-size: 0.8rem;
+	color: var(--muted-text-color);
+}
+
+.invoiceTotals {
+	width: 320px;
+	max-width: 100%;
+	margin: 24px 0 0 auto;
+	border-top: 1px solid var(--border-color);
+}
+
+.invoiceTotalRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 16px;
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+
+
+@media (max-width: 720px) {
+	.invoiceSheet {
+		padding: 24px 20px;
+	}
+
+	.invoiceTitleRow {
+		flex-direction: column;
+	}
+
+	.invoiceParties {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media print {
+	@page {
+		margin: 10mm;
+	}
+
+	body * {
+		visibility: hidden;
+	}
+
+	.invoiceSheet,
+	.invoiceSheet * {
+		visibility: visible;
+	}
+
+	.invoiceSheet {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		max-width: none;
+		padding: 0;
+		border: none;
+		box-shadow: none;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	.invoiceNoPrint {
+		display: none !important;
+	}
+
+	.invoiceSheetTop .statusPill {
+		margin-left: auto;
+	}
+
+}
+
+/* -------------------------------------------- Public Magic Link Page -------------------------------------------- */
+
+.publicPage {
+	max-width: 900px;
+}
+
+.publicBody {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	margin-top: 24px;
+}
+
+.milestoneDescription {
+	color: var(--muted-text-color);
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.publicManagedBy .projectSummaryContact {
+	padding-top: 0;
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {

@@ -47,18 +47,32 @@ app.get("/api/public/:token", publicLimiter, async (req: Request, res: Response)
   const token = String(req.params.token)
 
   const link = await prisma.magicLink.findUnique({
-    where: { 
+    where: {
       token
     },
-    include: { 
-      project: { 
-        include: { 
+    include: {
+      project: {
+        include: {
+          client: {
+            select: {
+              name: true,
+              companyName: true
+            }
+          },
+          admin: {
+            select: {
+              name: true,
+              businessName: true,
+              email: true,
+              phone: true
+            }
+          },
           milestones: {
             where: { deletedByAdmin: false },
             orderBy: { orderIndex: 'asc' }
           }
-        } 
-      } 
+        }
+      }
     }
   })
 

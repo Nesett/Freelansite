@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import type { Client } from '../pages/clients/Clients'
+import type { Client } from '../pages/Clients'
 
 
 export type SortField = 'client' | 'deadline'

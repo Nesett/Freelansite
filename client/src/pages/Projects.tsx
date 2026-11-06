@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react"
 import ProjectEntry from "../components/ProjectEntry"
 
-export type ProjectStatusValue = "NOT_STARTED" | "IN_PROGRESS" | "AWAITING_APPROVAL" | "COMPLETED" | "ON_HOLD"
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
 export interface ProjectClient {
 	id: string
-	name?: string | null
-	companyName?: string | null
+	name: string | null
+	companyName: string | null
+	email: string
+	phone: string | null
+	address: string
 }
 
 export interface Milestone {
@@ -20,15 +22,39 @@ export interface Milestone {
 	description?: string | null
 }
 
+export interface ProjectAdmin {
+	name: string
+	businessName: string | null
+	email: string
+	phone: string | null
+	address: string
+}
+
+export interface ProjectInvoice {
+	id: string
+	number: number
+	total: number
+	status: "UNPAID" | "PAID" | "OVERDUE"
+	issueDate: string
+}
+
 export interface Project {
 	id: string
 	title: string
 	description?: string | null
 	budget?: number | null
-	status: ProjectStatusValue
+	isOnHold: boolean
 	client: ProjectClient
+	admin: ProjectAdmin
 	progress: number
 	milestones: Milestone[]
+	invoices: ProjectInvoice[]
+}
+
+export interface MagicLink {
+	id: string
+	url: string,
+	expiresAt: string
 }
 
 

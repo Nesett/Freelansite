@@ -5,6 +5,8 @@ interface AreYouSureModalProps {
 	itemType: string
 	itemName: string
 	warningMessage?: string
+	title?: string
+	confirmLabel?: string
 	setAreYouSure: Dispatch<SetStateAction<boolean>>
 	onConfirm: () => void | Promise<void>
 }
@@ -13,6 +15,8 @@ export default function AreYouSureModal({
 	itemType,
 	itemName,
 	warningMessage,
+	title,
+	confirmLabel = "Proceed",
 	setAreYouSure,
 	onConfirm
 }: AreYouSureModalProps) {
@@ -21,7 +25,7 @@ export default function AreYouSureModal({
 			<div className="areYouSureModal">
 				<div className="areYouSureModalTop">
 					<button onClick={() => setAreYouSure(false)}><X /></button>
-					<h2>Do you want to delete {itemType}?</h2>
+					<h2>{title ?? `Do you want to delete ${itemType}?`}</h2>
 				</div>
 				<h1>{itemName}</h1>
 				{warningMessage && <p>{warningMessage}</p>}
@@ -36,7 +40,7 @@ export default function AreYouSureModal({
 						className="areYouSureProceedButton" 
 						onClick={onConfirm}
 					>
-						Proceed
+						{confirmLabel}
 					</button>
 				</div>
 			</div>
