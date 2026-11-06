@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Printer } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, EllipsisVertical, Printer } from 'lucide-react'
 import { formatInvoiceNumber, STATUS_LABELS } from '../components/InvoiceEntry'
 import type { InvoiceStatus } from './Invoices'
 import InvoiceFormModal from '../components/InvoiceFormModal'
+import AreYouSureModal from '../components/AreYouSureModal'
 import { useAuth } from '../context/AuthContext'
 
 interface InvoiceItem {
@@ -54,12 +55,17 @@ function formatMoney(value: number) {
 export default function InvoiceDetails() {
 	const { id } = useParams()
 	const { user } = useAuth()
+	const navigate = useNavigate()
+	const isAdmin = user?.role === 'admin'
 
 	const [ invoice, setInvoice ] = useState<InvoiceDetail | null>(null)
 	const [ loading, setLoading ] = useState(true)
 	const [ saving, setSaving ] = useState(false)
 	const [ error, setError ] = useState('')
 	const [ showEdit, setShowEdit ] = useState(false)
+	const [ showOptions, setShowOptions ] = useState(false)
+	const [ showDelete, setShowDelete ] = useState(false)
+	const optionsRef = useRef<HTMLDivElement | null>(null)
 
 	useEffect(() => {
 		let cancelled = false
@@ -103,6 +109,19 @@ export default function InvoiceDetails() {
         }
     }, [invoice])
 
+	useEffect(() => {
+		if (!showOptions) return
+
+		function onMouseDown(e: MouseEvent) {
+			if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
+				setShowOptions(false)
+			}
+		}
+
+		document.addEventListener('mousedown', onMouseDown)
+		return () => document.removeEventListener('mousedown', onMouseDown)
+	}, [showOptions])
+
 	const handleMarkAsPaid = async () => {
 		if (!invoice) return
 
@@ -128,6 +147,28 @@ export default function InvoiceDetails() {
 			setError('Could not update the invoice.')
 		} finally {
 			setSaving(false)
+		}
+	}
+
+	async function handleDelete() {
+		if (!invoice) return
+
+		try {
+			const res = await fetch(`/api/invoices/${invoice.id}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			})
+
+			if (!res.ok) {
+				const data = await res.json().catch(() => null)
+				throw new Error(data?.error || 'Could not delete the invoice.')
+			}
+
+			setShowDelete(false)
+			navigate('/invoices')
+		} catch (err) {
+			setShowDelete(false)
+			setError(err instanceof Error ? err.message : 'Could not delete the invoice.')
 		}
 	}
 
@@ -165,6 +206,15 @@ export default function InvoiceDetails() {
 					onSaved={handleSaved}
 				/>
 			)}
+			{showDelete && (
+				<AreYouSureModal
+					itemType="invoice"
+					itemName={formatInvoiceNumber(invoice.number)}
+					warningMessage="This invoice will be removed from the project."
+					setAreYouSure={setShowDelete}
+					onConfirm={handleDelete}
+				/>
+			)}
 			<div className="invoiceSheet">
 				<div className="invoiceSheetTop">
 					<Link to="/invoices" className="invoiceBackLink invoiceNoPrint">
@@ -183,34 +233,64 @@ export default function InvoiceDetails() {
 					</div>
 
 					<div className="invoiceActions invoiceNoPrint">
-						{user?.role === 'admin' && invoice.status !== 'PAID' && (
+						{isAdmin ? (
+							<div className="projectOptionsWrapper" ref={optionsRef}>
+								<button
+									type="button"
+									className="projectOptionsButton"
+									onClick={() => setShowOptions(prev => !prev)}
+									aria-label="Invoice options"
+								>
+									<EllipsisVertical />
+								</button>
+								{showOptions && (
+									<div className="clientOptionsMenu">
+										{invoice.status !== 'PAID' && (
+											<button
+												type="button"
+												className="clientOptionsMenuItem"
+												onClick={() => { setShowOptions(false); handleMarkAsPaid() }}
+												disabled={saving}
+											>
+												Mark as paid
+											</button>
+										)}
+										<button
+											type="button"
+											className="clientOptionsMenuItem"
+											onClick={() => { setShowOptions(false); window.print() }}
+										>
+											Print
+										</button>
+										{invoice.status !== 'PAID' && (
+											<button
+												type="button"
+												className="clientOptionsMenuItem"
+												onClick={() => { setShowOptions(false); setShowEdit(true) }}
+											>
+												Edit
+											</button>
+										)}
+										<button
+											type="button"
+											className="clientOptionsMenuItem"
+											onClick={() => { setShowOptions(false); setShowDelete(true) }}
+										>
+											Delete
+										</button>
+									</div>
+								)}
+							</div>
+						) : (
 							<button
 								className="invoiceSecondaryButton"
 								type="button"
-								onClick={() => setShowEdit(true)}
+								onClick={() => window.print()}
 							>
-								<Pencil size={16} />
-								Edit
+								<Printer size={16} />
+								Print / Download PDF
 							</button>
 						)}
-						{invoice.status !== 'PAID' && (
-							<button
-								className="newButton"
-								type="button"
-								onClick={handleMarkAsPaid}
-								disabled={saving}
-							>
-								{saving ? 'Saving...' : 'Mark as Paid'}
-							</button>
-						)}
-						<button
-							className="invoiceSecondaryButton"
-							type="button"
-							onClick={() => window.print()}
-						>
-							<Printer size={16} />
-							Print / Download PDF
-						</button>
 					</div>
 				</div>
 
