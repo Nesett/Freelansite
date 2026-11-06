@@ -422,7 +422,7 @@ export default function ProjectDetails() {
                 <section className="projectInvoicesCard">
                     <div className="projectDetailsInvoicesHeader">
                         <h3>Invoices</h3>
-                        <button className="statusPill statusPill--paid magicLinkButton">New Invoice</button>
+                        <button className="newButtonSmall"><Plus /> New Invoice</button>
                     </div>
                     {project.invoices.length > 0 ? (
                         <ul className="projectInvoiceList">
