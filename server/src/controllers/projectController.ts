@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
-import { MilestoneStatus, ProjectStatus } from '@prisma/client'
+import { MilestoneStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"

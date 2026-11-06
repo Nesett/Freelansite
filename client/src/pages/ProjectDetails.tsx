@@ -279,7 +279,7 @@ export default function ProjectDetails() {
 		return <p>{errorMessage || "Project not found."}</p>
 	}
 
-    const { label, variant } = getProjectTag(project.status)
+    const { label, variant } = getProjectTag(project.isOnHold, milestones)
     const sortedMilestones = [...milestones].sort((a, b) => a.orderIndex - b.orderIndex)
     const activeMilestone = getActiveMilestone(sortedMilestones)
     const currentProgress = countProgressPercent(milestones)

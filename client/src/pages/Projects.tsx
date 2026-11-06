@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import ProjectEntry from "../components/ProjectEntry"
 
-export type ProjectStatusValue = "NOT_STARTED" | "IN_PROGRESS" | "AWAITING_APPROVAL" | "COMPLETED" | "ON_HOLD"
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
 export interface ProjectClient {
@@ -44,7 +43,7 @@ export interface Project {
 	title: string
 	description?: string | null
 	budget?: number | null
-	status: ProjectStatusValue
+	isOnHold: boolean
 	client: ProjectClient
 	admin: ProjectAdmin
 	progress: number

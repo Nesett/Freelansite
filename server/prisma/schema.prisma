@@ -6,13 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ProjectStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  AWAITING_APPROVAL
-  COMPLETED
-  ON_HOLD
-}
 
 enum MilestoneStatus {
   NOT_STARTED
@@ -73,7 +66,7 @@ model Project {
   title           String
   description     String?
   budget          Int?
-  status          ProjectStatus @default(NOT_STARTED)
+  isOnHold        Boolean       @default(false) @map("is_on_hold")
   notes           String?
   deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
   deletedByClient Boolean       @default(false) @map("deleted_by_client")

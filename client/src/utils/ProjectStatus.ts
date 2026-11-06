@@ -1,5 +1,6 @@
-import type { Project, Milestone, ProjectStatusValue } from "../pages/Projects"
+import type { Project, Milestone } from "../pages/Projects"
 
+export type ProjectStatusValue = "NOT_STARTED" | "IN_PROGRESS" | "AWAITING_APPROVAL" | "COMPLETED"
 export type TagVariant = "neutral" | "warning" | "success" | "hold" | "progress"
 
 export interface ProjectDisplayState {
@@ -13,10 +14,9 @@ export interface ProjectDisplayState {
 
 const PROJECT_TAGS: Record<ProjectStatusValue, { label: string, variant: TagVariant }> = {
 	NOT_STARTED: { label: "Not started", variant: "neutral" },
-	IN_PROGRESS: { label: "In progress", variant: "neutral" },
-	AWAITING_APPROVAL: { label: "Awaiting approval", variant: "warning" },
-	COMPLETED: { label: "Completed", variant: "success" },
-	ON_HOLD: { label: "On hold", variant: "hold" }
+	IN_PROGRESS: { label: "In progress", variant: "progress" },
+	AWAITING_APPROVAL: { label: "Awaiting Approval", variant: "warning" },
+	COMPLETED: { label: "Completed", variant: "success" }
 }
 
 export const MILESTONE_PROGRESS: Record<string, number> = {
@@ -36,8 +36,24 @@ export function countProgressPercent(milestones: { status: string }[]): number {
 	return Math.round(sum / milestones.length)
 }
 
-export function getProjectTag(status: ProjectStatusValue) {
-	return PROJECT_TAGS[status]
+export function getProjectStatus(milestones: Milestone[]): ProjectStatusValue {
+	if (milestones.length === 0 || milestones.every(m => m.status === "NOT_STARTED")) {
+		return "NOT_STARTED"
+	}
+
+	if (milestones.every(m => m.status === "APPROVED")) {
+		return "COMPLETED"
+	}
+
+	return "IN_PROGRESS"
+}
+
+export function getProjectTag(isOnHold: boolean, milestones: Milestone[]): { label: string, variant: TagVariant } {
+	if (isOnHold) {
+		return { label: "On hold", variant: "hold" }
+	}
+
+	return PROJECT_TAGS[getProjectStatus(milestones)]
 }
 
 // active milestone is the first in order (sorted by orderIndex) that isn't approved yet.
@@ -139,20 +155,18 @@ export function getProjectDisplayState(project: Project): ProjectDisplayState {
 
 	const base = { progressPercent, deadlineText: null, deadlineDay: "", isUrgent: false }
 
-	if (project.status === "NOT_STARTED") {
-		return { ...base, tag: "Not started", tagVariant: "neutral" }
-	}
-
-	if (project.status === "ON_HOLD") {
+	if (project.isOnHold) {
 		return { ...base, tag: "On hold", tagVariant: "hold" }
 	}
 
-	if (project.status === "COMPLETED") {
-		return { ...base, tag: "Completed", tagVariant: "success" }
+	const status = getProjectStatus(project.milestones)
+
+	if (status === "NOT_STARTED") {
+		return { ...base, tag: "Not started", tagVariant: "neutral" }
 	}
 
-	if (project.status === "AWAITING_APPROVAL") {
-		return { ...base, tag: "Awaiting approval", tagVariant: "warning" }
+	if (status === "COMPLETED") {
+		return { ...base, tag: "Completed", tagVariant: "success" }
 	}
 
 	const activeMilestone = getActiveMilestone(project.milestones)
