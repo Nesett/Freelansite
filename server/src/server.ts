@@ -11,6 +11,7 @@ import milestoneRoutes from './routes/milestoneRoutes.js'
 import invoiceRoutes from './routes/invoiceRoutes.js'
 import { toPublicSafe } from "./utils/sanitizer.js"
 import { authLimiter, publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
+import helmet from 'helmet'
 
 
 const app = express()
@@ -21,22 +22,26 @@ const prisma = new PrismaClient({ adapter })
 
 const PORT = process.env.PORT || 5001
 
+if (!process.env.CLIENT_URL) {
+  throw new Error('CLIENT_URL is not set')
+}
 
+app.use(helmet())
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true
+  origin: process.env.CLIENT_URL,
+  credentials: true
 }))
 app.use(express.json())
 app.use(cookieParser())
 
 
-app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/auth', apiLimiter, authRoutes)
 app.use('/api/clients', apiLimiter, clientRoutes)
 app.use('/api/projects', apiLimiter, projectRoutes)
 app.use('/api/milestones', apiLimiter, milestoneRoutes)
 app.use('/api/invoices', apiLimiter, invoiceRoutes)
 
-app.get("/api/public/:token", publicLimiter, async (req: Request, res: Response) => {
+app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) => {
 
   const token = String(req.params.token)
 
