@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { createClient, getAllClients, getClient, updateClient, deactivateClient, getProjectsByClient, setClientPassword, loginClient } from "../controllers/clientController.js"
 import { requireAuth } from '../middleware/authMiddleware.js'
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router()
 
-router.put("/set-password", setClientPassword)
-router.post("/login", loginClient)
+router.put("/set-password", authLimiter, setClientPassword)
+router.post("/login", authLimiter, loginClient)
 
 router.post("/", requireAuth,  createClient)
 router.get("/", requireAuth, getAllClients)
