@@ -1,5 +1,5 @@
 import StatusTag from "./StatusTag"
-import { getProjectDisplayState } from "../utils/ProjectStatus"
+import { getProjectDisplayState, getProjectTotalBudget } from "../utils/ProjectStatus"
 import type { Project } from "../pages/Projects"
 import { useNavigate } from "react-router-dom"
 
@@ -11,6 +11,7 @@ interface ProjectEntryProps {
 export default function ProjectEntry({ project, showClient = false }: ProjectEntryProps) {
     const navigate = useNavigate()
     const { tag, tagVariant, progressPercent } = getProjectDisplayState(project)
+	const totalBudget = getProjectTotalBudget(project.milestones)
 
     function handleRowClick() {
         navigate(`/projects/${project.id}`)
@@ -26,8 +27,8 @@ export default function ProjectEntry({ project, showClient = false }: ProjectEnt
             )}
             <td>{Math.round(progressPercent)}%</td>
             <td>
-                {project.budget != null
-                    ? `$${project.budget.toLocaleString("en-US")}`
+                {totalBudget > 0
+                    ? `$${totalBudget.toLocaleString("en-US")}`
                     : "No budget set"}
             </td>
             <td>

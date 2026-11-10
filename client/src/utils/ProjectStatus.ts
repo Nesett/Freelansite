@@ -124,6 +124,10 @@ export function formatMilestoneBudget(budget: number | null): string | null {
 	return `$${budget.toLocaleString("en-US")}`
 }
 
+export function getProjectTotalBudget(milestones: Milestone[]): number {
+    return milestones.reduce((sum, m) => sum + (m.budget ?? 0), 0)
+}
+
 export function getDeadlineText(deadline?: string | null): { text: string, deadlineDay:string, isUrgent: boolean } {
 	if (!deadline) {
 		return { text: "No deadline", deadlineDay:"", isUrgent: false }
