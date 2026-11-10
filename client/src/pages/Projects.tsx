@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import ProjectEntry from "../components/ProjectEntry"
 import ProjectsTable from "../components/ProjectsTable"
 
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"

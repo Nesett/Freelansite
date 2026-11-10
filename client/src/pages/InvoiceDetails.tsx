@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, EllipsisVertical, Printer } from 'lucide-react'
 import { formatInvoiceNumber, STATUS_LABELS } from '../components/InvoiceEntry'
 import type { InvoiceStatus } from './Invoices'
@@ -57,6 +57,9 @@ export default function InvoiceDetails() {
 	const { user } = useAuth()
 	const navigate = useNavigate()
 	const isAdmin = user?.role === 'admin'
+	const location = useLocation()
+	const canGoBack = location.key !== 'default'
+
 
 	const [ invoice, setInvoice ] = useState<InvoiceDetail | null>(null)
 	const [ loading, setLoading ] = useState(true)
@@ -194,6 +197,13 @@ export default function InvoiceDetails() {
 		)
 	}
 
+	function goBack() {
+		if (canGoBack) {
+			navigate(-1)
+		} else {
+			navigate('/invoices')
+		}
+	}
 
 	return (
 		<div className="pageContent">
@@ -217,10 +227,10 @@ export default function InvoiceDetails() {
 			)}
 			<div className="invoiceSheet">
 				<div className="invoiceSheetTop">
-					<Link to="/invoices" className="invoiceBackLink invoiceNoPrint">
+					<button type="button" className="invoiceBackLink invoiceNoPrint" onClick={goBack}>
 						<ArrowLeft size={16} />
-						Back to invoices
-					</Link>
+						Back
+					</button>
 					<span className={`statusPill statusPill--${invoice.status.toLowerCase()}`}>
 						{STATUS_LABELS[invoice.status]}
 					</span>

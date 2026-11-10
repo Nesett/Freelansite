@@ -1866,12 +1866,17 @@ hr {
 }
 
 .invoiceBackLink {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 0.85rem;
-	color: rgba(29, 53, 87, 0.75);
-	text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: rgba(29, 53, 87, 0.75);
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .invoiceBackLink:hover {
