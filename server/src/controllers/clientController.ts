@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
-
+import { toClientSafe } from '../utils/sanitizer.js'
 
 // const dashboardLink = `http://localhost:5173/login`
 // await sendAdminAddedYouEmail(email, dashboardLink, name)
@@ -32,7 +32,7 @@ export async function createClient(req: Request, res: Response) {
     }
     const inviteToken = crypto.randomBytes(32).toString('hex')
     const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    const inviteLink = `${process.env.FRONTEND_URL}/set-password?token=${inviteToken}`
+    const inviteLink = `${process.env.CLIENT_URL}/set-password?token=${inviteToken}`
 
 
     try{
@@ -49,7 +49,7 @@ export async function createClient(req: Request, res: Response) {
         const isExistingUser = await db.client.findUnique({where: {email}})
         if (isExistingUser) {
             if (isExistingUser.password === null || isExistingUser.password === undefined) {
-                client = await db.client.update({
+                const updated = await db.client.update({
                     where: { email },
                     data: {
                         name: name,
@@ -62,11 +62,11 @@ export async function createClient(req: Request, res: Response) {
                     }
                 })
                 await sendInviteEmail(email, inviteLink, adminName)
-                return res.status(200).json({message: "Successfully created client account.", user: client})
+                return res.status(200).json({ message: "Successfully created client account.", user: toClientSafe(updated) })
             } else {
                 client = isExistingUser
                 await sendAdminAddedYouEmail(email, adminName)
-                return res.status(200).json({message: "This user already exists.", user: client})
+                return res.status(200).json({ message: "This user already exists.", user: toClientSafe(isExistingUser) })
             }
         } 
 
@@ -81,9 +81,9 @@ export async function createClient(req: Request, res: Response) {
                 inviteTokenExpires
             }
         })
-        await sendInviteEmail(email, inviteLink, adminName)
         client = newClient
-        return res.status(201).json({message: "Successfully created client account.", user: client})
+        await sendInviteEmail(email, inviteLink, adminName)
+        return res.status(201).json({ message: "Successfully created client account.", user: toClientSafe(newClient) })
 
 
     } catch(err) {
@@ -106,7 +106,7 @@ export async function getAllClients(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json(clients)
+        return res.status(200).json(clients.map(c => toClientSafe(c)))
 
     } catch(err) {
         console.log(err)
@@ -136,7 +136,7 @@ export async function getClient(req: Request, res: Response) {
             return res.status(404).json({error: "Client not found."})
         }
 
-        return res.status(200).json(client)
+        return res.status(200).json(toClientSafe(client))
 
     } catch(err) {
         console.log(err)
@@ -185,7 +185,7 @@ export async function updateClient(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json({updatedClient})
+        return res.status(200).json({ updatedClient: toClientSafe(updatedClient) })
 
     } catch(err) {
         console.log(err)
@@ -350,8 +350,8 @@ export async function loginClient(req: Request, res: Response) {
     try {
         const client = await db.client.findUnique({where: { email }})
         
-        if (!client) {
-            return res.status(401).json({error: "Invalid credentials."})
+        if (!client || !client.password) {
+            return res.status(401).json({ error: "Invalid credentials." })
         } else {
             const passwordMatch = await bcrypt.compare(password, client.password)
             if (!passwordMatch) {
@@ -371,7 +371,7 @@ export async function loginClient(req: Request, res: Response) {
                     maxAge: 24 * 60 * 60 * 1000
                 })
 
-                return res.status(200).json({client})
+                return res.status(200).json({ client: toClientSafe(client) })
             }
         }
         

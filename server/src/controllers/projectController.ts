@@ -320,7 +320,7 @@ export async function createMagicLink(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json({ url:`${process.env.CLIENT_URL}/p/${token}`, expiresAt: link.expiresAt, message:"Created Magic Link."})
+        return res.status(200).json({ url:`${process.env.CLIENT_URL}/share/${token}`, expiresAt: link.expiresAt, message:"Created Magic Link."})
 
     } catch(err) {
         console.log(err)
@@ -363,7 +363,7 @@ export async function getMagicLink(req: Request, res: Response) {
             return res.status(404).json({ error: "Not found" })
         }
 
-        return res.status(200).json({ url: `${process.env.CLIENT_URL}/p/${link.token}`, expiresAt: link.expiresAt })
+        return res.status(200).json({ url: `${process.env.CLIENT_URL}/share/${link.token}`, expiresAt: link.expiresAt })
 
     } catch(err) {
         console.log(err)

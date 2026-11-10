@@ -34,7 +34,7 @@ export default function PublicProject() {
 
         async function fetchPublicProject() {
             try {
-                const res = await fetch(`/api/public/${token}`)
+                const res = await fetch(`/api/share/${token}`)
 
                 if (res.status === 404) {
                     throw new Error("This link is invalid or has expired.")
