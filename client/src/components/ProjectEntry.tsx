@@ -1,48 +1,41 @@
 import StatusTag from "./StatusTag"
-import StatusBar from "./StatusBar"
 import { getProjectDisplayState } from "../utils/ProjectStatus"
 import type { Project } from "../pages/Projects"
 import { useNavigate } from "react-router-dom"
 
-interface ProjectProps {
-	project: Project
-	showClientLabel?: boolean
+interface ProjectEntryProps {
+    project: Project
+    showClient?: boolean
 }
 
-export default function ProjectComponent({ project, showClientLabel = false }: ProjectProps) {
+export default function ProjectEntry({ project, showClient = false }: ProjectEntryProps) {
+    const navigate = useNavigate()
+    const { tag, tagVariant, progressPercent } = getProjectDisplayState(project)
 
-	const navigate = useNavigate()
-	const { tag, tagVariant, deadlineText, isUrgent, progressPercent } = getProjectDisplayState(project)
+    function handleRowClick() {
+        navigate(`/projects/${project.id}`)
+    }
 
-	function handleRowClick(){
-		navigate(`/projects/${project.id}`)
-	}
-
-	return (
-		<div onClick={handleRowClick} className='clickableEntry'>
-			<div className="projectCardClientDetails">
-				<div className="projectCardHeaderRow">
-					{showClientLabel && (
-						<p className="projectClientLabel">
-							{project.client.companyName || project.client.name}
-						</p>
-					)}
-					{tag ? (
-						<StatusTag label={tag} variant={tagVariant} />
-					) : (
-						deadlineText && (
-							<p className={`projectDeadline${isUrgent ? " projectDeadline--urgent" : ""}`}>
-								{deadlineText}
-							</p>
-						)
-					)}
-				</div>
-				<div className="projectCardTitleRow">
-					<h3>{project.title}</h3>
-				</div>
-				<p>{project.budget ? `$${project.budget}` : 'No budget set'}</p>
-				<StatusBar percent={progressPercent} />
-			</div>
-		</div>
-	)
+    return (
+        <tr onClick={handleRowClick} className="clickableEntry">
+            <td>
+                <div className="clientPrimary">{project.title}</div>
+            </td>
+            {showClient && (
+                <td>{project.client.companyName || project.client.name}</td>
+            )}
+            <td>{Math.round(progressPercent)}%</td>
+            <td>
+                {project.budget != null
+                    ? `$${project.budget.toLocaleString("en-US")}`
+                    : "No budget set"}
+            </td>
+            <td>
+                <StatusTag
+                    label={tag ?? "In progress"}
+                    variant={tag ? tagVariant : "progress"}
+                />
+            </td>
+        </tr>
+    )
 }

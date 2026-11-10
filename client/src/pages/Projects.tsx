@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import ProjectEntry from "../components/ProjectEntry"
+import ProjectsTable from "../components/ProjectsTable"
 
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
@@ -99,19 +100,22 @@ export default function Projects() {
 		return <div>Loading projects...</div>
 	}
 
-	return (
-		<div className="pageContent">
-			<h1>Projects</h1>
-			{errorMessage && <p>{errorMessage}</p>}
-			<div className="projectsHolder">
-				{projects.length > 0 ? (
-					projects.map(project => (
-						<ProjectEntry key={project.id} project={project} showClientLabel />
-					))
-				) : (
-					<p>No projects found.</p>
-				)}
-			</div>
-		</div>
-	)
+	    return (
+        <div className="pageContent">
+            <div className="clientsHeader">
+                <div>
+                    <h1>Projects</h1>
+                    <p className="clientsSubtitle">
+                        Track progress, budgets, and delivery across your client work.
+                    </p>
+                </div>
+            </div>
+            {errorMessage && <p>{errorMessage}</p>}
+            {projects.length > 0 ? (
+                <ProjectsTable projects={projects} showClient />
+            ) : (
+                <p>No projects found.</p>
+            )}
+        </div>
+    )
 }

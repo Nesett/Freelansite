@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { User, Mail, Plus, EllipsisVertical } from 'lucide-react'
-import ProjectComponent from "../components/ProjectEntry"
+import { User, Mail, Plus, EllipsisVertical, FolderKanban } from 'lucide-react'
 import AreYouSureModal from "../components/AreYouSureModal"
 import ProjectFormModal from "../components/ProjectFormModal"
 import useClickOutside from "../utils/clicksOutside"
 import type { Client } from "./Clients"
 import type { Project } from "./Projects"
+import ProjectsTable from "../components/ProjectsTable"
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
@@ -182,20 +182,28 @@ export default function ClientsDetails() {
             <main>
                 <div className="projectsSectionHeader">
                     <h3>Projects</h3>
-                    <button onClick={() => setShowNewProjectForm(true)} className="newButton">
-                        <Plus />
-                        New Project
-                    </button>
-                </div>
-                <div className="projectsHolder">
-                    {projects.length > 0 ? (
-                        projects.map(project => (
-                            <ProjectComponent key={project.id} project={project} />
-                        ))
-                    ) : (
-                        <p>No projects found for this client.</p>
+                    {projects.length > 0 && (
+                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                            <Plus />
+                            New Project
+                        </button>
                     )}
                 </div>
+                {projects.length > 0 ? (
+                    <ProjectsTable projects={projects} />
+                ) : (
+                    <div className="emptyState">
+                        <div className="emptyStateIcon">
+                            <FolderKanban size={22} />
+                        </div>
+                        <h4>No projects yet for {client.companyName || client.name}</h4>
+                        <p>Start a project to track progress, budget, and status for this client.</p>
+                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                            <Plus size={16} />
+                            New Project
+                        </button>
+                    </div>
+                )}
             </main>
         </div>
     )

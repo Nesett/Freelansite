@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
 import InvoiceEntry from '../components/InvoiceEntry'
 
 export type InvoiceStatus = 'PAID' | 'UNPAID' | 'OVERDUE'
@@ -62,10 +61,6 @@ export default function Invoices() {
 						Track billing across all your clients and projects.
 					</p>
 				</div>
-				<button className="newButton" type="button">
-					<Plus size={16} />
-					New Invoice
-				</button>
 			</div>
 
 			<div className="invoiceTabs">
