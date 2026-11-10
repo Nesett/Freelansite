@@ -10,7 +10,7 @@ import projectRoutes from './routes/projectRoutes.js'
 import milestoneRoutes from './routes/milestoneRoutes.js'
 import invoiceRoutes from './routes/invoiceRoutes.js'
 import { toPublicSafe } from "./utils/sanitizer.js"
-import { authLimiter, publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
+import {  publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
 import helmet from 'helmet'
 
 
