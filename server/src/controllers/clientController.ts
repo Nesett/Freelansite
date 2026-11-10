@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
 import { toClientSafe } from '../utils/sanitizer.js'
+import { MilestoneStatus } from '@prisma/client'
 
 // const dashboardLink = `http://localhost:5173/login`
 // await sendAdminAddedYouEmail(email, dashboardLink, name)
@@ -103,10 +104,39 @@ export async function getAllClients(req: Request, res: Response) {
             where: {
                 adminId: adminId,
 				deletedByAdmin: false
+            },
+            include: {
+                projects: {
+                    where: { adminId, deletedByAdmin: false },
+                    select: {
+                        milestones: {
+                            where: {
+                                deletedByAdmin: false,
+                                deadline: { not: null },
+                                status: { not: MilestoneStatus.APPROVED }
+                            },
+                            orderBy: { deadline: 'asc' },
+                            take: 1,
+                            select: { deadline: true }
+                        }
+                    }
+                }
             }
         })
 
-        return res.status(200).json(clients.map(c => toClientSafe(c)))
+        const result = clients.map(({ projects, ...client }) => {
+            const deadlines = projects.flatMap(project =>
+                project.milestones.map(milestone => milestone.deadline!.getTime())
+            )
+
+            const nextDeadline = deadlines.length > 0
+                ? new Date(Math.min(...deadlines)).toISOString()
+                : null
+
+            return { ...toClientSafe(client), nextDeadline }
+        })
+
+        return res.status(200).json(result)
 
     } catch(err) {
         console.log(err)
