@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
-
+import { toClientSafe } from '../utils/sanitizer.js'
 
 // const dashboardLink = `http://localhost:5173/login`
 // await sendAdminAddedYouEmail(email, dashboardLink, name)
@@ -32,7 +32,7 @@ export async function createClient(req: Request, res: Response) {
     }
     const inviteToken = crypto.randomBytes(32).toString('hex')
     const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    const inviteLink = `${process.env.FRONTEND_URL}/set-password?token=${inviteToken}`
+    const inviteLink = `${process.env.CLIENT_URL}/set-password?token=${inviteToken}`
 
 
     try{
@@ -350,8 +350,8 @@ export async function loginClient(req: Request, res: Response) {
     try {
         const client = await db.client.findUnique({where: { email }})
         
-        if (!client) {
-            return res.status(401).json({error: "Invalid credentials."})
+        if (!client || !client.password) {
+            return res.status(401).json({ error: "Invalid credentials." })
         } else {
             const passwordMatch = await bcrypt.compare(password, client.password)
             if (!passwordMatch) {
@@ -371,7 +371,7 @@ export async function loginClient(req: Request, res: Response) {
                     maxAge: 24 * 60 * 60 * 1000
                 })
 
-                return res.status(200).json({client})
+                return res.status(200).json({ client: toClientSafe(client) })
             }
         }
         
