@@ -2053,6 +2053,122 @@ hr {
 	padding-top: 0;
 }
 
+/* -------------------------------------------- Settings Page -------------------------------------------- */
+
+.settingsSections {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 640px;
+}
+
+.settingsCard {
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+}
+
+.settingsCard--danger {
+    border-color: #e6b8b2;
+}
+
+.settingsCard h2 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.settingsCardDescription {
+    color: var(--muted-text-color);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.settingsForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settingsField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.settingsField input {
+    min-height: 44px;
+    padding: 0 14px;
+    background-color: var(--input-color);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    outline: none;
+}
+
+.settingsField input:focus {
+    border-color: var(--primary-color);
+}
+
+.settingsField input:disabled {
+    color: var(--muted-text-color);
+    cursor: not-allowed;
+}
+
+.settingsActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settingsButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background-color: var(--primary-color);
+    color: var(--elements-color);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.settingsButton:hover {
+    opacity: 0.9;
+}
+
+.settingsButton--secondary {
+    background-color: transparent;
+    color: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+.settingsButton--danger {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+.settingsMessage {
+    font-size: 0.875rem;
+}
+
+.settingsMessage--success {
+    color: #2e7d4f;
+}
+
+.settingsMessage--error {
+    color: #c0392b;
+}
+
 /* -------------------------------------------- Landing Page -------------------------------------------- */
 
 .landingPage {
