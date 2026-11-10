@@ -20,3 +20,22 @@ export const setPasswordSchema = z.object({
     token: z.string().min(1),
     password: newPassword
 })
+
+export const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1).max(72),
+    newPassword: newPassword
+})
+
+export const deleteAccountSchema = z.object({
+    password: z.string().min(1).max(72)
+})
+
+const optionalText = (max: number) =>
+    z.string().trim().max(max).transform(v => v === '' ? null : v).nullable().optional()
+
+export const updateProfileSchema = z.object({
+    name: z.string().trim().min(1, "Name is required").max(100),
+    businessName: optionalText(100),
+    phone: optionalText(30),
+    address: optionalText(200)
+})

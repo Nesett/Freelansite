@@ -147,3 +147,97 @@ export async function mySession(req: Request, res: Response) {
 		return res.status(500).json({ error: 'Internal server error.' })
 	}
 }
+
+export async function changePassword(req: Request, res: Response) {
+
+    const { currentPassword, newPassword } = req.body
+
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' })
+        }
+
+        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+
+        if (!admin) {
+            return res.status(401).json({ error: 'User no longer exists' })
+        }
+
+        const passwordMatch = await bcrypt.compare(currentPassword, admin.password)
+
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect.' })
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ error: 'New password must be different from the current one.' })
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        await db.admin.update({
+            where: { id: admin.id },
+            data: { password: hashedPassword }
+        })
+
+        return res.status(200).json({ message: 'Password updated.' })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: 'Internal server error.' })
+    }
+}
+
+export async function deleteAccount(req: Request, res: Response) {
+
+    const { password } = req.body
+
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' })
+        }
+
+        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+
+        if (!admin) {
+            return res.status(401).json({ error: 'User no longer exists' })
+        }
+
+        const passwordMatch = await bcrypt.compare(password, admin.password)
+
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Password is incorrect.' })
+        }
+
+        await db.admin.delete({ where: { id: admin.id } })
+
+        res.clearCookie('auth_token')
+        return res.status(200).json({ message: 'Account deleted.' })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: 'Internal server error.' })
+    }
+}
+
+export async function updateProfile(req: Request, res: Response) {
+
+    const { name, businessName, phone, address } = req.body
+
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' })
+        }
+
+        const admin = await db.admin.update({
+            where: { id: req.user.id },
+            data: { name, businessName, phone, address }
+        })
+
+        return res.status(200).json({ user: toClientSafe(admin) })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: 'Internal server error.' })
+    }
+}

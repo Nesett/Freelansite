@@ -35,7 +35,7 @@ export default function MilestoneFormModal({
             const url = milestone ? `/api/milestones/${milestone.id}` : `/api/milestones`
 
             const res = await fetch(url, {
-                method: isEdit ? "PATCH" : "POST",
+                method: isEdit ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({

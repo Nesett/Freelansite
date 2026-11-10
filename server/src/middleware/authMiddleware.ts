@@ -4,7 +4,6 @@ import { TokenPayload } from '../types/auth.js'
 import db from '../db/db.js'
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-  // Did browser send auth_token cookie?
     const token = req.cookies?.auth_token
 
     if (!token) {
@@ -79,7 +78,8 @@ export async function requireAnyAuth(req: Request, res: Response, next: NextFunc
 
         const user = decoded.role === 'admin'
             ? await db.admin.findUnique({ where: { id: decoded.id } })
-            : await db.client.findFirst({ where: { id: decoded.id, isActive: true } })
+            : await db.client.findFirst({where: { id: decoded.id, deletedByAdmin: false, deletedByClient: false }
+        })
 
         if (!user) {
             return res.status(401).json({ error: 'User no longer exists' })
