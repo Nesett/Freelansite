@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
-import { toClientSafe } from '../utils/sanitizer.js'
+import { toClientSafe, toAdminClientView } from '../utils/sanitizer.js'
 import { MilestoneStatus } from '@prisma/client'
 
 // const dashboardLink = `http://localhost:5173/login`
@@ -15,116 +15,126 @@ import { MilestoneStatus } from '@prisma/client'
 
 export async function createClient(req: Request, res: Response) {
 
-    const { name, email, phone, companyName } = req.body
+    const { name, email: rawEmail, phone, companyName } = req.body
     const adminId = req.user.id
 
     if (!name && !companyName) {
-        return res.status(400).json({message:"Enter at least name or company name of your client."})
-    } else {
-        if (!email) {
-
-            return res.status(400).json({message:"Enter email."})
-
-        } else if (!validator.isEmail(email)){
-        
-                return res.status(400).json({error: "The email is invalid."})
-        
-        }
+        return res.status(400).json({ error: "Enter at least name or company name of your client." })
     }
-    const inviteToken = crypto.randomBytes(32).toString('hex')
-    const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    const inviteLink = `${process.env.CLIENT_URL}/set-password?token=${inviteToken}`
 
+    if (!rawEmail) {
+        return res.status(400).json({ error: "Enter email." })
+    }
 
-    try{
-        let client = {}
-        let adminName = ''
-        const admin = await db.admin.findFirst({where: {id: adminId}})
+    const email = String(rawEmail).trim().toLowerCase()
 
-        if (admin.businessName !== null && admin.businessName !== undefined){
-            adminName = admin.businessName
-        } else {
-            adminName = admin.name
+    if (!validator.isEmail(email)) {
+        return res.status(400).json({ error: "The email is invalid." })
+    }
+
+    try {
+        const admin = await db.admin.findUnique({ where: { id: adminId } })
+
+        if (!admin) {
+            return res.status(404).json({ error: "Admin not found." })
         }
 
-        const isExistingUser = await db.client.findUnique({where: {email}})
-        if (isExistingUser) {
-            if (isExistingUser.password === null || isExistingUser.password === undefined) {
-                const updated = await db.client.update({
-                    where: { email },
-                    data: {
-                        name: name,
-                        email: email,
-                        phone: phone || null,
-                        companyName: companyName || null,
-                        adminId: adminId,
-                        inviteToken,
-                        inviteTokenExpires
-                    }
-                })
-                await sendInviteEmail(email, inviteLink, adminName)
-                return res.status(200).json({ message: "Successfully created client account.", user: toClientSafe(updated) })
-            } else {
-                client = isExistingUser
-                await sendAdminAddedYouEmail(email, adminName)
-                return res.status(200).json({ message: "This user already exists.", user: toClientSafe(isExistingUser) })
-            }
-        } 
+        const adminName = admin.businessName ?? admin.name
 
-        const newClient = await db.client.create({
-            data: {
-                name: name,
-                email: email,
-                phone: phone || null,
+        let client = await db.client.findUnique({ where: { email } })
+        const hasAccount = client !== null && client.password !== null
+
+        const inviteToken = crypto.randomBytes(32).toString('hex')
+        const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        const inviteLink = `${process.env.CLIENT_URL}/set-password?token=${inviteToken}`
+
+        if (!client) {
+            client = await db.client.create({
+                data: { email, inviteToken, inviteTokenExpires }
+            })
+        } else if (!hasAccount) {
+            client = await db.client.update({
+                where: { id: client.id },
+                data: { inviteToken, inviteTokenExpires }
+            })
+        }
+
+        const adminClient = await db.adminClient.upsert({
+            where: { adminId_clientId: { adminId, clientId: client.id } },
+            update: {
+                name: name || null,
                 companyName: companyName || null,
-                adminId: adminId,
-                inviteToken,
-                inviteTokenExpires
+                phone: phone || null,
+                deletedByAdmin: false
+            },
+            create: {
+                adminId,
+                clientId: client.id,
+                name: name || null,
+                companyName: companyName || null,
+                phone: phone || null
             }
         })
-        client = newClient
-        await sendInviteEmail(email, inviteLink, adminName)
-        return res.status(201).json({ message: "Successfully created client account.", user: toClientSafe(newClient) })
 
+        if (hasAccount) {
+            await sendAdminAddedYouEmail(email, adminName)
+        } else {
+            await sendInviteEmail(email, inviteLink, adminName)
+        }
 
-    } catch(err) {
+        return res.status(201).json({
+            message: "Successfully added client.",
+            user: toAdminClientView(adminClient, client)
+        })
+
+    } catch (err) {
         console.log(err)
-        return res.status(500).json({error: "Could not create the client."})
+        return res.status(500).json({ error: "Could not create the client." })
     }
 }
 
 
 export async function getAllClients(req: Request, res: Response) {
-    
+
     const adminId = req.user.id
-    
+
     try {
 
-        const clients = await db.client.findMany({
+        const adminClients = await db.adminClient.findMany({
             where: {
-                adminId: adminId,
-				deletedByAdmin: false
+                adminId,
+                deletedByAdmin: false
             },
             include: {
-                projects: {
-                    where: { adminId, deletedByAdmin: false },
+                client: {
                     select: {
-                        milestones: {
-                            where: {
-                                deletedByAdmin: false,
-                                deadline: { not: null },
-                                status: { not: MilestoneStatus.APPROVED }
-                            },
-                            orderBy: { deadline: 'asc' },
-                            take: 1,
-                            select: { deadline: true }
+                        id: true,
+                        email: true,
+                        lastActive: true,
+                        password: true,
+                        projects: {
+                            where: { adminId, deletedByAdmin: false },
+                            select: {
+                                milestones: {
+                                    where: {
+                                        deletedByAdmin: false,
+                                        deadline: { not: null },
+                                        status: { not: MilestoneStatus.APPROVED }
+                                    },
+                                    orderBy: { deadline: 'asc' },
+                                    take: 1,
+                                    select: { deadline: true }
+                                }
+                            }
                         }
                     }
                 }
             }
         })
 
-        const result = clients.map(({ projects, ...client }) => {
+        const result = adminClients.map(({ client, ...adminClient }) => {
+            const { projects, ...clientData } = client
+
             const deadlines = projects.flatMap(project =>
                 project.milestones.map(milestone => milestone.deadline!.getTime())
             )
@@ -133,48 +143,44 @@ export async function getAllClients(req: Request, res: Response) {
                 ? new Date(Math.min(...deadlines)).toISOString()
                 : null
 
-            return { ...toClientSafe(client), nextDeadline }
+            return { ...toAdminClientView(adminClient, clientData), nextDeadline }
         })
 
         return res.status(200).json(result)
 
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-        return res.status(500).json({error: "Could not fetch all clients."})
+        return res.status(500).json({ error: "Could not fetch all clients." })
     }
-
-    
 }
 
 
 export async function getClient(req: Request, res: Response) {
-    
+
     const adminId = req.user.id
     const clientId = String(req.params.id)
 
     try {
 
-        const client = await db.client.findFirst({
-            where: {
-                id: clientId,
-                adminId: adminId,
-				deletedByAdmin: false
+        const adminClient = await db.adminClient.findFirst({
+            where: { adminId, clientId, deletedByAdmin: false },
+            include: {
+                client: {
+                    select: { id: true, email: true, lastActive: true, password: true }
+                }
             }
         })
 
-        if (!client) {
-            return res.status(404).json({error: "Client not found."})
+        if (!adminClient) {
+            return res.status(404).json({ error: "Client not found." })
         }
 
-        return res.status(200).json(toClientSafe(client))
+        return res.status(200).json(toAdminClientView(adminClient, adminClient.client))
 
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-        return res.status(500).json({error: `Could not fetch client with id ${clientId}.`})
+        return res.status(500).json({ error: `Could not fetch client with id ${clientId}.` })
     }
-
-    
-    
 }
 
 
@@ -183,45 +189,34 @@ export async function updateClient(req: Request, res: Response) {
     const adminId = req.user.id
     const clientId = String(req.params.id)
 
-    const {name, email, phone, companyName} = req.body
-
+    const { name, phone, companyName, address } = req.body
 
     try {
 
-        const existingClient = await db.client.findFirst({
-            where: {
-                id: clientId,
-                adminId: adminId,
-				deletedByAdmin: false
-            }
+        const existing = await db.adminClient.findFirst({
+            where: { adminId, clientId, deletedByAdmin: false }
         })
 
-        if (!existingClient) {
-            return res.status(404).json({error: "Client does not exist."})
-        } else if (existingClient.password != null || existingClient.password != undefined) {
-            return res.status(404).json({error: "This is a logged in client. You cannot edit their data anymore."})
+        if (!existing) {
+            return res.status(404).json({ error: "Client does not exist." })
         }
 
-        const updatedClient = await db.client.update({
-            where: {
-                id: clientId,
-				deletedByAdmin: false
-            },
-            data: {
-                name: name !== undefined ? name : existingClient.name,
-				email: email !== undefined ? email : existingClient.email,
-				phone: phone !== undefined ? phone : existingClient.phone,
-				companyName: companyName !== undefined ? companyName : existingClient.companyName
+        const updated = await db.adminClient.update({
+            where: { id: existing.id },
+            data: { name, phone, companyName, address },
+            include: {
+                client: {
+                    select: { id: true, email: true, lastActive: true, password: true }
+                }
             }
         })
 
-        return res.status(200).json({ updatedClient: toClientSafe(updatedClient) })
+        return res.status(200).json({ updatedClient: toAdminClientView(updated, updated.client) })
 
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-        return res.status(500).json({error: `Could not update client with id ${clientId}.`})
+        return res.status(500).json({ error: `Could not update client with id ${clientId}.` })
     }
-
 }
 
 
@@ -231,21 +226,18 @@ export async function deactivateClient(req: Request, res: Response) {
     const clientId = String(req.params.id)
 
     try {
-        const existingClient = await db.client.findFirst({
-            where: {
-                id: clientId,
-                adminId: adminId,
-				deletedByAdmin: false
-            }
+
+        const existing = await db.adminClient.findFirst({
+            where: { adminId, clientId, deletedByAdmin: false }
         })
 
-        if (!existingClient) {
-            return res.status(404).json({error: "Client does not exist."})
-        } 
+        if (!existing) {
+            return res.status(404).json({ error: "Client does not exist." })
+        }
 
         await db.$transaction([
-            db.client.update({
-                where: { id: clientId },
+            db.adminClient.update({
+                where: { id: existing.id },
                 data: { deletedByAdmin: true }
             }),
             db.project.updateMany({
@@ -254,43 +246,48 @@ export async function deactivateClient(req: Request, res: Response) {
             })
         ])
 
-        return res.status(200).json({message: "Client and their projects have been removed from your view."})
+        return res.status(200).json({ message: "Client and their projects have been removed from your view." })
 
-    } catch(err) {
+    } catch (err) {
         console.log(err)
-        return res.status(500).json({error: `Could not delete client with id ${clientId}.`})
+        return res.status(500).json({ error: `Could not delete client with id ${clientId}.` })
     }
-
 }
 
 
 
 export async function getProjectsByClient(req: Request, res: Response) {
-	const adminId = req.user.id
-	const clientId = String(req.params.id)
 
-	try {
-		const clientProjects = await db.project.findMany({
+    const adminId = req.user.id
+    const clientId = String(req.params.id)
+
+    try {
+
+        const adminClient = await db.adminClient.findFirst({
+            where: { adminId, clientId, deletedByAdmin: false }
+        })
+
+        if (!adminClient) {
+            return res.status(404).json({ error: "Client not found." })
+        }
+
+        const clientProjects = await db.project.findMany({
             where: {
                 clientId,
                 adminId,
-                deletedByAdmin: false,
-                client: { deletedByAdmin: false }
+                deletedByAdmin: false
             },
-			orderBy: {
-				createdAt: 'desc'
-			}, include: {
+            orderBy: { createdAt: 'desc' },
+            include: {
                 milestones: {
                     orderBy: { orderIndex: 'asc' },
                     select: { id: true, status: true, deadline: true, orderIndex: true, budget: true }
                 },
                 admin: {
-                    select: {
-                        name: true, businessName: true
-                    }
+                    select: { name: true, businessName: true }
                 }
             }
-		})
+        })
 
         const clientProjectsWithProgress = clientProjects.map(project => ({
             ...project,
@@ -298,12 +295,12 @@ export async function getProjectsByClient(req: Request, res: Response) {
         }))
 
         return res.status(200).json(clientProjectsWithProgress)
-	} catch (err) {
-		console.log(err)
-		return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })
-	}
-}
 
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: `Could not fetch projects for client ${clientId}.` })
+    }
+}
 
 
 export async function setClientPassword(req: Request, res: Response) {
@@ -347,7 +344,7 @@ export async function setClientPassword(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json({id:client.id, name:client.name, companyName:client.companyName})
+        return res.status(200).json({ id: client.id, email: client.email })
         
     } catch(err) {
         console.log(err)
