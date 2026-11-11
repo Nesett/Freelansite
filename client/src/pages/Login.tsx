@@ -1,6 +1,6 @@
 import loginImg from '../images/loginImg.png'
 import { useState} from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 type Role = 'admin' | 'client'
@@ -164,7 +164,7 @@ export default function LoginPage() {
 
 				<div className="switchSignText">
 					<p>Don't have an account?</p>
-					<a href="#">Sign Up</a>
+					<Link to="/signup">Sign Up</Link>
 				</div>
 					</>
 				)}

@@ -15,6 +15,7 @@ import Layout from './components/Layout'
 import ClientSetPassword from './pages/ClientSetPassword'
 import InvoiceDetails from './pages/InvoiceDetails'
 import MagicLinkPage from './pages/MagicLinkPage'
+import SignUp from './pages/SignUp'
 
 export function App() {
 	return (
@@ -23,6 +24,7 @@ export function App() {
 				<Routes>
 					<Route path="/" element={<LandingPage />} />
 					<Route path="/login" element={<LoginPage />} />
+					<Route path="/signup" element={<SignUp />} />
 					<Route path='/set-password' element={<ClientSetPassword />}/>
 					<Route path='/share/:token' element={<MagicLinkPage/>} />
 

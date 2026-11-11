@@ -4,9 +4,14 @@ import type { Project } from "../pages/Projects"
 interface ProjectsTableProps {
     projects: Project[]
     showClient?: boolean
+    emptyMessage?: string
 }
 
-export default function ProjectsTable({ projects, showClient = false }: ProjectsTableProps) {
+export default function ProjectsTable({
+    projects,
+    showClient = false,
+    emptyMessage = "No projects yet."
+}: ProjectsTableProps) {
     return (
         <div className="clientsTableWrapper">
             <table className="clientsTable">
@@ -25,6 +30,10 @@ export default function ProjectsTable({ projects, showClient = false }: Projects
                     ))}
                 </tbody>
             </table>
+
+            {projects.length === 0 && (
+                <p className="tableEmptyState">{emptyMessage}</p>
+            )}
         </div>
     )
 }

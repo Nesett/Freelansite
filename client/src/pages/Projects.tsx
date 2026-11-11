@@ -110,11 +110,7 @@ export default function Projects() {
                 </div>
             </div>
             {errorMessage && <p>{errorMessage}</p>}
-            {projects.length > 0 ? (
-                <ProjectsTable projects={projects} showClient />
-            ) : (
-                <p>No projects found.</p>
-            )}
+            <ProjectsTable projects={projects} showClient />
         </div>
     )
 }
