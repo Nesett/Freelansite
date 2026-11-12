@@ -200,10 +200,10 @@ export async function approveMilestone(req: Request, res: Response) {
         const approvedMilestone = await db.milestone.update({
             where: {
                 id,
-                isActive: true
+                deletedByAdmin: false
             },
             data: {
-				status: "APPROVED"
+                status: "APPROVED"
             }
         })
 

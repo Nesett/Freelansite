@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
 import InvoiceEntry from '../components/InvoiceEntry'
+import { useAuth } from '../context/AuthContext'
 
 export type InvoiceStatus = 'PAID' | 'UNPAID' | 'OVERDUE'
 type InvoiceFilter = 'ALL' | InvoiceStatus
@@ -13,14 +13,18 @@ export interface Invoice {
 	total: number
 	clientName: string
 	number: number
-	project: {
-		id: string
-		title: string
-		client: {
-			id: string
-			email: string
-		}
-	}
+    adminName: string
+    project: {
+        id: string
+        title: string
+        admin: {
+            email: string
+        }
+        client: {
+            id: string
+            email: string
+        }
+    }
 }
 
 const FILTERS: { label: string, value: InvoiceFilter }[] = [
@@ -33,6 +37,8 @@ const FILTERS: { label: string, value: InvoiceFilter }[] = [
 export default function Invoices() {
 	const [ invoices, setInvoices ] = useState<Invoice[]>([])
 	const [ activeFilter, setActiveFilter ] = useState<InvoiceFilter>('ALL')
+    const { user } = useAuth()
+    const isClient = user?.role === 'client'
 
 	useEffect(() => {
 		const fetchInvoices = async () => {
@@ -62,10 +68,6 @@ export default function Invoices() {
 						Track billing across all your clients and projects.
 					</p>
 				</div>
-				<button className="newButton" type="button">
-					<Plus size={16} />
-					New Invoice
-				</button>
 			</div>
 
 			<div className="invoiceTabs">
@@ -85,7 +87,7 @@ export default function Invoices() {
 				<table className="clientsTable">
 					<thead>
 						<tr>
-							<th>Client</th>
+							<th>{isClient ? 'Admin' : 'Client'}</th>
 							<th>Project</th>
 							<th>Invoice</th>
 							<th>Amount</th>
@@ -95,7 +97,7 @@ export default function Invoices() {
 					</thead>
 					<tbody>
 						{visibleInvoices.map(invoice => (
-							<InvoiceEntry key={invoice.id} invoice={invoice} />
+							<InvoiceEntry key={invoice.id} invoice={invoice} isClient={isClient} />
 						))}
 					</tbody>
 				</table>

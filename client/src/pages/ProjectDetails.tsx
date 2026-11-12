@@ -336,7 +336,7 @@ export default function ProjectDetails() {
 
 	return (
 		<div className="pageContent">
-            {editProjectForm && (
+            {editProjectForm && isAdmin && (
                 <ProjectFormModal
                     project={project}
                     onClose={() => setEditProjectForm(false)}
@@ -418,7 +418,7 @@ export default function ProjectDetails() {
                         {editOptions && (
                             <div className="clientOptionsMenu">
                                 <button onClick={()=>setAreYouSure(prev=>!prev)} className="clientOptionsMenuItem">Delete project</button>
-                                {!project.isOnHold && (
+                                {isAdmin && !project.isOnHold && (
                                     <button onClick={()=>setEditProjectForm(prev=>!prev)} className="clientOptionsMenuItem">Edit project</button>
                                 )}
                                 {isAdmin && (project.isOnHold

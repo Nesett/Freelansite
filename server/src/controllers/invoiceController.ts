@@ -368,18 +368,13 @@ export async function deactivateInvoice(req: Request, res: Response) {
 
 }
 
-export async function getAdminInvoices(req: Request, res: Response) {
-
-    const adminId = req.user.id
+export async function getUserInvoices(req: Request, res: Response) {
 
     try {
         const invoices = await db.invoice.findMany({
             where: {
-                deletedByAdmin: false,
-                project: {
-                    adminId,
-                    deletedByAdmin: false
-                }
+                ...deletedFilter(req),
+                project: projectAccessFilter(req)
             },
             orderBy: { issueDate: 'desc' },
             select: {
@@ -390,10 +385,16 @@ export async function getAdminInvoices(req: Request, res: Response) {
                 issueDate: true,
                 total: true,
                 clientName: true,
+                adminName: true,
                 project: {
                     select: {
                         id: true,
                         title: true,
+                        admin: {
+                            select: {
+                                email: true
+                            }
+                        },
                         client: {
                             select: {
                                 id: true,

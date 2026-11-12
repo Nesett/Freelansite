@@ -32,6 +32,22 @@ type ProjectForPublic = Prisma.ProjectGetPayload<{
 	}
 }>
 
+export function toAdminClientView(
+    adminClient: { name: string | null, companyName: string | null, phone: string | null, address: string | null },
+    client: { id: string, email: string, lastActive: Date, password: string | null }
+) {
+    return {
+        id: client.id,
+        email: client.email,
+        name: adminClient.name,
+        companyName: adminClient.companyName,
+        phone: adminClient.phone,
+        address: adminClient.address,
+        lastActive: client.lastActive,
+        hasAccount: client.password !== null
+    }
+}
+
 export const toPublicSafe = (project: ProjectForPublic) => ({
 	title: project.title,
 	description: project.description,

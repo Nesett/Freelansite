@@ -70,7 +70,7 @@ export default function Clients() {
 			}
 
 			console.log("Added new client.")
-			navigate(`/clients/${data.user.client.id}`)
+			navigate(`/clients/${data.user.id}`)
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
