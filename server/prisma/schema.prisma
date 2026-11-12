@@ -20,6 +20,11 @@ enum InvoiceStatus {
   OVERDUE
 }
 
+enum Plan {
+    FREE
+    PRO
+}
+
 model Admin {
   id                String   @id @default(uuid())
   name              String
@@ -31,8 +36,15 @@ model Admin {
   address           String?
   lastInvoiceNumber Int      @default(0) @map("last_invoice_number")
 
+  plan                 Plan      @default(FREE)
+  currentPeriodEnd     DateTime? @map("current_period_end")
+
+  brandPrimary String? @map("brand_primary")
+  brandAccent  String? @map("brand_accent")
+  logoUrl      String? @map("logo_url")
+
   adminClients AdminClient[]
-  projects Project[]
+  projects     Project[]
 
   @@map("admins")
 }
