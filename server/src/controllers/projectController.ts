@@ -241,6 +241,10 @@ export async function getProject(req: Request, res: Response) {
 
 export async function updateProject(req: Request, res: Response) {
 
+    if (req.userRole !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' })
+    }
+
     const projectId = String(req.params.id)
 
     const { title, description, isOnHold } = req.body
