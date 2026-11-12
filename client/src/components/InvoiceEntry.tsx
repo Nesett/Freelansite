@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import type { Invoice, InvoiceStatus } from '../pages/Invoices'
 
 interface InvoiceEntryProps {
-	invoice: Invoice
+    invoice: Invoice
+    isClient: boolean
 }
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -27,18 +28,21 @@ export function formatInvoiceNumber(n: number) {
 	return `INV-${String(n).padStart(4, '0')}`
 }
 
-export default function InvoiceEntry({ invoice }: InvoiceEntryProps) {
-	const navigate = useNavigate()
+export default function InvoiceEntry({ invoice, isClient }: InvoiceEntryProps) {
+    const navigate = useNavigate()
 
-	return (
-		<tr
-			className="clickableEntry"
-			onClick={() => navigate(`/invoices/${invoice.id}`)}
-		>
-			<td>
-				<div className="clientPrimary">{invoice.clientName}</div>
-				<div className="clientSecondary">{invoice.project.client.email}</div>
-			</td>
+    const name = isClient ? invoice.adminName : invoice.clientName
+    const email = isClient ? invoice.project.admin.email : invoice.project.client.email
+
+    return (
+        <tr
+            className="clickableEntry"
+            onClick={() => navigate(`/invoices/${invoice.id}`)}
+        >
+            <td>
+                <div className="clientPrimary">{name}</div>
+                <div className="clientSecondary">{email}</div>
+            </td>
 			<td>{invoice.project.title}</td>
 			<td className="invoiceNumber">{formatInvoiceNumber(invoice.number)}</td>
 			<td className="invoiceAmount">{amountFormatter.format(invoice.total)}</td>
