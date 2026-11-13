@@ -7,6 +7,7 @@ import useClickOutside from "../utils/clicksOutside"
 import type { Client } from "./Clients"
 import type { Project } from "./Projects"
 import ProjectsTable from "../components/ProjectsTable"
+import { useUpgrade } from "../context/UpgradeContext"
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
@@ -18,6 +19,7 @@ export default function ClientsDetails() {
     const { id } = useParams<{ id: string }>()
     const clientOptionsRef = useRef<HTMLDivElement | null>(null)
     const [errorMessage, setErrorMessage] = useState<string>("")
+    const { checkLimit } = useUpgrade()
 
     const navigate = useNavigate()
 
@@ -107,6 +109,11 @@ export default function ClientsDetails() {
         return <div>Client not found.</div>
     }
 
+    async function handleNewProjectClick() {
+        if (await checkLimit('projects')) {
+            setShowNewProjectForm(true)
+        }
+    }
 
     
     function showClientOptions() {
@@ -183,7 +190,7 @@ export default function ClientsDetails() {
                 <div className="projectsSectionHeader">
                     <h3>Projects</h3>
                     {projects.length > 0 && (
-                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                        <button onClick={handleNewProjectClick} className="newButton">
                             <Plus />
                             New Project
                         </button>
@@ -198,7 +205,7 @@ export default function ClientsDetails() {
                         </div>
                         <h4>No projects yet for {client.companyName || client.name}</h4>
                         <p>Start a project to track progress, budget, and status for this client.</p>
-                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                        <button onClick={handleNewProjectClick} className="newButton">
                             <Plus size={16} />
                             New Project
                         </button>

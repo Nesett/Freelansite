@@ -4,6 +4,7 @@ import { MilestoneStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"
+import { canAddProject } from '../services/planLimits.js'
 
 
 type ClientDetails = {
@@ -86,6 +87,13 @@ export async function createProject(req: Request, res: Response) {
 
         if (!existingClient) {
             return res.status(404).json({error: "Client does not exist."})
+        }
+
+        if (!(await canAddProject(adminId))) {
+            return res.status(402).json({
+                error: "You've reached the active project limit for your plan. Put a project on hold or upgrade to Pro.",
+                code: 'PLAN_LIMIT_PROJECTS'
+            })
         }
 
         // every project starts with exactly one milestone, same as project.
@@ -264,6 +272,15 @@ export async function updateProject(req: Request, res: Response) {
 
         if (!existingProject) {
             return res.status(404).json({error: "Project does not exist."})
+        }
+
+        const isResuming = isOnHold === false && existingProject.isOnHold
+
+        if (isResuming && !(await canAddProject(req.user.id))) {
+            return res.status(402).json({
+                error: "You've reached the active project limit for your plan. Put another project on hold first or upgrade to Pro.",
+                code: 'PLAN_LIMIT_PROJECTS'
+            })
         }
 
         const updatedProject = await db.project.update({

@@ -3,7 +3,7 @@ import { Plus, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import ClientEntry from '../components/ClientEntry'
 import { useSortableClients } from '../utils/useSortableClients'
 import { useNavigate } from 'react-router-dom'
-
+import { useUpgrade } from '../context/UpgradeContext'
 
 export interface Client {
 	id: string
@@ -26,6 +26,7 @@ export default function Clients() {
 	const [ clientCname, setClientCname ] = useState('')
 	const [ clientPhone, setClientPhone ] = useState('')
 	const [ errorMessage, setErrorMessage ]= useState('')
+	const { openUpgrade, checkLimit } = useUpgrade()
 	const navigate = useNavigate()
 
 	const { sortedClients, sortField, sortDirection, handleSort } = useSortableClients(clients)
@@ -46,6 +47,11 @@ export default function Clients() {
 		setShowNewClientModal(prevShown => !prevShown)
 	}
 
+	async function handleNewClientClick() {
+		if (await checkLimit('clients')) {
+			setShowNewClientModal(true)
+		}
+	}
 	async function handleAddNewClient(e: React.FormEvent) {
 		e.preventDefault()
 
@@ -64,6 +70,12 @@ export default function Clients() {
 			})
 
 			const data = await response.json()
+
+			if (response.status === 402) {
+				setShowNewClientModal(false)
+				openUpgrade(data.code)
+				return
+			}
 
 			if (!response.ok) {
 				throw new Error(data.error || "Something went wrong")
@@ -134,7 +146,7 @@ export default function Clients() {
 						{clients.length} client{clients.length === 1 ? '' : 's'} across your studio.
 					</p>
 				</div>
-				<button onClick= {showClientModal} className="newButton" type="button" disabled={showNewClientModal}>
+				<button onClick={handleNewClientClick} className="newButton" type="button" disabled={showNewClientModal}>
 					<Plus size={16} />
 					New Client
 				</button>

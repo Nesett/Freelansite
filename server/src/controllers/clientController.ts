@@ -8,6 +8,7 @@ import crypto from 'crypto'
 import { sendInviteEmail, sendAdminAddedYouEmail } from '../services/emailService.js'
 import { toClientSafe, toAdminClientView } from '../utils/sanitizer.js'
 import { MilestoneStatus } from '@prisma/client'
+import { canAddClient } from '../services/planLimits.js'
 
 // const dashboardLink = `http://localhost:5173/login`
 // await sendAdminAddedYouEmail(email, dashboardLink, name)
@@ -43,6 +44,19 @@ export async function createClient(req: Request, res: Response) {
 
         let client = await db.client.findUnique({ where: { email } })
         const hasAccount = client !== null && client.password !== null
+
+        const alreadyActive = client
+            ? await db.adminClient.findFirst({
+                where: { adminId, clientId: client.id, deletedByAdmin: false }
+            })
+            : null
+
+        if (!alreadyActive && !(await canAddClient(adminId))) {
+            return res.status(402).json({
+                error: "You've reached the client limit for your plan. Upgrade to Pro to add more.",
+                code: 'PLAN_LIMIT_CLIENTS'
+            })
+        }
 
         const inviteToken = crypto.randomBytes(32).toString('hex')
         const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
