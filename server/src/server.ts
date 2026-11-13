@@ -10,6 +10,7 @@ import projectRoutes from './routes/projectRoutes.js'
 import milestoneRoutes from './routes/milestoneRoutes.js'
 import invoiceRoutes from './routes/invoiceRoutes.js'
 import planRoutes from './routes/planRoutes.js'
+import searchRoutes from './routes/searchRoutes.js'
 import { toPublicSafe } from "./utils/sanitizer.js"
 import {  publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
 import helmet from 'helmet'
@@ -42,6 +43,7 @@ app.use('/api/projects', apiLimiter, projectRoutes)
 app.use('/api/milestones', apiLimiter, milestoneRoutes)
 app.use('/api/invoices', apiLimiter, invoiceRoutes)
 app.use('/api/plan', planRoutes)
+app.use('/api/search', apiLimiter, searchRoutes)
 
 app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) => {
 

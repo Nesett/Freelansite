@@ -132,6 +132,325 @@ h1, h2, h3, h4, p, a {
 	background: #f5f6f8;
 }
 
+/* -------------------------------------------- Top bar -------------------------------------------- */
+
+.layoutMain {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 56px;
+    padding: 0 24px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Breadcrumbs */
+
+.breadcrumbs ol {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.breadcrumbs li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted-text-color);
+}
+
+.breadcrumbs li svg {
+    color: #B5B4BC;
+    flex-shrink: 0;
+}
+
+.breadcrumbs a {
+    color: var(--muted-text-color);
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    color: var(--primary-color);
+}
+
+.breadcrumbCurrent {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.breadcrumbs li:last-child .breadcrumbCurrent {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Search */
+
+.topbarSearch {
+    position: relative;
+    width: 320px;
+    max-width: 100%;
+}
+
+.topbarSearchField {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 10px;
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--muted-text-color);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.topbarSearchField:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.12);
+}
+
+.topbarSearchField input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.topbarSearchField input::placeholder {
+    color: var(--muted-text-color);
+}
+
+.searchKbd {
+    padding: 2px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--input-color);
+    font-family: inherit;
+    font-size: 0.7rem;
+    color: var(--muted-text-color);
+}
+
+.searchPanel,
+.studioMenuPanel {
+    position: absolute;
+    top: calc(100% + 8px);
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(29, 53, 87, 0.12);
+    padding: 6px;
+}
+
+.searchPanel {
+    left: 0;
+    width: max(100%, 440px);
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.searchGroupLabel {
+    padding: 8px 10px 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text-color);
+}
+
+.searchOption,
+.studioMenuItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    font: inherit;
+    text-align: left;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.searchOption--active,
+.studioMenuItem:hover {
+    background-color: #E8ECF3;
+}
+
+.searchOptionIcon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: var(--input-color);
+    color: var(--muted-text-color);
+}
+
+.searchOptionText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.searchOptionTitle {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.searchOptionSubtitle {
+    font-size: 0.78rem;
+    color: var(--muted-text-color);
+}
+
+.searchOptionTitle,
+.searchOptionSubtitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.searchHighlight {
+    padding: 0 1px;
+    border-radius: 3px;
+    background-color: rgba(255, 214, 102, 0.55);
+    color: inherit;
+}
+
+.searchStatus {
+    padding: 16px 10px;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+/* Studio menu */
+
+.studioMenu {
+    position: relative;
+    margin-left: auto;
+}
+
+.studioButton {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px 0 6px;
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.studioButton:hover {
+    background-color: var(--input-color);
+}
+
+.studioButton svg {
+    color: var(--muted-text-color);
+}
+
+.studioAvatar {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #E8ECF3;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.studioName {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.studioMenuPanel {
+    right: 0;
+    min-width: 220px;
+}
+
+.studioMenuHeader {
+    margin-bottom: 4px;
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.studioMenuHeaderName {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.studioMenuHeaderEmail {
+    font-size: 0.78rem;
+    color: var(--muted-text-color);
+}
+
+.studioMenuItem {
+    font-size: 0.875rem;
+}
+
+.studioButton:focus-visible,
+.searchOption:focus-visible,
+.studioMenuItem:focus-visible,
+.breadcrumbs a:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    .topbar {
+        gap: 12px;
+        padding: 0 16px;
+    }
+
+    .studioName,
+    .searchKbd {
+        display: none;
+    }
+
+    .breadcrumbs li:first-child {
+        display: none;
+    }
+
+    .breadcrumbs li:nth-child(2) svg {
+        display: none;
+    }
+
+    .searchPanel {
+        width: 100%;
+    }
+}
 
 /* -------------------------------------------- SignIn pages -------------------------------------------- */
 .signPagesMain {
