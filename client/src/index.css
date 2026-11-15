@@ -2901,6 +2901,111 @@ hr {
 	}
 }
 
+/* -------------------------------------------- Dashboard Page -------------------------------------------- */
+
+.dashboardStats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.statCard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 24px;
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.statLabel {
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.statValue {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 4px 0 2px;
+}
+
+.statHint {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.statHintDanger {
+    color: #c1552c;
+    font-weight: 600;
+}
+
+.dashboardCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dashboardCardHeader h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.viewAllLink {
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+.viewAllLink:hover {
+    background-color: var(--input-color);
+}
+
+.dashboardProjectTitle {
+    color: #5F5F68;
+}
+
+.dashboardProgress .statusBarTrack {
+    flex: none;
+    width: 160px;
+}
+
+.dashboardProgress p {
+    min-width: 40px;
+    text-align: right;
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.statusTag--danger {
+    background-color: #FBDADA;
+    color: #A12C2C;
+}
+
+@media (max-width: 1100px) {
+    .dashboardStats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .dashboardStats {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboardProgress .statusBarTrack {
+        width: 90px;
+    }
+}
+
 /* -------------------------------------------- Icons -------------------------------------------- */
 
 .fieldIcon,
