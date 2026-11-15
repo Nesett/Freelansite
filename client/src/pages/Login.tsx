@@ -143,7 +143,7 @@ export default function LoginPage() {
 
 				{role === 'admin' && (
 					<>
-				<div className="orDivider">
+				{/*<div className="orDivider">
 					<span>Or</span>
 				</div>
 
@@ -160,7 +160,7 @@ export default function LoginPage() {
 						<span className="authIcon authIcon--linkedin" aria-hidden="true" />
 						<h4>LinkedIn</h4>
 					</button>
-				</div>
+				</div>*/}
 
 				<div className="switchSignText">
 					<p>Don't have an account?</p>
