@@ -40,9 +40,11 @@ export default function Settings() {
     const { user, setUser, refreshUser } = useAuth()
     const navigate = useNavigate()
 
-    // profile
+    const isClient = user?.role === 'client'
+
+    // profile (admins have a business name, clients have a company name)
     const [name, setName] = useState(user?.name ?? '')
-    const [businessName, setBusinessName] = useState(user?.businessName ?? '')
+    const [company, setCompany] = useState((isClient ? user?.companyName : user?.businessName) ?? '')
     const [phone, setPhone] = useState(user?.phone ?? '')
     const [address, setAddress] = useState(user?.address ?? '')
     const [profileStatus, setProfileStatus] = useState<Status>(null)
@@ -63,7 +65,12 @@ export default function Settings() {
         setProfileStatus(null)
 
         try {
-            await request('/api/auth/profile', 'PATCH', { name, businessName, phone, address })
+            if (isClient) {
+                await request('/api/clients/me', 'PATCH', { name, companyName: company, phone, address })
+            } else {
+                await request('/api/auth/profile', 'PATCH', { name, businessName: company, phone, address })
+            }
+
             await refreshUser()
             setProfileStatus({ type: 'success', message: 'Profile updated.' })
         } catch (err) {
@@ -118,7 +125,11 @@ export default function Settings() {
             <div className="clientsHeader">
                 <div>
                     <h1>Settings</h1>
-                    <p className="clientsSubtitle">Manage your account and business details.</p>
+                    <p className="clientsSubtitle">
+                        {isClient
+                            ? 'Manage your account details.'
+                            : 'Manage your account and business details.'}
+                    </p>
                 </div>
                 <button type="button" className="settingsButton settingsButton--secondary" onClick={handleLogout}>
                     <LogOut size={16} />
@@ -131,7 +142,9 @@ export default function Settings() {
                 <section className="settingsCard">
                     <h2>Profile</h2>
                     <p className="settingsCardDescription">
-                        This information appears on your invoices and client portal.
+                        {isClient
+                            ? 'This information is shown to the freelancers you work with.'
+                            : 'This information appears on your invoices and client portal.'}
                     </p>
 
                     <form className="settingsForm" onSubmit={handleProfileSubmit}>
@@ -145,15 +158,15 @@ export default function Settings() {
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                required
+                                required={!isClient}
                             />
                         </label>
                         <label className="settingsField">
-                            Business name
+                            {isClient ? 'Company name' : 'Business name'}
                             <input
                                 type="text"
-                                value={businessName}
-                                onChange={(e) => setBusinessName(e.target.value)}
+                                value={company}
+                                onChange={(e) => setCompany(e.target.value)}
                             />
                         </label>
                         <label className="settingsField">
@@ -228,9 +241,9 @@ export default function Settings() {
                 <section className="settingsCard settingsCard--danger">
                     <h2>Delete account</h2>
                     <p className="settingsCardDescription">
-                        This permanently deletes your account along with all your clients, projects,
-                        milestones, invoices, and shared links. Your clients will lose access
-                        immediately. This cannot be undone.
+                        {isClient
+                            ? 'This closes your account and you will lose access to all your projects and invoices. The freelancers you worked with keep their own records of that work. This cannot be undone.'
+                            : 'This permanently deletes your account along with all your clients, projects, milestones, invoices, and shared links. Your clients will lose access immediately. This cannot be undone.'}
                     </p>
 
                     {!showDelete ? (

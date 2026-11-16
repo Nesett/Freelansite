@@ -157,13 +157,18 @@ export async function changePassword(req: Request, res: Response) {
             return res.status(401).json({ error: 'Unauthorized' })
         }
 
-        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+        const isClient = req.userRole === 'client'
 
-        if (!admin) {
+        const account = isClient
+            ? await db.client.findUnique({ where: { id: req.user.id } })
+            : await db.admin.findUnique({ where: { id: req.user.id } })
+
+        // a client who deleted their account has no password anymore
+        if (!account || !account.password) {
             return res.status(401).json({ error: 'User no longer exists' })
         }
 
-        const passwordMatch = await bcrypt.compare(currentPassword, admin.password)
+        const passwordMatch = await bcrypt.compare(currentPassword, account.password)
 
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Current password is incorrect.' })
@@ -175,10 +180,17 @@ export async function changePassword(req: Request, res: Response) {
 
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
-        await db.admin.update({
-            where: { id: admin.id },
-            data: { password: hashedPassword }
-        })
+        if (isClient) {
+            await db.client.update({
+                where: { id: account.id },
+                data: { password: hashedPassword }
+            })
+        } else {
+            await db.admin.update({
+                where: { id: account.id },
+                data: { password: hashedPassword }
+            })
+        }
 
         return res.status(200).json({ message: 'Password updated.' })
 
@@ -197,19 +209,35 @@ export async function deleteAccount(req: Request, res: Response) {
             return res.status(401).json({ error: 'Unauthorized' })
         }
 
-        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+        const isClient = req.userRole === 'client'
 
-        if (!admin) {
+        const account = isClient
+            ? await db.client.findUnique({ where: { id: req.user.id } })
+            : await db.admin.findUnique({ where: { id: req.user.id } })
+
+        if (!account || !account.password) {
             return res.status(401).json({ error: 'User no longer exists' })
         }
 
-        const passwordMatch = await bcrypt.compare(password, admin.password)
+        const passwordMatch = await bcrypt.compare(password, account.password)
 
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Password is incorrect.' })
         }
 
-        await db.admin.delete({ where: { id: admin.id } })
+        if (isClient) {
+            await db.client.update({
+                where: { id: account.id },
+                data: {
+                    deletedByClient: true,
+                    password: null,
+                    inviteToken: null,
+                    inviteTokenExpires: null
+                }
+            })
+        } else {
+            await db.admin.delete({ where: { id: account.id } })
+        }
 
         res.clearCookie('auth_token')
         return res.status(200).json({ message: 'Account deleted.' })

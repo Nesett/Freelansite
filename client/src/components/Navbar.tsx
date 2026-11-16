@@ -18,7 +18,8 @@ export default function Navbar() {
 
 	const clientLinks = [
 		{ to: '/projects', label: 'Projects', icon: FolderKanban },
-		{ to: '/invoices', label: 'Invoices', icon: Receipt }
+		{ to: '/invoices', label: 'Invoices', icon: Receipt },
+		{ to: '/settings', label: 'Settings', icon: Settings }
 	]
 
 	const links = user?.role === 'admin' ? adminLinks : clientLinks

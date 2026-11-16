@@ -379,6 +379,7 @@ export async function setClientPassword(req: Request, res: Response) {
             },
             data: {
                 password: hashedPassword,
+                deletedByClient: false,
                 inviteToken: null,
                 inviteTokenExpires: null
             }
@@ -417,7 +418,7 @@ export async function loginClient(req: Request, res: Response) {
     try {
         const client = await db.client.findUnique({where: { email }})
         
-        if (!client || !client.password) {
+        if (!client || !client.password || client.deletedByClient) {
             return res.status(401).json({ error: "Invalid credentials." })
         } else {
             const passwordMatch = await bcrypt.compare(password, client.password)
