@@ -9,6 +9,8 @@ import type { Project } from "./Projects"
 import ProjectsTable from "../components/ProjectsTable"
 import { useUpgrade } from "../context/UpgradeContext"
 import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
+import { useToast } from "../context/ToastContext"
+import NotFoundState from "../components/NotFoundState"
 
 
 
@@ -21,7 +23,7 @@ export default function ClientsDetails() {
     const [showNewProjectForm, setShowNewProjectForm] = useState<boolean>(false)
     const { id } = useParams<{ id: string }>()
     const clientOptionsRef = useRef<HTMLDivElement | null>(null)
-    const [errorMessage, setErrorMessage] = useState<string>("")
+    const { showError } = useToast()
     const { checkLimit } = useUpgrade()
 
     const navigate = useNavigate()
@@ -56,10 +58,12 @@ export default function ClientsDetails() {
 					setProjects(projectsJson)
 				}
 			} catch (err) {
+                if (!isFinished) return
+
                 if (err instanceof Error) {
-                    setErrorMessage(err.message)
+                    showError(err.message)
                 } else {
-                    setErrorMessage("An unexpected error occured.")
+                    showError("An unexpected error occured.")
                     console.error("error:", err)
                 }
 				
@@ -75,7 +79,7 @@ export default function ClientsDetails() {
 		return () => {
 			isFinished = false
 		}
-	}, [id])
+	}, [id, showError])
 
 
     async function deleteClient() {
@@ -93,9 +97,9 @@ export default function ClientsDetails() {
             navigate("/clients")
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occured while deleting client.")
+                showError("An unexpected error occured while deleting client.")
                 console.error("error:", err)
             }
         }
@@ -111,7 +115,14 @@ export default function ClientsDetails() {
     }
 
     if (!client) {
-        return <div>Client not found.</div>
+        return (
+            <NotFoundState
+                title="Client not found"
+                text="This client doesn't exist, or you don't have access to them."
+                backTo="/clients"
+                backLabel="Back to clients"
+            />
+        )
     }
 
     async function handleNewProjectClick() {

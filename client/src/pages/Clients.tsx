@@ -4,6 +4,7 @@ import ClientEntry from '../components/ClientEntry'
 import { useSortableClients } from '../utils/useSortableClients'
 import { useNavigate } from 'react-router-dom'
 import { useUpgrade } from '../context/UpgradeContext'
+import { useToast } from '../context/ToastContext'
 
 export interface Client {
 	id: string
@@ -25,7 +26,7 @@ export default function Clients() {
 	const [ clientName, setClientName ] = useState('')
 	const [ clientCname, setClientCname ] = useState('')
 	const [ clientPhone, setClientPhone ] = useState('')
-	const [ errorMessage, setErrorMessage ]= useState('')
+	const { showError } = useToast()
 	const { openUpgrade, checkLimit } = useUpgrade()
 	const navigate = useNavigate()
 
@@ -86,10 +87,9 @@ export default function Clients() {
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
-				setErrorMessage(err.message)
-				console.log(errorMessage)
+				showError(err.message)
 			} else {
-				setErrorMessage("An unexpected error occured.")
+				showError("An unexpected error occured.")
 			}
 		}
 

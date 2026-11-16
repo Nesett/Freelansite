@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import type { Project } from "./Projects"
+import { useToast } from "../context/ToastContext"
 
 const RECENT_PROJECTS_LIMIT = 5
 
@@ -53,7 +54,7 @@ export default function DashboardPage() {
     const [projects, setProjects] = useState<Project[]>([])
     const [invoices, setInvoices] = useState<DashboardInvoice[]>([])
     const [loading, setLoading] = useState<boolean>(true)
-    const [errorMessage, setErrorMessage] = useState<string>("")
+    const { showError } = useToast()
 
     useEffect(() => {
         async function fetchProjects() {
@@ -64,7 +65,7 @@ export default function DashboardPage() {
                 ])
 
                 if (!projectsRes.ok || !invoicesRes.ok) {
-                    setErrorMessage("Could not load your dashboard")
+                    showError("Could not load your dashboard")
                     return
                 }
 
@@ -78,14 +79,14 @@ export default function DashboardPage() {
                 })))
                 setInvoices(invoicesData)
             } catch (err) {
-                setErrorMessage(err instanceof Error ? err.message : "An unexpected error occurred")
+                showError(err instanceof Error ? err.message : "An unexpected error occurred")
             } finally {
                 setLoading(false)
             }
         }
 
         fetchProjects()
-    }, [])
+    }, [showError])
 
     if (loading) {
         return <div>Loading dashboard...</div>
@@ -117,9 +118,6 @@ export default function DashboardPage() {
                     <p className="clientsSubtitle">Here's what's happening across your clients today.</p>
                 </div>
             </div>
-
-            {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-
             <div className="dashboardStats">
                 <div className="statCard">
                     <p className="statLabel">Active Projects</p>

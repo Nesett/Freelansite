@@ -7,6 +7,8 @@ import InvoiceFormModal from '../components/InvoiceFormModal'
 import AreYouSureModal from '../components/AreYouSureModal'
 import { useAuth } from '../context/AuthContext'
 import { useBreadcrumbLabel } from '../context/BreadcrumbContext'
+import { useToast } from '../context/ToastContext'
+import NotFoundState from '../components/NotFoundState'
 
 
 interface InvoiceItem {
@@ -66,7 +68,7 @@ export default function InvoiceDetails() {
 	const [ invoice, setInvoice ] = useState<InvoiceDetail | null>(null)
 	const [ loading, setLoading ] = useState(true)
 	const [ saving, setSaving ] = useState(false)
-	const [ error, setError ] = useState('')
+	const { showError } = useToast()
 	const [ showEdit, setShowEdit ] = useState(false)
 	const [ showOptions, setShowOptions ] = useState(false)
 	const [ showDelete, setShowDelete ] = useState(false)
@@ -88,10 +90,10 @@ export default function InvoiceDetails() {
 				if (res.ok) {
 					setInvoice(data.invoice)
 				} else {
-					setError(data.error || 'Could not load the invoice.')
+					showError(data.error || 'Could not load the invoice.')
 				}
 			} catch {
-				if (!cancelled) setError('Could not load the invoice.')
+				if (!cancelled) showError('Could not load the invoice.')
 			} finally {
 				if (!cancelled) setLoading(false)
 			}
@@ -102,7 +104,7 @@ export default function InvoiceDetails() {
 		return () => {
 			cancelled = true
 		}
-	}, [id])
+	}, [id, showError])
 
     useEffect(() => {
         if (!invoice) return
@@ -132,7 +134,6 @@ export default function InvoiceDetails() {
 		if (!invoice) return
 
 		setSaving(true)
-		setError('')
 
 		try {
 			const res = await fetch(`/api/invoices/${invoice.id}`, {
@@ -144,13 +145,13 @@ export default function InvoiceDetails() {
 			const data = await res.json()
 
 			if (!res.ok) {
-				setError(data.error || 'Could not update the invoice.')
+				showError(data.error || 'Could not update the invoice.')
 				return
 			}
 
 			setInvoice({ ...invoice, status: data.updatedInvoice.status })
 		} catch {
-			setError('Could not update the invoice.')
+			showError('Could not update the invoice.')
 		} finally {
 			setSaving(false)
 		}
@@ -174,7 +175,7 @@ export default function InvoiceDetails() {
 			navigate('/invoices')
 		} catch (err) {
 			setShowDelete(false)
-			setError(err instanceof Error ? err.message : 'Could not delete the invoice.')
+			showError(err instanceof Error ? err.message : 'Could not delete the invoice.')
 		}
 	}
 
@@ -194,9 +195,12 @@ export default function InvoiceDetails() {
 
 	if (!invoice) {
 		return (
-			<div className="pageContent">
-				<p className="tableEmptyState">{error || 'Invoice not found.'}</p>
-			</div>
+			<NotFoundState
+				title="Invoice not found"
+				text="This invoice doesn't exist, or you don't have access to it."
+				backTo="/invoices"
+				backLabel="Back to invoices"
+			/>
 		)
 	}
 
@@ -306,9 +310,6 @@ export default function InvoiceDetails() {
 						)}
 					</div>
 				</div>
-
-				{error && <p className="errorMessage invoiceError invoiceNoPrint">{error}</p>}
-
 				<div className="invoiceParties">
 					<div>
 						<p className="invoiceLabel">From</p>

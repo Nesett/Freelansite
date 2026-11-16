@@ -2,6 +2,7 @@ import loginImg from '../images/loginImg.png'
 import { useState} from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 type Role = 'admin' | 'client'
 
@@ -15,7 +16,7 @@ export default function LoginPage() {
 	const [ showPassword, setShowPassword ] = useState(false)
 	const [ password, setPassword ] = useState("")
 	const [ email, setEmail ] = useState("")
-	const [ errorMessage, setErrorMessage] = useState("")
+	const { showError } = useToast()
 	const navigate = useNavigate()
 	const { refreshUser } = useAuth()
 
@@ -43,9 +44,9 @@ export default function LoginPage() {
 
 		} catch(err: unknown) {
 			if (err instanceof Error) {
-				setErrorMessage(err.message)
+				showError(err.message)
 			} else {
-				setErrorMessage("An unexpected error occured.")
+				showError("An unexpected error occured.")
 			}
 		}
 
@@ -53,7 +54,6 @@ export default function LoginPage() {
 
 	function switchRole(newRole: Role) {
 		setRole(newRole)
-		setErrorMessage("")
 	}
 
 	function togglePassword() {
@@ -133,9 +133,6 @@ export default function LoginPage() {
 						<input id="rememberMe" name="rememberMe" type="checkbox" />
 						<span>Remember me</span>
 					</label>
-
-					{errorMessage && <p className="errorMessage">{errorMessage}</p>}
-
 					<button type="submit" className="signInButton">
 						Sign in
 					</button>

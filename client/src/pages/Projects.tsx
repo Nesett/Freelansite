@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import ProjectsTable from "../components/ProjectsTable"
+import { useToast } from "../context/ToastContext"
 
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
@@ -62,7 +63,7 @@ export interface MagicLink {
 export default function Projects() {
 	const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState<boolean>(true)
-    const [ errorMessage, setErrorMessage] = useState<string>("")
+    const { showError } = useToast()
 
 	useEffect(()=> {
 		async function fetchAllProjects() {
@@ -81,10 +82,10 @@ export default function Projects() {
 
 			} catch(err) {
 				if (err instanceof Error) {
-					setErrorMessage(err.message)
+					showError(err.message)
 					console.log(err.message)
 				} else {
-					setErrorMessage("An unexpected error occured")
+					showError("An unexpected error occured")
 				}
 			} finally {
 				setLoading(false)
@@ -93,7 +94,7 @@ export default function Projects() {
 		}
 
 		fetchAllProjects()
-	}, [])
+	}, [showError])
 
 	if (loading) {
 		return <div>Loading projects...</div>
@@ -109,7 +110,6 @@ export default function Projects() {
                     </p>
                 </div>
             </div>
-            {errorMessage && <p>{errorMessage}</p>}
             <ProjectsTable projects={projects} showClient />
         </div>
     )
