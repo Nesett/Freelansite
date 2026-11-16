@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext"
 import MagicLinkFormModal from "../components/MagicLinkFormModal"
 import InvoiceFormModal from "../components/InvoiceFormModal"
 import { formatInvoiceNumber } from "../components/InvoiceEntry"
+import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
 
 
 
@@ -37,6 +38,8 @@ export default function ProjectDetails() {
     const [copied, setCopied] = useState<boolean>(false)
     const [showInvoiceForm, setShowInvoiceForm] = useState<boolean>(false)
     const navigate = useNavigate()
+
+    useBreadcrumbLabel(project?.title)
 
 	useEffect(() => {
         let isFinished = true

@@ -6,6 +6,8 @@ import type { InvoiceStatus } from './Invoices'
 import InvoiceFormModal from '../components/InvoiceFormModal'
 import AreYouSureModal from '../components/AreYouSureModal'
 import { useAuth } from '../context/AuthContext'
+import { useBreadcrumbLabel } from '../context/BreadcrumbContext'
+
 
 interface InvoiceItem {
 	id: string
@@ -69,6 +71,7 @@ export default function InvoiceDetails() {
 	const [ showOptions, setShowOptions ] = useState(false)
 	const [ showDelete, setShowDelete ] = useState(false)
 	const optionsRef = useRef<HTMLDivElement | null>(null)
+	useBreadcrumbLabel(invoice ? formatInvoiceNumber(invoice.number) : null)
 
 	useEffect(() => {
 		let cancelled = false

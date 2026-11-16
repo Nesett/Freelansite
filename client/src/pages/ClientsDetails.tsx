@@ -8,6 +8,9 @@ import type { Client } from "./Clients"
 import type { Project } from "./Projects"
 import ProjectsTable from "../components/ProjectsTable"
 import { useUpgrade } from "../context/UpgradeContext"
+import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
+
+
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
@@ -22,6 +25,8 @@ export default function ClientsDetails() {
     const { checkLimit } = useUpgrade()
 
     const navigate = useNavigate()
+
+    useBreadcrumbLabel(client ? (client.companyName || client.name) : null)
 
     useClickOutside(editOptions, () => setEditOptions(false), clientOptionsRef)
 
