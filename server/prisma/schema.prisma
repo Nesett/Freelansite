@@ -50,29 +50,29 @@ model Admin {
 }
 
 model Client {
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String?
-  createdAt          DateTime  @default(now()) @map("created_at")
-  lastActive         DateTime  @default(now()) @map("last_active")
-  deletedByClient    Boolean   @default(false) @map("deleted_by_client")
-  inviteToken        String?   @unique
-  inviteTokenExpires DateTime?
+    id                 String    @id @default(uuid())
+    email              String    @unique
+    password           String?
+    name               String?
+    companyName        String?   @map("company_name")
+    phone              String?
+    address            String?
+    createdAt          DateTime  @default(now()) @map("created_at")
+    lastActive         DateTime  @default(now()) @map("last_active")
+    deletedByClient    Boolean   @default(false) @map("deleted_by_client")
+    inviteToken        String?   @unique
+    inviteTokenExpires DateTime?
 
-  adminClients AdminClient[]
-  projects     Project[]
+    adminClients AdminClient[]
+    projects     Project[]
 
-  @@map("clients")
+    @@map("clients")
 }
 
 model AdminClient {
     id             String   @id @default(uuid())
     adminId        String   @map("admin_id")
     clientId       String   @map("client_id")
-    name           String?
-    companyName    String?
-    phone          String?
-    address        String?
     deletedByAdmin Boolean  @default(false) @map("deleted_by_admin")
     createdAt      DateTime @default(now()) @map("created_at")
 

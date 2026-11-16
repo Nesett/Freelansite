@@ -20,7 +20,6 @@ export async function search(req: Request, res: Response) {
         return res.json({ clients: [], projects: [], invoices: [] })
     }
 
-    // "#015", "015" and "15" all find invoice number 15
     const numberTerm = term.replace(/^#/, '')
     const invoiceNumberFilter = /^\d{1,9}$/.test(numberTerm)
         ? [{ number: Number(numberTerm) }]
@@ -30,22 +29,21 @@ export async function search(req: Request, res: Response) {
         if (req.userRole === 'admin') {
             const adminId = req.user.id
 
-            const [adminClients, projects, invoices] = await Promise.all([
-                db.adminClient.findMany({
+            const [clients, projects, invoices] = await Promise.all([
+                db.client.findMany({
                     where: {
-                        adminId,
-                        deletedByAdmin: false,
+                        adminClients: { some: { adminId, deletedByAdmin: false } },
                         OR: [
                             { name: contains(term) },
                             { companyName: contains(term) },
-                            { client: { email: contains(term) } }
+                            { email: contains(term) }
                         ]
                     },
                     select: {
-                        clientId: true,
+                        id: true,
                         name: true,
                         companyName: true,
-                        client: { select: { email: true } }
+                        email: true
                     },
                     orderBy: { createdAt: 'desc' },
                     take: MAX_RESULTS
@@ -58,15 +56,10 @@ export async function search(req: Request, res: Response) {
                             { title: contains(term) },
                             {
                                 client: {
-                                    adminClients: {
-                                        some: {
-                                            adminId,
-                                            OR: [
-                                                { name: contains(term) },
-                                                { companyName: contains(term) }
-                                            ]
-                                        }
-                                    }
+                                    OR: [
+                                        { name: contains(term) },
+                                        { companyName: contains(term) }
+                                    ]
                                 }
                             }
                         ]
@@ -77,10 +70,8 @@ export async function search(req: Request, res: Response) {
                         client: {
                             select: {
                                 email: true,
-                                adminClients: {
-                                    where: { adminId },
-                                    select: { name: true, companyName: true }
-                                }
+                                name: true,
+                                companyName: true
                             }
                         }
                     },
@@ -109,21 +100,17 @@ export async function search(req: Request, res: Response) {
             ])
 
             return res.json({
-                clients: adminClients.map(ac => ({
-                    id: ac.clientId,
-                    name: ac.name,
-                    companyName: ac.companyName,
-                    email: ac.client.email
+                clients: clients.map(client => ({
+                    id: client.id,
+                    name: client.name,
+                    companyName: client.companyName,
+                    email: client.email
                 })),
-                projects: projects.map(project => {
-                    const adminClient = project.client.adminClients[0]
-
-                    return {
-                        id: project.id,
-                        title: project.title,
-                        clientName: adminClient?.companyName || adminClient?.name || project.client.email
-                    }
-                }),
+                projects: projects.map(project => ({
+                    id: project.id,
+                    title: project.title,
+                    clientName: project.client.companyName || project.client.name || project.client.email
+                })),
                 invoices: invoices.map(invoice => ({
                     id: invoice.id,
                     number: invoice.number,

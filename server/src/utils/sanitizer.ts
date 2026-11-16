@@ -11,8 +11,8 @@ function isAdmin(user: Admin | Client): user is Admin {
 }
 
 export const toClientSafe = (user: Admin | Client): SafeUser => {
-    if ('companyName' in user) {
-        const { password, inviteToken, inviteTokenExpires, deletedByAdmin, deletedByClient, ...safeData } = user
+    if ('lastActive' in user) {
+        const { password, inviteToken, inviteTokenExpires, deletedByClient, ...safeData } = user
         return { ...safeData, role: 'client' } as SafeClient
     }
 
@@ -33,16 +33,24 @@ type ProjectForPublic = Prisma.ProjectGetPayload<{
 }>
 
 export function toAdminClientView(
-    adminClient: { name: string | null, companyName: string | null, phone: string | null, address: string | null },
-    client: { id: string, email: string, lastActive: Date, password: string | null }
+    client: {
+        id: string
+        email: string
+        name: string | null
+        companyName: string | null
+        phone: string | null
+        address: string | null
+        lastActive: Date
+        password: string | null
+    }
 ) {
     return {
         id: client.id,
         email: client.email,
-        name: adminClient.name,
-        companyName: adminClient.companyName,
-        phone: adminClient.phone,
-        address: adminClient.address,
+        name: client.name,
+        companyName: client.companyName,
+        phone: client.phone,
+        address: client.address,
         lastActive: client.lastActive,
         hasAccount: client.password !== null
     }

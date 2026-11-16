@@ -14,24 +14,43 @@ import { canAddClient } from '../services/planLimits.js'
 // await sendAdminAddedYouEmail(email, dashboardLink, name)
 
 
+export async function lookupClient(req: Request, res: Response) {
+
+    const adminId = req.user.id
+    const email = String(req.body.email).trim().toLowerCase()
+
+    try {
+        const client = await db.client.findUnique({
+            where: { email },
+            select: { id: true, name: true, companyName: true }
+        })
+
+        if (!client) {
+            return res.status(200).json({ exists: false })
+        }
+
+        const alreadyAdded = await db.adminClient.findFirst({
+            where: { adminId, clientId: client.id, deletedByAdmin: false }
+        })
+
+        return res.status(200).json({
+            exists: true,
+            alreadyAdded: alreadyAdded !== null,
+            displayName: client.companyName || client.name || null
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: "Could not look up the client." })
+    }
+}
+
+
 export async function createClient(req: Request, res: Response) {
 
     const { name, email: rawEmail, phone, companyName } = req.body
     const adminId = req.user.id
-
-    if (!name && !companyName) {
-        return res.status(400).json({ error: "Enter at least name or company name of your client." })
-    }
-
-    if (!rawEmail) {
-        return res.status(400).json({ error: "Enter email." })
-    }
-
     const email = String(rawEmail).trim().toLowerCase()
-
-    if (!validator.isEmail(email)) {
-        return res.status(400).json({ error: "The email is invalid." })
-    }
 
     try {
         const admin = await db.admin.findUnique({ where: { id: adminId } })
@@ -43,6 +62,13 @@ export async function createClient(req: Request, res: Response) {
         const adminName = admin.businessName ?? admin.name
 
         let client = await db.client.findUnique({ where: { email } })
+
+        // a brand new client needs details from the admin. an existing client owns their own data,
+        // so anything the admin sent for them is ignored.
+        if (!client && !name && !companyName) {
+            return res.status(400).json({ error: "Enter at least name or company name of your client." })
+        }
+
         const hasAccount = client !== null && client.password !== null
 
         const alreadyActive = client
@@ -51,7 +77,11 @@ export async function createClient(req: Request, res: Response) {
             })
             : null
 
-        if (!alreadyActive && !(await canAddClient(adminId))) {
+        if (alreadyActive) {
+            return res.status(409).json({ error: "This client is already in your list." })
+        }
+
+        if (!(await canAddClient(adminId))) {
             return res.status(402).json({
                 error: "You've reached the client limit for your plan. Upgrade to Pro to add more.",
                 code: 'PLAN_LIMIT_CLIENTS'
@@ -64,7 +94,14 @@ export async function createClient(req: Request, res: Response) {
 
         if (!client) {
             client = await db.client.create({
-                data: { email, inviteToken, inviteTokenExpires }
+                data: {
+                    email,
+                    name: name || null,
+                    companyName: companyName || null,
+                    phone: phone || null,
+                    inviteToken,
+                    inviteTokenExpires
+                }
             })
         } else if (!hasAccount) {
             client = await db.client.update({
@@ -73,21 +110,10 @@ export async function createClient(req: Request, res: Response) {
             })
         }
 
-        const adminClient = await db.adminClient.upsert({
+        await db.adminClient.upsert({
             where: { adminId_clientId: { adminId, clientId: client.id } },
-            update: {
-                name: name || null,
-                companyName: companyName || null,
-                phone: phone || null,
-                deletedByAdmin: false
-            },
-            create: {
-                adminId,
-                clientId: client.id,
-                name: name || null,
-                companyName: companyName || null,
-                phone: phone || null
-            }
+            update: { deletedByAdmin: false },
+            create: { adminId, clientId: client.id }
         })
 
         if (hasAccount) {
@@ -98,7 +124,7 @@ export async function createClient(req: Request, res: Response) {
 
         return res.status(201).json({
             message: "Successfully added client.",
-            user: toAdminClientView(adminClient, client)
+            user: toAdminClientView(client)
         })
 
     } catch (err) {
@@ -124,6 +150,10 @@ export async function getAllClients(req: Request, res: Response) {
                     select: {
                         id: true,
                         email: true,
+                        name: true,
+                        companyName: true,
+                        phone: true,
+                        address: true,
                         lastActive: true,
                         password: true,
                         projects: {
@@ -146,7 +176,7 @@ export async function getAllClients(req: Request, res: Response) {
             }
         })
 
-        const result = adminClients.map(({ client, ...adminClient }) => {
+        const result = adminClients.map(({ client }) => {
             const { projects, ...clientData } = client
 
             const deadlines = projects.flatMap(project =>
@@ -157,7 +187,7 @@ export async function getAllClients(req: Request, res: Response) {
                 ? new Date(Math.min(...deadlines)).toISOString()
                 : null
 
-            return { ...toAdminClientView(adminClient, clientData), nextDeadline }
+            return { ...toAdminClientView(clientData), nextDeadline }
         })
 
         return res.status(200).json(result)
@@ -180,7 +210,16 @@ export async function getClient(req: Request, res: Response) {
             where: { adminId, clientId, deletedByAdmin: false },
             include: {
                 client: {
-                    select: { id: true, email: true, lastActive: true, password: true }
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        companyName: true,
+                        phone: true,
+                        address: true,
+                        lastActive: true,
+                        password: true
+                    }
                 }
             }
         })
@@ -189,7 +228,7 @@ export async function getClient(req: Request, res: Response) {
             return res.status(404).json({ error: "Client not found." })
         }
 
-        return res.status(200).json(toAdminClientView(adminClient, adminClient.client))
+        return res.status(200).json(toAdminClientView(adminClient.client))
 
     } catch (err) {
         console.log(err)
@@ -198,38 +237,25 @@ export async function getClient(req: Request, res: Response) {
 }
 
 
-export async function updateClient(req: Request, res: Response) {
+export async function updateMyProfile(req: Request, res: Response) {
 
-    const adminId = req.user.id
-    const clientId = String(req.params.id)
+    if (req.userRole !== 'client') {
+        return res.status(403).json({ error: 'Forbidden' })
+    }
 
-    const { name, phone, companyName, address } = req.body
+    const { name, companyName, phone, address } = req.body
 
     try {
-
-        const existing = await db.adminClient.findFirst({
-            where: { adminId, clientId, deletedByAdmin: false }
+        const client = await db.client.update({
+            where: { id: req.user.id },
+            data: { name, companyName, phone, address }
         })
 
-        if (!existing) {
-            return res.status(404).json({ error: "Client does not exist." })
-        }
-
-        const updated = await db.adminClient.update({
-            where: { id: existing.id },
-            data: { name, phone, companyName, address },
-            include: {
-                client: {
-                    select: { id: true, email: true, lastActive: true, password: true }
-                }
-            }
-        })
-
-        return res.status(200).json({ updatedClient: toAdminClientView(updated, updated.client) })
+        return res.status(200).json({ user: toClientSafe(client) })
 
     } catch (err) {
         console.log(err)
-        return res.status(500).json({ error: `Could not update client with id ${clientId}.` })
+        return res.status(500).json({ error: "Could not update your profile." })
     }
 }
 

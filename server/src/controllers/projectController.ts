@@ -7,52 +7,14 @@ import crypto from "crypto"
 import { canAddProject } from '../services/planLimits.js'
 
 
-type ClientDetails = {
-    clientId: string
-    name: string | null
-    companyName: string | null
-    phone: string | null
-    address: string | null
-}
-
-async function getClientDetails(req: Request, clientIds: string[]) {
-    const detailsByClientId = new Map<string, ClientDetails>()
-
-    if (req.userRole !== 'admin' || clientIds.length === 0) {
-        return detailsByClientId
-    }
-
-    const rows = await db.adminClient.findMany({
-        where: {
-            adminId: req.user.id,
-            clientId: { in: clientIds }
-        },
-        select: {
-            clientId: true,
-            name: true,
-            companyName: true,
-            phone: true,
-            address: true
-        }
-    })
-
-    for (const row of rows) {
-        detailsByClientId.set(row.clientId, row)
-    }
-
-    return detailsByClientId
-}
-
-function buildClient(client: { id: string, email: string }, details?: ClientDetails) {
-    return {
-        id: client.id,
-        email: client.email,
-        name: details?.name ?? null,
-        companyName: details?.companyName ?? null,
-        phone: details?.phone ?? null,
-        address: details?.address ?? null
-    }
-}
+const clientSelect = {
+    id: true,
+    email: true,
+    name: true,
+    companyName: true,
+    phone: true,
+    address: true
+} as const
 
 
 export async function createProject(req: Request, res: Response) {
@@ -138,10 +100,7 @@ export async function getAllProjects(req: Request, res: Response) {
             orderBy: { createdAt: 'desc' },
             include: {
                 client: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
+                    select: clientSelect
                 },
                 admin: {
                     select: {
@@ -163,12 +122,8 @@ export async function getAllProjects(req: Request, res: Response) {
             }
         })
 
-        const clientIds = [...new Set(allProjects.map(project => project.clientId))]
-        const clientDetails = await getClientDetails(req, clientIds)
-
         const projectsWithProgress = allProjects.map(project => ({
             ...project,
-            client: buildClient(project.client, clientDetails.get(project.clientId)),
             progress: countProgressPercent(project.milestones)
         }))
 
@@ -196,10 +151,7 @@ export async function getProject(req: Request, res: Response) {
             },
             include: {
                 client: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
+                    select: clientSelect
                 },
                 admin: {
                     select: {
@@ -232,11 +184,8 @@ export async function getProject(req: Request, res: Response) {
             return res.status(404).json({ error: "Project not found." })
         }
 
-        const clientDetails = await getClientDetails(req, [project.clientId])
-
         return res.status(200).json({
             ...project,
-            client: buildClient(project.client, clientDetails.get(project.clientId)),
             progress: countProgressPercent(project.milestones)
         })
 
