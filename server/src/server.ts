@@ -15,6 +15,8 @@ import brandingRoutes from './routes/brandingRoutes.js'
 import { toPublicSafe } from "./utils/sanitizer.js"
 import { getPublicBranding } from "./utils/branding.js"
 import {  publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
+import billingRoutes from './routes/billingRoutes.js'
+import { handleWebhook } from './controllers/billingController.js'
 import helmet from 'helmet'
 
 
@@ -35,6 +37,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL,
   credentials: true
 }))
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), handleWebhook)
 app.use(express.json())
 app.use(cookieParser())
 
@@ -47,6 +50,7 @@ app.use('/api/invoices', apiLimiter, invoiceRoutes)
 app.use('/api/plan', planRoutes)
 app.use('/api/search', apiLimiter, searchRoutes)
 app.use('/api/branding', apiLimiter, brandingRoutes)
+app.use('/api/billing', apiLimiter, billingRoutes)
 
 app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) => {
 

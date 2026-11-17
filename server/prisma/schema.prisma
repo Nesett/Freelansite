@@ -43,6 +43,8 @@ model Admin {
 
   plan                 Plan      @default(FREE)
   currentPeriodEnd     DateTime? @map("current_period_end")
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
 
   brandPrimary String? @map("brand_primary")
   brandAccent  String? @map("brand_accent")
