@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { LayoutDashboard, Users, FolderKanban, Receipt, UsersRound, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useBrandingContext } from '../context/BrandingContext'
 
 export default function Navbar() {
 	const [collapsed, setCollapsed] = useState(false)
 	const { user } = useAuth()
+	const { branding } = useBrandingContext()
 
 	const adminLinks = [
 		{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,11 +26,30 @@ export default function Navbar() {
 
 	const links = user?.role === 'admin' ? adminLinks : clientLinks
 
+	const logoUrl = branding?.logoUrl ?? null
+	const logoStyle = branding?.logoStyle ?? 'WORDMARK'
+
+	function renderLogo() {
+		if (!logoUrl) {
+			return <span className="logo-text">{collapsed ? 'F' : 'Freelansite'}</span>
+		}
+
+		// if its collapsed and a wordmark, since it would look ugly collapsed, i show the brand's initial instead
+		if (collapsed && logoStyle === 'WORDMARK') {
+			return <span className="logo-text">{(branding?.name ?? '').charAt(0).toUpperCase()}</span>
+		}
+
+		return <img className="sidebarLogoImg" src={logoUrl} alt={branding?.name ?? ''} />
+	}
 
 	return (
 		<nav className={collapsed ? 'sidebar collapsed' : 'sidebar'}>
-        <Link to="/dashboard" className="sidebar-logo">
-            <span className="logo-text">{collapsed ? 'F' : 'Freelansate'}</span>
+        <Link
+            to="/dashboard"
+            className={logoUrl ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}
+            aria-label="Home"
+        >
+            {renderLogo()}
         </Link>
 
 			<div className="sidebar-links">

@@ -17,6 +17,7 @@ import { formatInvoiceNumber } from "../components/InvoiceEntry"
 import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
 import { useToast } from "../context/ToastContext"
 import NotFoundState from "../components/NotFoundState"
+import { useBranding } from "../context/BrandingContext"
 
 
 
@@ -42,6 +43,7 @@ export default function ProjectDetails() {
     const navigate = useNavigate()
 
     useBreadcrumbLabel(project?.title)
+    useBranding(project?.admin.branding)
 
 	useEffect(() => {
         let isFinished = true
@@ -449,10 +451,10 @@ export default function ProjectDetails() {
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
-                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton" disabled={project.isOnHold}>
+                        {isAdmin && <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton" disabled={project.isOnHold}>
                             <Plus />
                             Add Milestone
-                        </button>
+                        </button>}
                     </div>
                     <div className="projectMilestones" style={project.isOnHold ? { pointerEvents: "none", opacity: 0.55 } : undefined}>
                         {sortedMilestones.length > 0 ? (

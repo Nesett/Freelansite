@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import ProjectsTable from "../components/ProjectsTable"
 import { useToast } from "../context/ToastContext"
+import type { LogoStyle } from "../utils/brandTheme"
 
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
@@ -23,12 +24,20 @@ export interface Milestone {
 	description?: string | null
 }
 
+export interface ProjectBranding {
+	name: string
+	primary: string | null
+	logoUrl: string | null
+	logoStyle: LogoStyle
+}
+
 export interface ProjectAdmin {
 	name: string
 	businessName: string | null
 	email: string
 	phone: string | null
 	address: string
+	branding?: ProjectBranding | null
 }
 
 export interface ProjectInvoice {

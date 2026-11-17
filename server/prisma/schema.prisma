@@ -25,6 +25,11 @@ enum Plan {
     PRO
 }
 
+enum LogoStyle {
+  WORDMARK
+  SYMBOL
+}
+
 model Admin {
   id                String   @id @default(uuid())
   name              String
@@ -42,6 +47,7 @@ model Admin {
   brandPrimary String? @map("brand_primary")
   brandAccent  String? @map("brand_accent")
   logoUrl      String? @map("logo_url")
+  logoStyle    LogoStyle @default(WORDMARK) @map("logo_style")
 
   adminClients AdminClient[]
   projects     Project[]

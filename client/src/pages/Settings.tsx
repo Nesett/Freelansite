@@ -1,16 +1,22 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
+import { FolderKanban, LogOut, Trash2, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useUpgrade } from '../context/UpgradeContext'
+import StatusBar from '../components/StatusBar'
+import { buildBrandTheme, checkBrandColor, makeReadable, normalizeHex, themeToCssVars, type LogoStyle } from '../utils/brandTheme'
+import { LOGO_RULES, checkLogoFile } from '../utils/logoRules'
 
 type Status = { type: 'success' | 'error', message: string } | null
 
 async function request(url: string, method: string, body?: object) {
+    const isForm = body instanceof FormData
+
     const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: isForm ? undefined : { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: body ? JSON.stringify(body) : undefined
+        body: !body ? undefined : isForm ? body : JSON.stringify(body)
     })
 
     const data = await response.json()
@@ -39,6 +45,7 @@ function StatusMessage({ status }: { status: Status }) {
 export default function Settings() {
     const { user, setUser, refreshUser } = useAuth()
     const navigate = useNavigate()
+    const { openUpgrade } = useUpgrade()
 
     const isClient = user?.role === 'client'
 
@@ -48,6 +55,18 @@ export default function Settings() {
     const [phone, setPhone] = useState(user?.phone ?? '')
     const [address, setAddress] = useState(user?.address ?? '')
     const [profileStatus, setProfileStatus] = useState<Status>(null)
+
+    // branding (pro plan)
+    const isPro = user?.plan === 'PRO'
+    const [brandColor, setBrandColor] = useState(user?.brandPrimary ?? '')
+    const [logoStyle, setLogoStyle] = useState<LogoStyle>(user?.logoStyle ?? 'WORDMARK')
+    const [logoFile, setLogoFile] = useState<File | null>(null)
+    const [logoBlobUrl, setLogoBlobUrl] = useState<string | null>(null)
+    const [logoRemoved, setLogoRemoved] = useState(false)
+    const [brandingSaving, setBrandingSaving] = useState(false)
+    const [brandingStatus, setBrandingStatus] = useState<Status>(null)
+    const logoInputRef = useRef<HTMLInputElement | null>(null)
+    const blobUrlRef = useRef<string | null>(null)
 
     // password
     const [currentPassword, setCurrentPassword] = useState('')
@@ -59,6 +78,20 @@ export default function Settings() {
     const [showDelete, setShowDelete] = useState(false)
     const [deletePassword, setDeletePassword] = useState('')
     const [deleteStatus, setDeleteStatus] = useState<Status>(null)
+
+    useEffect(() => {
+        return () => {
+            if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+        }
+    }, [])
+
+    // derived branding values
+    const normalizedColor = normalizeHex(brandColor)
+    const colorProblem = brandColor.trim() === '' ? null : checkBrandColor(brandColor).reason
+    const displayLogo = logoBlobUrl ?? (logoRemoved ? null : user?.logoUrl ?? null)
+    const previewVars = normalizedColor
+        ? themeToCssVars(buildBrandTheme(normalizedColor)) as CSSProperties
+        : undefined
 
     async function handleProfileSubmit(e: FormEvent) {
         e.preventDefault()
@@ -75,6 +108,68 @@ export default function Settings() {
             setProfileStatus({ type: 'success', message: 'Profile updated.' })
         } catch (err) {
             setProfileStatus({ type: 'error', message: getErrorMessage(err) })
+        }
+    }
+
+    function selectLogoFile(file: File | null) {
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+
+        blobUrlRef.current = file ? URL.createObjectURL(file) : null
+        setLogoFile(file)
+        setLogoBlobUrl(blobUrlRef.current)
+    }
+
+    async function handleLogoChange(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        e.target.value = ''
+
+        if (!file) return
+
+        const problem = await checkLogoFile(file)
+
+        if (problem) {
+            setBrandingStatus({ type: 'error', message: problem })
+            return
+        }
+
+        setBrandingStatus(null)
+        setLogoRemoved(false)
+        selectLogoFile(file)
+    }
+
+    function handleLogoRemove() {
+        selectLogoFile(null)
+        setLogoRemoved(true)
+    }
+
+    async function handleBrandingSubmit(e: FormEvent) {
+        e.preventDefault()
+        setBrandingStatus(null)
+
+        if (!isPro || colorProblem) return
+
+        setBrandingSaving(true)
+
+        try {
+            await request('/api/branding', 'PATCH', { brandPrimary: normalizedColor, logoStyle })
+
+            if (logoFile) {
+                const body = new FormData()
+                body.append('logo', logoFile)
+                await request('/api/branding/logo', 'PUT', body)
+            } else if (logoRemoved) {
+                await request('/api/branding/logo', 'DELETE')
+            }
+
+            await refreshUser()
+            selectLogoFile(null)
+            setLogoRemoved(false)
+            setBrandColor(normalizedColor ?? '')
+            setBrandingStatus({ type: 'success', message: 'Branding updated.' })
+        } catch (err) {
+            setBrandingStatus({ type: 'error', message: getErrorMessage(err) })
+        } finally {
+            setBrandingSaving(false)
         }
     }
 
@@ -193,6 +288,179 @@ export default function Settings() {
                         </div>
                     </form>
                 </section>
+
+                {!isClient && (
+                    <section className="settingsCard">
+                        <h2>
+                            Branding
+                            {!isPro && <span className="proBadge">Pro</span>}
+                        </h2>
+                        <p className="settingsCardDescription">
+                            Your logo and brand color replace Freelansite when you and your clients view your projects and shared links.
+                        </p>
+
+                        {!isPro && (
+                            <div className="brandingLocked">
+                                <p>Branding is available on the Pro plan.</p>
+                                <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
+                                    Upgrade to Pro
+                                </button>
+                            </div>
+                        )}
+
+                        <form className="settingsForm" onSubmit={handleBrandingSubmit}>
+                            <fieldset className="brandingFieldset" disabled={!isPro}>
+
+                                <div className="brandingField">
+                                    <span className="brandingFieldLabel">Brand color</span>
+                                    <div className="brandColorRow">
+                                        <input
+                                            type="color"
+                                            className="brandColorPicker"
+                                            aria-label="Pick brand color"
+                                            value={normalizedColor ?? '#1D3557'}
+                                            onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
+                                        />
+                                        <input
+                                            type="text"
+                                            className="brandColorText"
+                                            aria-label="Brand color hex code"
+                                            placeholder="#0F7734"
+                                            maxLength={7}
+                                            value={brandColor}
+                                            onChange={(e) => setBrandColor(e.target.value)}
+                                        />
+                                        {brandColor && (
+                                            <button
+                                                type="button"
+                                                className="settingsButton settingsButton--secondary"
+                                                onClick={() => setBrandColor('')}
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                    </div>
+                                    {colorProblem && (
+                                        <div className="brandingProblem">
+                                            <p className="settingsMessage settingsMessage--error">{colorProblem}</p>
+                                            {normalizedColor && (
+                                                <button
+                                                    type="button"
+                                                    className="settingsButton settingsButton--secondary"
+                                                    onClick={() => setBrandColor(makeReadable(brandColor))}
+                                                >
+                                                    Use closest readable shade
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    <p className="brandingHint">
+                                        Used for headings, buttons and progress. The pale accent, background and borders are generated from it.
+                                    </p>
+                                </div>
+
+                                <div className="brandingField">
+                                    <span className="brandingFieldLabel">Logo</span>
+
+                                    <div className="logoStyleOptions" role="radiogroup" aria-label="Logo style">
+                                        <label className={`logoStyleOption${logoStyle === 'WORDMARK' ? ' logoStyleOption--active' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="logoStyle"
+                                                checked={logoStyle === 'WORDMARK'}
+                                                onChange={() => setLogoStyle('WORDMARK')}
+                                            />
+                                            <span className="logoStyleTitle">Wordmark</span>
+                                            <span className="logoStyleHint">
+                                                Wide, text-style logo. Shown on the left, same size as the Freelansite logo.
+                                            </span>
+                                        </label>
+                                        <label className={`logoStyleOption${logoStyle === 'SYMBOL' ? ' logoStyleOption--active' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="logoStyle"
+                                                checked={logoStyle === 'SYMBOL'}
+                                                onChange={() => setLogoStyle('SYMBOL')}
+                                            />
+                                            <span className="logoStyleTitle">Symbol</span>
+                                            <span className="logoStyleHint">
+                                                Round or square emblem. Shown centered, up to twice as large.
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <div className="logoUploadRow">
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept={LOGO_RULES.types.join(',')}
+                                            hidden
+                                            onChange={handleLogoChange}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="settingsButton settingsButton--secondary"
+                                            onClick={() => logoInputRef.current?.click()}
+                                        >
+                                            <Upload size={16} />
+                                            {displayLogo ? 'Replace logo' : 'Upload logo'}
+                                        </button>
+                                        {displayLogo && (
+                                            <button
+                                                type="button"
+                                                className="settingsButton settingsButton--secondary"
+                                                onClick={handleLogoRemove}
+                                            >
+                                                <Trash2 size={16} />
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="brandingHint">
+                                        PNG, JPG or WebP, up to 2 MB, at least {LOGO_RULES.minPx} px on each side. A transparent PNG works best.
+                                    </p>
+                                </div>
+
+                                <div className="brandingField">
+                                    <span className="brandingFieldLabel">Preview</span>
+                                    <div className="brandingPreview" style={previewVars}>
+                                        <div className="brandingPreviewSidebar">
+                                            <div className={displayLogo ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}>
+                                                {displayLogo
+                                                    ? <img className="sidebarLogoImg" src={displayLogo} alt="" />
+                                                    : <span className="logo-text">Freelansate</span>}
+                                            </div>
+                                            <span className="nav-link active">
+                                                <FolderKanban size={18} />
+                                                Projects
+                                            </span>
+                                        </div>
+                                        <div className="brandingPreviewMain">
+                                            <h3>Website redesign</h3>
+                                            <StatusBar percent={60} />
+                                            <span className="newButton brandingPreviewButton">Approve milestone</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </fieldset>
+
+                            <StatusMessage status={brandingStatus} />
+
+                            {isPro && (
+                                <div className="settingsActions">
+                                    <button
+                                        type="submit"
+                                        className="settingsButton"
+                                        disabled={brandingSaving || !!colorProblem}
+                                    >
+                                        {brandingSaving ? 'Saving...' : 'Save branding'}
+                                    </button>
+                                </div>
+                            )}
+                        </form>
+                    </section>
+                )}
 
                 <section className="settingsCard">
                     <h2>Password</h2>

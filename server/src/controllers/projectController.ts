@@ -5,6 +5,7 @@ import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"
 import { canAddProject } from '../services/planLimits.js'
+import { getPublicBranding } from '../utils/branding.js'
 
 
 const clientSelect = {
@@ -159,7 +160,12 @@ export async function getProject(req: Request, res: Response) {
                         businessName: true,
                         email: true,
                         phone: true,
-                        address: true
+                        address: true,
+                        plan: true,
+                        currentPeriodEnd: true,
+                        brandPrimary: true,
+                        logoUrl: true,
+                        logoStyle: true
                     }
                 },
                 milestones: {
@@ -184,8 +190,18 @@ export async function getProject(req: Request, res: Response) {
             return res.status(404).json({ error: "Project not found." })
         }
 
+        const { admin } = project
+
         return res.status(200).json({
             ...project,
+            admin: {
+                name: admin.name,
+                businessName: admin.businessName,
+                email: admin.email,
+                phone: admin.phone,
+                address: admin.address,
+                branding: getPublicBranding(admin)
+            },
             progress: countProgressPercent(project.milestones)
         })
 

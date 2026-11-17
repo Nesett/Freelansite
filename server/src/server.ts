@@ -11,7 +11,9 @@ import milestoneRoutes from './routes/milestoneRoutes.js'
 import invoiceRoutes from './routes/invoiceRoutes.js'
 import planRoutes from './routes/planRoutes.js'
 import searchRoutes from './routes/searchRoutes.js'
+import brandingRoutes from './routes/brandingRoutes.js'
 import { toPublicSafe } from "./utils/sanitizer.js"
+import { getPublicBranding } from "./utils/branding.js"
 import {  publicLimiter, apiLimiter } from "./middleware/rateLimiter.js"
 import helmet from 'helmet'
 
@@ -44,6 +46,7 @@ app.use('/api/milestones', apiLimiter, milestoneRoutes)
 app.use('/api/invoices', apiLimiter, invoiceRoutes)
 app.use('/api/plan', planRoutes)
 app.use('/api/search', apiLimiter, searchRoutes)
+app.use('/api/branding', apiLimiter, brandingRoutes)
 
 app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) => {
 
@@ -67,7 +70,12 @@ app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) 
               name: true,
               businessName: true,
               email: true,
-              phone: true
+              phone: true,
+              plan: true,
+              currentPeriodEnd: true,
+              brandPrimary: true,
+              logoUrl: true,
+              logoStyle: true
             }
           },
           milestones: {
@@ -96,7 +104,18 @@ app.get("/api/share/:token", publicLimiter, async (req: Request, res: Response) 
   res.set("Cache-Control", "no-store")
   res.set("Referrer-Policy", "no-referrer")
 
-  res.json(toPublicSafe(link.project))
+  const { admin } = link.project
+
+  res.json({
+    ...toPublicSafe(link.project),
+    admin: {
+      name: admin.name,
+      businessName: admin.businessName,
+      email: admin.email,
+      phone: admin.phone,
+      branding: getPublicBranding(admin)
+    }
+  })
 })
 
 

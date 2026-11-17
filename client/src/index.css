@@ -8,6 +8,8 @@
 	--muted-text-color: #8A8A93;
 	--radius-sm: 10px;
 	--radius-md: 12px;
+	--accent-color: #E8ECF3;
+	--progress-color: #1D7A6B;
 }
 
 @font-face {
@@ -86,6 +88,44 @@ h1, h2, h3, h4, p, a {
 	padding: 8px 0 24px;
 	text-align: center;
 }
+
+/* ------ custom logos for pro users ------ */
+.sidebar-logo--wordmark {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.sidebar-logo--symbol {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.sidebarLogoImg {
+	display: block;
+	width: auto;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+.sidebar-logo--wordmark .sidebarLogoImg {
+	height: 26px;
+	object-position: left center;
+}
+
+.sidebar-logo--symbol .sidebarLogoImg {
+	height: 52px;
+}
+
+.sidebar.collapsed .sidebar-logo--symbol .sidebarLogoImg {
+	height: 40px;
+}
+
+.sidebar.collapsed .sidebar-logo--wordmark {
+	justify-content: center;
+}
+
 .sidebar-links {
 	display: flex;
 	flex-direction: column;
@@ -110,8 +150,8 @@ h1, h2, h3, h4, p, a {
 }
 
 .nav-link.active {
-	background: #e8ecf3;
-	color: #1a2b4c;
+	background: var(--accent-color);
+	color: var(--primary-color);
 	font-weight: 600;
 }
 
@@ -222,7 +262,7 @@ h1, h2, h3, h4, p, a {
 
 .topbarSearchField:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.12);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 12%, transparent);
 }
 
 .topbarSearchField input {
@@ -294,7 +334,7 @@ h1, h2, h3, h4, p, a {
 
 .searchOption--active,
 .studioMenuItem:hover {
-    background-color: #E8ECF3;
+    background-color: var(--accent-color);
 }
 
 .searchOptionIcon {
@@ -382,7 +422,7 @@ h1, h2, h3, h4, p, a {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: #E8ECF3;
+    background-color: var(--accent-color);
     font-size: 0.65rem;
     font-weight: 700;
     color: var(--primary-color);
@@ -1786,7 +1826,7 @@ hr {
 .statusBarFill {
 	height: 100%;
 	border-radius: 999px;
-	background-color: #1D7A6B;
+	background-color: var(--progress-color);
 	transition: width 0.3s ease;
 }
 
@@ -2461,6 +2501,38 @@ hr {
 	line-height: 1.5;
 }
 
+.publicManagedBy {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.publicManagedByLogo {
+	display: block;
+	flex-shrink: 0;
+	width: auto;
+	object-fit: contain;
+}
+
+.publicManagedByLogo--wordmark {
+	height: 40px;
+	max-width: 220px;
+	object-position: right center;
+}
+
+.publicManagedByLogo--symbol {
+	height: 88px;
+	max-width: 160px;
+}
+
+@media (max-width: 560px) {
+	.publicManagedBy {
+		flex-direction: column-reverse;
+		align-items: flex-start;
+	}
+}
+
 .publicManagedBy .projectSummaryContact {
 	padding-top: 0;
 }
@@ -2578,6 +2650,208 @@ hr {
 
 .settingsMessage--error {
     color: #c0392b;
+}
+
+/* ----- branding card ----- */
+
+.proBadge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+    font-size: 0.7rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.brandingLocked {
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    color: var(--muted-text-color);
+}
+
+.brandingFieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.brandingFieldset:disabled {
+    opacity: 0.55;
+}
+
+.brandingField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.brandingFieldLabel {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.brandingHint {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--muted-text-color);
+}
+
+.brandColorRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.brandColorPicker {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+    background-color: var(--input-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.brandColorText {
+    width: 140px;
+    min-height: 44px;
+    padding: 0 14px;
+    background-color: var(--input-color);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    outline: none;
+}
+
+.brandColorText:focus {
+    border-color: var(--primary-color);
+}
+
+.brandingProblem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.logoStyleOptions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.logoStyleOption {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.logoStyleOption input {
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: 3px;
+    accent-color: var(--primary-color);
+}
+
+.logoStyleOption--active {
+    border-color: var(--primary-color);
+    background-color: var(--accent-color);
+}
+
+.logoStyleTitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.logoStyleHint {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--muted-text-color);
+}
+
+.logoUploadRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.brandingPreview {
+    display: flex;
+    width: 100%;
+    max-width: 560px;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.brandingPreviewSidebar {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 4px;
+    width: 240px;
+    padding: 16px 12px;
+    background-color: #fff;
+    border-right: 1px solid #eee;
+}
+
+.brandingPreviewSidebar .nav-link {
+    cursor: default;
+}
+
+.brandingPreviewMain {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    padding: 20px;
+}
+
+.brandingPreviewMain h3 {
+    font-size: 1.1rem;
+}
+
+.brandingPreviewButton {
+    align-self: flex-start;
+    cursor: default;
+}
+
+@media (max-width: 640px) {
+    .logoStyleOptions {
+        grid-template-columns: 1fr;
+    }
+
+    .brandingPreview {
+        flex-direction: column;
+    }
+
+    .brandingPreviewSidebar {
+        width: auto;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+    }
 }
 
 /* -------------------------------------------- Landing Page -------------------------------------------- */
