@@ -42,7 +42,7 @@ export default function StudioMenu() {
                 onClick={() => setOpen(prev => !prev)}
             >
                 {isPro && <span className="studioProBadge">PRO</span>}
-                <span className="studioName">{studioLabel}</span>
+                <span className="studioName" title={studioLabel}>{studioLabel}</span>
                 <ChevronsUpDown size={14} aria-hidden="true" />
             </button>
 

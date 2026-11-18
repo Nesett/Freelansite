@@ -225,7 +225,8 @@ h1, h2, h3, h4, p, a {
     position: sticky;
     top: 0;
     z-index: 20;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 480px) 1fr;
     align-items: center;
     gap: 24px;
     height: 56px;
@@ -283,8 +284,7 @@ h1, h2, h3, h4, p, a {
 
 .topbarSearch {
     position: relative;
-    width: 320px;
-    max-width: 100%;
+    width: 100%;
 }
 
 .topbarSearchField {
@@ -344,7 +344,7 @@ h1, h2, h3, h4, p, a {
 
 .searchPanel {
     left: 0;
-    width: max(100%, 440px);
+    width: 100%;
     max-height: 420px;
     overflow-y: auto;
 }
@@ -429,7 +429,7 @@ h1, h2, h3, h4, p, a {
 
 .studioMenu {
     position: relative;
-    margin-left: auto;
+    justify-self: end;
 }
 
 .studioButton {
@@ -474,7 +474,7 @@ h1, h2, h3, h4, p, a {
 }
 
 .studioName {
-    max-width: 180px;
+    max-width: min(420px, 35vw);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -515,6 +515,7 @@ h1, h2, h3, h4, p, a {
 
 @media (max-width: 900px) {
     .topbar {
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 12px;
         padding: 0 16px;
     }

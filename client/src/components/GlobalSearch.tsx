@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent as R
 import { useNavigate } from 'react-router-dom'
 import { Search, Users, FolderKanban, Receipt, type LucideIcon } from 'lucide-react'
 import useClickOutside from '../utils/clicksOutside'
+import { useAuth } from '../context/AuthContext'
 
 type SearchResults = {
     clients: { id: string, name: string | null, companyName: string | null, email: string }[]
@@ -85,6 +86,9 @@ export default function GlobalSearch() {
     const inputRef = useRef<HTMLInputElement | null>(null)
     const containerRef = useRef<HTMLDivElement | null>(null)
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const isClient = user?.role === 'client'
+    const placeholder = isClient ? 'Search projects, invoices…' : 'Search clients, projects…'
 
     useClickOutside(open, () => setOpen(false), containerRef)
 
@@ -92,7 +96,6 @@ export default function GlobalSearch() {
     const items = useMemo(() => buildItems(results), [results])
     const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent)
 
-    // Ctrl/Cmd + K focuses the search from anywhere
     useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -246,9 +249,9 @@ export default function GlobalSearch() {
                     ref={inputRef}
                     type="text"
                     value={query}
-                    placeholder="Search clients, projects…"
+                    placeholder={placeholder}
                     role="combobox"
-                    aria-label="Search clients, projects and invoices"
+                    aria-label={isClient ? 'Search projects and invoices' : 'Search clients, projects and invoices'}
                     aria-expanded={showPanel}
                     aria-controls="global-search-list"
                     aria-autocomplete="list"
