@@ -52,14 +52,18 @@ h1, h2, h3, h4, p, a {
 }
 
 .sidebar {
-	width: 240px;
-	min-height: 100vh;
-	background: #fff;
-	border-right: 1px solid #eee;
-	display: flex;
-	flex-direction: column;
-	padding: 16px 12px;
-	transition: width 0.2s ease;
+    width: 240px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    transition: width 0.2s ease;
 }
 
 .sidebar.collapsed {
@@ -71,8 +75,9 @@ h1, h2, h3, h4, p, a {
 }
 
 .sidebar.collapsed .nav-link,
-.sidebar.collapsed .collapse-btn {
-	justify-content: center;
+.sidebar.collapsed .collapse-btn,
+.sidebar.collapsed .sidebar-upgrade {
+    justify-content: center;
 }
 
 .sidebar-logo {
@@ -127,10 +132,12 @@ h1, h2, h3, h4, p, a {
 }
 
 .sidebar-links {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .nav-link {
@@ -170,6 +177,39 @@ h1, h2, h3, h4, p, a {
 
 .collapse-btn:hover {
 	background: #f5f6f8;
+}
+
+.sidebar-upgrade {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-color);
+    color: var(--elements-color);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.sidebar-upgrade:hover {
+    opacity: 0.9;
+}
+
+.sidebar-upgrade-short {
+    display: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.sidebar.collapsed .sidebar-upgrade-short {
+    display: block;
 }
 
 /* -------------------------------------------- Top bar -------------------------------------------- */
@@ -416,16 +456,21 @@ h1, h2, h3, h4, p, a {
     color: var(--muted-text-color);
 }
 
-.studioAvatar {
+.studioProBadge {
     display: grid;
     place-items: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
     background-color: var(--accent-color);
     font-size: 0.65rem;
     font-weight: 700;
+    letter-spacing: 0.04em;
     color: var(--primary-color);
+}
+
+.studioButton--plain {
+    padding-left: 12px;
 }
 
 .studioName {

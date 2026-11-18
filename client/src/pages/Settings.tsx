@@ -79,6 +79,36 @@ export default function Settings() {
     const [deletePassword, setDeletePassword] = useState('')
     const [deleteStatus, setDeleteStatus] = useState<Status>(null)
 
+    // plan
+    const [showCancel, setShowCancel] = useState(false)
+    const [planSaving, setPlanSaving] = useState(false)
+    const [planStatus, setPlanStatus] = useState<Status>(null)
+
+    const periodEnd = user?.currentPeriodEnd
+        ? new Date(user.currentPeriodEnd).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+        : null
+
+    async function handlePlanChange(action: 'cancel' | 'resume') {
+        setPlanStatus(null)
+        setPlanSaving(true)
+
+        try {
+            await request(`/api/billing/${action}`, 'POST')
+            await refreshUser()
+            setShowCancel(false)
+            setPlanStatus({
+                type: 'success',
+                message: action === 'cancel'
+                    ? `Subscription cancelled. You keep Pro until ${periodEnd ?? 'the end of your billing period'}.`
+                    : 'Subscription resumed. Welcome back!'
+            })
+        } catch (err) {
+            setPlanStatus({ type: 'error', message: getErrorMessage(err) })
+        } finally {
+            setPlanSaving(false)
+        }
+    }
+
     useEffect(() => {
         return () => {
             if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
@@ -288,7 +318,86 @@ export default function Settings() {
                         </div>
                     </form>
                 </section>
+                {!isClient && (
+                    <section className="settingsCard">
+                        <h2>
+                            Plan
+                            {isPro && <span className="proBadge">Pro</span>}
+                        </h2>
 
+                        {!isPro ? (
+                            <>
+                                <p className="settingsCardDescription">
+                                    You're on the Free plan. Go Pro to unlock custom branding, higher limits and more.
+                                </p>
+                                <div className="settingsActions">
+                                    <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
+                                        Upgrade to Pro
+                                    </button>
+                                </div>
+                            </>
+                        ) : user?.cancelAtPeriodEnd ? (
+                            <>
+                                <p className="settingsCardDescription">
+                                    Your subscription is cancelled. You keep Pro until {periodEnd}, then your account moves to the Free plan.
+                                </p>
+                                <StatusMessage status={planStatus} />
+                                <div className="settingsActions">
+                                    <button
+                                        type="button"
+                                        className="settingsButton"
+                                        disabled={planSaving}
+                                        onClick={() => handlePlanChange('resume')}
+                                    >
+                                        {planSaving ? 'Resuming...' : 'Resume subscription'}
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <p className="settingsCardDescription">
+                                    You're on the Pro plan.{periodEnd && ` Renews on ${periodEnd}.`}
+                                </p>
+                                <StatusMessage status={planStatus} />
+
+                                {!showCancel ? (
+                                    <div className="settingsActions">
+                                        <button
+                                            type="button"
+                                            className="settingsButton settingsButton--secondary"
+                                            onClick={() => setShowCancel(true)}
+                                        >
+                                            Cancel subscription
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="settingsCardDescription">
+                                            You'll keep Pro features until {periodEnd ?? 'the end of your billing period'}. After that, branding is turned off and Free plan limits apply.
+                                        </p>
+                                        <div className="settingsActions">
+                                            <button
+                                                type="button"
+                                                className="settingsButton settingsButton--danger"
+                                                disabled={planSaving}
+                                                onClick={() => handlePlanChange('cancel')}
+                                            >
+                                                {planSaving ? 'Cancelling...' : 'Yes, cancel'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="settingsButton settingsButton--secondary"
+                                                onClick={() => setShowCancel(false)}
+                                            >
+                                                Keep Pro
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </section>
+                )}
                 {!isClient && (
                     <section className="settingsCard">
                         <h2>

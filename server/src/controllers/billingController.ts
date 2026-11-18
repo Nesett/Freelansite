@@ -122,7 +122,8 @@ export async function handleWebhook(req: Request, res: Response) {
                     data: {
                         plan: 'PRO',
                         stripeSubscriptionId: subscription.id,
-                        currentPeriodEnd: getPeriodEnd(subscription)
+                        currentPeriodEnd: getPeriodEnd(subscription),
+                        cancelAtPeriodEnd: false
                     }
                 })
                 break
@@ -137,7 +138,8 @@ export async function handleWebhook(req: Request, res: Response) {
                     where: { stripeCustomerId: getId(subscription.customer) },
                     data: {
                         plan: isActive ? 'PRO' : 'FREE',
-                        currentPeriodEnd: getPeriodEnd(subscription)
+                        currentPeriodEnd: getPeriodEnd(subscription),
+                        cancelAtPeriodEnd: subscription.cancel_at_period_end
                     }
                 })
                 break
@@ -151,7 +153,8 @@ export async function handleWebhook(req: Request, res: Response) {
                     data: {
                         plan: 'FREE',
                         stripeSubscriptionId: null,
-                        currentPeriodEnd: null
+                        currentPeriodEnd: null,
+                        cancelAtPeriodEnd: false
                     }
                 })
                 break
@@ -164,4 +167,44 @@ export async function handleWebhook(req: Request, res: Response) {
         console.log(err)
         return res.status(500).json({ error: 'Webhook handler failed.' })
     }
+}
+
+async function setCancelAtPeriodEnd(req: Request, res: Response, cancel: boolean) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' })
+        }
+
+        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+
+        if (!admin?.stripeSubscriptionId) {
+            return res.status(400).json({ error: 'No active subscription found.' })
+        }
+
+        const subscription = await stripe.subscriptions.update(admin.stripeSubscriptionId, {
+            cancel_at_period_end: cancel
+        })
+
+        await db.admin.update({
+            where: { id: admin.id },
+            data: {
+                cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                currentPeriodEnd: getPeriodEnd(subscription)
+            }
+        })
+
+        return res.status(200).json({ ok: true })
+
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: 'Internal server error.' })
+    }
+}
+
+export function cancelSubscription(req: Request, res: Response) {
+    return setCancelAtPeriodEnd(req, res, true)
+}
+
+export function resumeSubscription(req: Request, res: Response) {
+    return setCancelAtPeriodEnd(req, res, false)
 }

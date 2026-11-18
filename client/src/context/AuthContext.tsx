@@ -14,6 +14,8 @@ type User = {
 	brandPrimary?: string | null
 	logoUrl?: string | null
 	logoStyle?: 'WORDMARK' | 'SYMBOL'
+	cancelAtPeriodEnd: boolean
+	currentPeriodEnd?: string | null
 }
 
 

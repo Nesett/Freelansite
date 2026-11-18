@@ -1,5 +1,5 @@
-import { useEffect } from "react"
-import { X, Sparkles, Check } from "lucide-react"
+import { X, Check } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export type LimitCode = 'PLAN_LIMIT_CLIENTS' | 'PLAN_LIMIT_PROJECTS'
 
@@ -25,6 +25,8 @@ const COPY: Record<LimitCode | 'default', { title: string, text: string }> = {
 
 export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
     const copy = COPY[code ?? 'default']
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,8 +37,27 @@ export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
         return () => document.removeEventListener("keydown", handleKeyDown)
     }, [onClose])
 
-    function handleUpgrade() {
-        // TODO: idk yet
+    async function handleUpgrade() {
+        setError(null)
+        setLoading(true)
+
+        try {
+            const response = await fetch('/api/billing/checkout', {
+                method: 'POST',
+                credentials: 'include'
+            })
+
+            const data = await response.json()
+
+            if (!response.ok || !data.url) {
+                throw new Error(data.error || 'Something went wrong')
+            }
+
+            window.location.href = data.url
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
+            setLoading(false)
+        }
     }
 
     return (
@@ -48,9 +69,6 @@ export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
                 </div>
 
                 <div className="upgradeModalBody">
-                    <div className="upgradeModalIcon">
-                        <Sparkles size={22} />
-                    </div>
                     <p className="upgradeModalText">{copy.text}</p>
 
                     <ul className="upgradeBenefits">
@@ -59,8 +77,9 @@ export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
                         <li><Check size={16} /> White-label branding on projects and magic links</li>
                     </ul>
 
-                    <button type="button" className="upgradeButton" onClick={handleUpgrade}>
-                        Upgrade to Pro
+                    {error && <p className="settingsMessage settingsMessage--error">{error}</p>}
+                    <button type="button" className="upgradeButton" onClick={handleUpgrade} disabled={loading}>
+                        {loading ? 'Redirecting...' : 'Upgrade to Pro'}
                     </button>
                     <button type="button" className="upgradeLaterButton" onClick={onClose}>
                         Maybe later

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
-import { LayoutDashboard, Users, FolderKanban, Receipt, UsersRound, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, FolderKanban, Receipt, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useUpgrade } from '../context/UpgradeContext'
 import { useAuth } from '../context/AuthContext'
 import { useBrandingContext } from '../context/BrandingContext'
 
@@ -8,6 +9,8 @@ export default function Navbar() {
 	const [collapsed, setCollapsed] = useState(false)
 	const { user } = useAuth()
 	const { branding } = useBrandingContext()
+	const { openUpgrade } = useUpgrade()
+	const showUpgrade = user?.role === 'admin' && user?.plan !== 'PRO'
 
 	const adminLinks = [
 		{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -66,10 +69,17 @@ export default function Navbar() {
 				))}
 			</div>
 
-			<button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
-				{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-				<span className="nav-label">Collapse</span>
-			</button>
-		</nav>
+			{showUpgrade && (
+                <button type="button" className="sidebar-upgrade" onClick={() => openUpgrade()}>
+					<span className="sidebar-upgrade-short">PRO</span>
+					<span className="nav-label">Upgrade to Pro</span>
+				</button>
+            )}
+
+            <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+                {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                <span className="nav-label">Collapse</span>
+            </button>
+        </nav>
 	)
 }
