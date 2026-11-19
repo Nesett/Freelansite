@@ -2698,6 +2698,53 @@ hr {
     color: #c0392b;
 }
 
+.settingsTabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.settingsTab {
+    padding: 9px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--elements-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.settingsTab:hover {
+    background-color: var(--input-color);
+}
+
+.settingsTab--active,
+.settingsTab--active:hover {
+    background-color: var(--accent-color);
+    border-color: var(--primary-color);
+    font-weight: 700;
+}
+
+.settingsTab:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .settingsTabs {
+        gap: 8px;
+    }
+
+    .settingsTab {
+        padding: 8px 6px;
+        font-size: 0.85rem;
+    }
+}
 /* ----- branding card ----- */
 
 .proBadge {

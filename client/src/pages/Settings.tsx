@@ -8,6 +8,7 @@ import { buildBrandTheme, checkBrandColor, makeReadable, normalizeHex, themeToCs
 import { LOGO_RULES, checkLogoFile } from '../utils/logoRules'
 
 type Status = { type: 'success' | 'error', message: string } | null
+type SettingsTab = 'profile' | 'subscription' | 'security'
 
 async function request(url: string, method: string, body?: object) {
     const isForm = body instanceof FormData
@@ -48,6 +49,14 @@ export default function Settings() {
     const { openUpgrade } = useUpgrade()
 
     const isClient = user?.role === 'client'
+
+    // tabs (clients have no plan or branding, so they only get Profile and Security)
+    const tabs: { id: SettingsTab, label: string }[] = [
+        { id: 'profile', label: 'Profile' },
+        ...(isClient ? [] : [{ id: 'subscription' as const, label: 'Subscription' }]),
+        { id: 'security', label: 'Security' }
+    ]
+    const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
 
     // profile (admins have a business name, clients have a company name)
     const [name, setName] = useState(user?.name ?? '')
@@ -262,411 +271,441 @@ export default function Settings() {
                 </button>
             </div>
 
-            <div className="settingsSections">
+            <div className="settingsTabs" role="tablist" aria-label="Settings sections">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        id={`settings-tab-${tab.id}`}
+                        aria-selected={activeTab === tab.id}
+                        aria-controls={`settings-panel-${tab.id}`}
+                        className={`settingsTab${activeTab === tab.id ? ' settingsTab--active' : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
-                <section className="settingsCard">
-                    <h2>Profile</h2>
-                    <p className="settingsCardDescription">
-                        {isClient
-                            ? 'This information is shown to the freelancers you work with.'
-                            : 'This information appears on your invoices and client portal.'}
-                    </p>
+            <div
+                className="settingsSections"
+                role="tabpanel"
+                id={`settings-panel-${activeTab}`}
+                aria-labelledby={`settings-tab-${activeTab}`}
+            >
 
-                    <form className="settingsForm" onSubmit={handleProfileSubmit}>
-                        <label className="settingsField">
-                            Email
-                            <input type="email" value={user?.email ?? ''} disabled />
-                        </label>
-                        <label className="settingsField">
-                            Name
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required={!isClient}
-                            />
-                        </label>
-                        <label className="settingsField">
-                            {isClient ? 'Company name' : 'Business name'}
-                            <input
-                                type="text"
-                                value={company}
-                                onChange={(e) => setCompany(e.target.value)}
-                            />
-                        </label>
-                        <label className="settingsField">
-                            Phone
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                            />
-                        </label>
-                        <label className="settingsField">
-                            Address
-                            <input
-                                type="text"
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                            />
-                        </label>
-
-                        <StatusMessage status={profileStatus} />
-
-                        <div className="settingsActions">
-                            <button type="submit" className="settingsButton">Save changes</button>
-                        </div>
-                    </form>
-                </section>
-                {!isClient && (
+                {activeTab === 'profile' && (
                     <section className="settingsCard">
-                        <h2>
-                            Plan
-                            {isPro && <span className="proBadge">Pro</span>}
-                        </h2>
+                        <h2>Profile details</h2>
+                        <p className="settingsCardDescription">
+                            {isClient
+                                ? 'This information is shown to the freelancers you work with.'
+                                : 'This information appears on your invoices and client portal.'}
+                        </p>
 
-                        {!isPro ? (
-                            <>
-                                <p className="settingsCardDescription">
-                                    You're on the Free plan. Go Pro to unlock custom branding, higher limits and more.
-                                </p>
-                                <div className="settingsActions">
+                        <form className="settingsForm" onSubmit={handleProfileSubmit}>
+                            <label className="settingsField">
+                                Email
+                                <input type="email" value={user?.email ?? ''} disabled />
+                            </label>
+                            <label className="settingsField">
+                                Name
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required={!isClient}
+                                />
+                            </label>
+                            <label className="settingsField">
+                                {isClient ? 'Company name' : 'Business name'}
+                                <input
+                                    type="text"
+                                    value={company}
+                                    onChange={(e) => setCompany(e.target.value)}
+                                />
+                            </label>
+                            <label className="settingsField">
+                                Phone
+                                <input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                />
+                            </label>
+                            <label className="settingsField">
+                                Address
+                                <input
+                                    type="text"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                />
+                            </label>
+
+                            <StatusMessage status={profileStatus} />
+
+                            <div className="settingsActions">
+                                <button type="submit" className="settingsButton">Save changes</button>
+                            </div>
+                        </form>
+                    </section>
+                )}
+
+                {activeTab === 'subscription' && !isClient && (
+                    <>
+                        <section className="settingsCard">
+                            <h2>
+                                Branding
+                                {!isPro && <span className="proBadge">Pro</span>}
+                            </h2>
+                            <p className="settingsCardDescription">
+                                Your logo and brand color replace Freelansite when you and your clients view your projects and shared links.
+                            </p>
+
+                            {!isPro && (
+                                <div className="brandingLocked">
+                                    <p>Branding is available on the Pro plan.</p>
                                     <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
                                         Upgrade to Pro
                                     </button>
                                 </div>
-                            </>
-                        ) : user?.cancelAtPeriodEnd ? (
-                            <>
-                                <p className="settingsCardDescription">
-                                    Your subscription is cancelled. You keep Pro until {periodEnd}, then your account moves to the Free plan.
-                                </p>
-                                <StatusMessage status={planStatus} />
-                                <div className="settingsActions">
-                                    <button
-                                        type="button"
-                                        className="settingsButton"
-                                        disabled={planSaving}
-                                        onClick={() => handlePlanChange('resume')}
-                                    >
-                                        {planSaving ? 'Resuming...' : 'Resume subscription'}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <p className="settingsCardDescription">
-                                    You're on the Pro plan.{periodEnd && ` Renews on ${periodEnd}.`}
-                                </p>
-                                <StatusMessage status={planStatus} />
+                            )}
 
-                                {!showCancel ? (
-                                    <div className="settingsActions">
-                                        <button
-                                            type="button"
-                                            className="settingsButton settingsButton--secondary"
-                                            onClick={() => setShowCancel(true)}
-                                        >
-                                            Cancel subscription
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <p className="settingsCardDescription">
-                                            You'll keep Pro features until {periodEnd ?? 'the end of your billing period'}. After that, branding is turned off and Free plan limits apply.
-                                        </p>
-                                        <div className="settingsActions">
-                                            <button
-                                                type="button"
-                                                className="settingsButton settingsButton--danger"
-                                                disabled={planSaving}
-                                                onClick={() => handlePlanChange('cancel')}
-                                            >
-                                                {planSaving ? 'Cancelling...' : 'Yes, cancel'}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="settingsButton settingsButton--secondary"
-                                                onClick={() => setShowCancel(false)}
-                                            >
-                                                Keep Pro
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </section>
-                )}
-                {!isClient && (
-                    <section className="settingsCard">
-                        <h2>
-                            Branding
-                            {!isPro && <span className="proBadge">Pro</span>}
-                        </h2>
-                        <p className="settingsCardDescription">
-                            Your logo and brand color replace Freelansite when you and your clients view your projects and shared links.
-                        </p>
+                            <form className="settingsForm" onSubmit={handleBrandingSubmit}>
+                                <fieldset className="brandingFieldset" disabled={!isPro}>
 
-                        {!isPro && (
-                            <div className="brandingLocked">
-                                <p>Branding is available on the Pro plan.</p>
-                                <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
-                                    Upgrade to Pro
-                                </button>
-                            </div>
-                        )}
-
-                        <form className="settingsForm" onSubmit={handleBrandingSubmit}>
-                            <fieldset className="brandingFieldset" disabled={!isPro}>
-
-                                <div className="brandingField">
-                                    <span className="brandingFieldLabel">Brand color</span>
-                                    <div className="brandColorRow">
-                                        <input
-                                            type="color"
-                                            className="brandColorPicker"
-                                            aria-label="Pick brand color"
-                                            value={normalizedColor ?? '#1D3557'}
-                                            onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
-                                        />
-                                        <input
-                                            type="text"
-                                            className="brandColorText"
-                                            aria-label="Brand color hex code"
-                                            placeholder="#0F7734"
-                                            maxLength={7}
-                                            value={brandColor}
-                                            onChange={(e) => setBrandColor(e.target.value)}
-                                        />
-                                        {brandColor && (
-                                            <button
-                                                type="button"
-                                                className="settingsButton settingsButton--secondary"
-                                                onClick={() => setBrandColor('')}
-                                            >
-                                                Reset
-                                            </button>
-                                        )}
-                                    </div>
-                                    {colorProblem && (
-                                        <div className="brandingProblem">
-                                            <p className="settingsMessage settingsMessage--error">{colorProblem}</p>
-                                            {normalizedColor && (
+                                    <div className="brandingField">
+                                        <span className="brandingFieldLabel">Brand color</span>
+                                        <div className="brandColorRow">
+                                            <input
+                                                type="color"
+                                                className="brandColorPicker"
+                                                aria-label="Pick brand color"
+                                                value={normalizedColor ?? '#1D3557'}
+                                                onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="brandColorText"
+                                                aria-label="Brand color hex code"
+                                                placeholder="#0F7734"
+                                                maxLength={7}
+                                                value={brandColor}
+                                                onChange={(e) => setBrandColor(e.target.value)}
+                                            />
+                                            {brandColor && (
                                                 <button
                                                     type="button"
                                                     className="settingsButton settingsButton--secondary"
-                                                    onClick={() => setBrandColor(makeReadable(brandColor))}
+                                                    onClick={() => setBrandColor('')}
                                                 >
-                                                    Use closest readable shade
+                                                    Reset
                                                 </button>
                                             )}
                                         </div>
-                                    )}
-                                    <p className="brandingHint">
-                                        Used for headings, buttons and progress. The pale accent, background and borders are generated from it.
-                                    </p>
-                                </div>
-
-                                <div className="brandingField">
-                                    <span className="brandingFieldLabel">Logo</span>
-
-                                    <div className="logoStyleOptions" role="radiogroup" aria-label="Logo style">
-                                        <label className={`logoStyleOption${logoStyle === 'WORDMARK' ? ' logoStyleOption--active' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="logoStyle"
-                                                checked={logoStyle === 'WORDMARK'}
-                                                onChange={() => setLogoStyle('WORDMARK')}
-                                            />
-                                            <span className="logoStyleTitle">Wordmark</span>
-                                            <span className="logoStyleHint">
-                                                Wide, text-style logo. Shown on the left, same size as the Freelansite logo.
-                                            </span>
-                                        </label>
-                                        <label className={`logoStyleOption${logoStyle === 'SYMBOL' ? ' logoStyleOption--active' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="logoStyle"
-                                                checked={logoStyle === 'SYMBOL'}
-                                                onChange={() => setLogoStyle('SYMBOL')}
-                                            />
-                                            <span className="logoStyleTitle">Symbol</span>
-                                            <span className="logoStyleHint">
-                                                Round or square emblem. Shown centered, up to twice as large.
-                                            </span>
-                                        </label>
+                                        {colorProblem && (
+                                            <div className="brandingProblem">
+                                                <p className="settingsMessage settingsMessage--error">{colorProblem}</p>
+                                                {normalizedColor && (
+                                                    <button
+                                                        type="button"
+                                                        className="settingsButton settingsButton--secondary"
+                                                        onClick={() => setBrandColor(makeReadable(brandColor))}
+                                                    >
+                                                        Use closest readable shade
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        <p className="brandingHint">
+                                            Used for headings, buttons and progress. The pale accent, background and borders are generated from it.
+                                        </p>
                                     </div>
 
-                                    <div className="logoUploadRow">
-                                        <input
-                                            ref={logoInputRef}
-                                            type="file"
-                                            accept={LOGO_RULES.types.join(',')}
-                                            hidden
-                                            onChange={handleLogoChange}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="settingsButton settingsButton--secondary"
-                                            onClick={() => logoInputRef.current?.click()}
-                                        >
-                                            <Upload size={16} />
-                                            {displayLogo ? 'Replace logo' : 'Upload logo'}
-                                        </button>
-                                        {displayLogo && (
+                                    <div className="brandingField">
+                                        <span className="brandingFieldLabel">Logo</span>
+
+                                        <div className="logoStyleOptions" role="radiogroup" aria-label="Logo style">
+                                            <label className={`logoStyleOption${logoStyle === 'WORDMARK' ? ' logoStyleOption--active' : ''}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="logoStyle"
+                                                    checked={logoStyle === 'WORDMARK'}
+                                                    onChange={() => setLogoStyle('WORDMARK')}
+                                                />
+                                                <span className="logoStyleTitle">Wordmark</span>
+                                                <span className="logoStyleHint">
+                                                    Wide, text-style logo. Shown on the left, same size as the Freelansite logo.
+                                                </span>
+                                            </label>
+                                            <label className={`logoStyleOption${logoStyle === 'SYMBOL' ? ' logoStyleOption--active' : ''}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="logoStyle"
+                                                    checked={logoStyle === 'SYMBOL'}
+                                                    onChange={() => setLogoStyle('SYMBOL')}
+                                                />
+                                                <span className="logoStyleTitle">Symbol</span>
+                                                <span className="logoStyleHint">
+                                                    Round or square emblem. Shown centered, up to twice as large.
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div className="logoUploadRow">
+                                            <input
+                                                ref={logoInputRef}
+                                                type="file"
+                                                accept={LOGO_RULES.types.join(',')}
+                                                hidden
+                                                onChange={handleLogoChange}
+                                            />
                                             <button
                                                 type="button"
                                                 className="settingsButton settingsButton--secondary"
-                                                onClick={handleLogoRemove}
+                                                onClick={() => logoInputRef.current?.click()}
                                             >
-                                                <Trash2 size={16} />
-                                                Remove
+                                                <Upload size={16} />
+                                                {displayLogo ? 'Replace logo' : 'Upload logo'}
                                             </button>
-                                        )}
+                                            {displayLogo && (
+                                                <button
+                                                    type="button"
+                                                    className="settingsButton settingsButton--secondary"
+                                                    onClick={handleLogoRemove}
+                                                >
+                                                    <Trash2 size={16} />
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="brandingHint">
+                                            PNG, JPG or WebP, up to 2 MB, at least {LOGO_RULES.minPx} px on each side. A transparent PNG works best.
+                                        </p>
                                     </div>
-                                    <p className="brandingHint">
-                                        PNG, JPG or WebP, up to 2 MB, at least {LOGO_RULES.minPx} px on each side. A transparent PNG works best.
-                                    </p>
-                                </div>
 
-                                <div className="brandingField">
-                                    <span className="brandingFieldLabel">Preview</span>
-                                    <div className="brandingPreview" style={previewVars}>
-                                        <div className="brandingPreviewSidebar">
-                                            <div className={displayLogo ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}>
-                                                {displayLogo
-                                                    ? <img className="sidebarLogoImg" src={displayLogo} alt="" />
-                                                    : <span className="logo-text">Freelansate</span>}
+                                    <div className="brandingField">
+                                        <span className="brandingFieldLabel">Preview</span>
+                                        <div className="brandingPreview" style={previewVars}>
+                                            <div className="brandingPreviewSidebar">
+                                                <div className={displayLogo ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}>
+                                                    {displayLogo
+                                                        ? <img className="sidebarLogoImg" src={displayLogo} alt="" />
+                                                        : <span className="logo-text">Freelansate</span>}
+                                                </div>
+                                                <span className="nav-link active">
+                                                    <FolderKanban size={18} />
+                                                    Projects
+                                                </span>
                                             </div>
-                                            <span className="nav-link active">
-                                                <FolderKanban size={18} />
-                                                Projects
-                                            </span>
-                                        </div>
-                                        <div className="brandingPreviewMain">
-                                            <h3>Website redesign</h3>
-                                            <StatusBar percent={60} />
-                                            <span className="newButton brandingPreviewButton">Approve milestone</span>
+                                            <div className="brandingPreviewMain">
+                                                <h3>Website redesign</h3>
+                                                <StatusBar percent={60} />
+                                                <span className="newButton brandingPreviewButton">Approve milestone</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                            </fieldset>
+                                </fieldset>
 
-                            <StatusMessage status={brandingStatus} />
+                                <StatusMessage status={brandingStatus} />
 
-                            {isPro && (
-                                <div className="settingsActions">
-                                    <button
-                                        type="submit"
-                                        className="settingsButton"
-                                        disabled={brandingSaving || !!colorProblem}
-                                    >
-                                        {brandingSaving ? 'Saving...' : 'Save branding'}
-                                    </button>
-                                </div>
+                                {isPro && (
+                                    <div className="settingsActions">
+                                        <button
+                                            type="submit"
+                                            className="settingsButton"
+                                            disabled={brandingSaving || !!colorProblem}
+                                        >
+                                            {brandingSaving ? 'Saving...' : 'Save branding'}
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
+                        </section>
+
+                        <section className="settingsCard">
+                            <h2>
+                                Plan
+                                {isPro && <span className="proBadge">Pro</span>}
+                            </h2>
+
+                            {!isPro ? (
+                                <>
+                                    <p className="settingsCardDescription">
+                                        You're on the Free plan. Go Pro to unlock custom branding, higher limits and more.
+                                    </p>
+                                    <div className="settingsActions">
+                                        <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
+                                            Upgrade to Pro
+                                        </button>
+                                    </div>
+                                </>
+                            ) : user?.cancelAtPeriodEnd ? (
+                                <>
+                                    <p className="settingsCardDescription">
+                                        Your subscription is cancelled. You keep Pro until {periodEnd}, then your account moves to the Free plan.
+                                    </p>
+                                    <StatusMessage status={planStatus} />
+                                    <div className="settingsActions">
+                                        <button
+                                            type="button"
+                                            className="settingsButton"
+                                            disabled={planSaving}
+                                            onClick={() => handlePlanChange('resume')}
+                                        >
+                                            {planSaving ? 'Resuming...' : 'Resume subscription'}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="settingsCardDescription">
+                                        You're on the Pro plan.{periodEnd && ` Renews on ${periodEnd}.`}
+                                    </p>
+                                    <StatusMessage status={planStatus} />
+
+                                    {!showCancel ? (
+                                        <div className="settingsActions">
+                                            <button
+                                                type="button"
+                                                className="settingsButton settingsButton--secondary"
+                                                onClick={() => setShowCancel(true)}
+                                            >
+                                                Cancel subscription
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="settingsCardDescription">
+                                                You'll keep Pro features until {periodEnd ?? 'the end of your billing period'}. After that, branding is turned off and Free plan limits apply.
+                                            </p>
+                                            <div className="settingsActions">
+                                                <button
+                                                    type="button"
+                                                    className="settingsButton settingsButton--danger"
+                                                    disabled={planSaving}
+                                                    onClick={() => handlePlanChange('cancel')}
+                                                >
+                                                    {planSaving ? 'Cancelling...' : 'Yes, cancel'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="settingsButton settingsButton--secondary"
+                                                    onClick={() => setShowCancel(false)}
+                                                >
+                                                    Keep Pro
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
                             )}
-                        </form>
-                    </section>
+                        </section>
+                    </>
                 )}
 
-                <section className="settingsCard">
-                    <h2>Password</h2>
-                    <p className="settingsCardDescription">Use at least 8 characters.</p>
+                {activeTab === 'security' && (
+                    <>
+                        <section className="settingsCard">
+                            <h2>Change password</h2>
+                            <p className="settingsCardDescription">Use at least 8 characters.</p>
 
-                    <form className="settingsForm" onSubmit={handlePasswordSubmit}>
-                        <label className="settingsField">
-                            Current password
-                            <input
-                                type="password"
-                                autoComplete="current-password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                required
-                            />
-                        </label>
-                        <label className="settingsField">
-                            New password
-                            <input
-                                type="password"
-                                autoComplete="new-password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                required
-                            />
-                        </label>
-                        <label className="settingsField">
-                            Confirm new password
-                            <input
-                                type="password"
-                                autoComplete="new-password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
-                        </label>
+                            <form className="settingsForm" onSubmit={handlePasswordSubmit}>
+                                <label className="settingsField">
+                                    Current password
+                                    <input
+                                        type="password"
+                                        autoComplete="current-password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        required
+                                    />
+                                </label>
+                                <label className="settingsField">
+                                    New password
+                                    <input
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        required
+                                    />
+                                </label>
+                                <label className="settingsField">
+                                    Confirm new password
+                                    <input
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                    />
+                                </label>
 
-                        <StatusMessage status={passwordStatus} />
+                                <StatusMessage status={passwordStatus} />
 
-                        <div className="settingsActions">
-                            <button type="submit" className="settingsButton">Update password</button>
-                        </div>
-                    </form>
-                </section>
+                                <div className="settingsActions">
+                                    <button type="submit" className="settingsButton">Update password</button>
+                                </div>
+                            </form>
+                        </section>
 
-                <section className="settingsCard settingsCard--danger">
-                    <h2>Delete account</h2>
-                    <p className="settingsCardDescription">
-                        {isClient
-                            ? 'This closes your account and you will lose access to all your projects and invoices. The freelancers you worked with keep their own records of that work. This cannot be undone.'
-                            : 'This permanently deletes your account along with all your clients, projects, milestones, invoices, and shared links. Your clients will lose access immediately. This cannot be undone.'}
-                    </p>
+                        <section className="settingsCard settingsCard--danger">
+                            <h2>Delete account</h2>
+                            <p className="settingsCardDescription">
+                                {isClient
+                                    ? 'This closes your account and you will lose access to all your projects and invoices. The freelancers you worked with keep their own records of that work. This cannot be undone.'
+                                    : 'This permanently deletes your account along with all your clients, projects, milestones, invoices, and shared links. Your clients will lose access immediately. This cannot be undone.'}
+                            </p>
 
-                    {!showDelete ? (
-                        <div className="settingsActions">
-                            <button
-                                type="button"
-                                className="settingsButton settingsButton--danger"
-                                onClick={() => setShowDelete(true)}
-                            >
-                                Delete my account
-                            </button>
-                        </div>
-                    ) : (
-                        <form className="settingsForm" onSubmit={handleDeleteSubmit}>
-                            <label className="settingsField">
-                                Enter your password to confirm
-                                <input
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={deletePassword}
-                                    onChange={(e) => setDeletePassword(e.target.value)}
-                                    required
-                                />
-                            </label>
+                            {!showDelete ? (
+                                <div className="settingsActions">
+                                    <button
+                                        type="button"
+                                        className="settingsButton settingsButton--danger"
+                                        onClick={() => setShowDelete(true)}
+                                    >
+                                        Delete my account
+                                    </button>
+                                </div>
+                            ) : (
+                                <form className="settingsForm" onSubmit={handleDeleteSubmit}>
+                                    <label className="settingsField">
+                                        Enter your password to confirm
+                                        <input
+                                            type="password"
+                                            autoComplete="current-password"
+                                            value={deletePassword}
+                                            onChange={(e) => setDeletePassword(e.target.value)}
+                                            required
+                                        />
+                                    </label>
 
-                            <StatusMessage status={deleteStatus} />
+                                    <StatusMessage status={deleteStatus} />
 
-                            <div className="settingsActions">
-                                <button type="submit" className="settingsButton settingsButton--danger">
-                                    Permanently delete
-                                </button>
-                                <button
-                                    type="button"
-                                    className="settingsButton settingsButton--secondary"
-                                    onClick={() => {
-                                        setShowDelete(false)
-                                        setDeletePassword('')
-                                        setDeleteStatus(null)
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </section>
+                                    <div className="settingsActions">
+                                        <button type="submit" className="settingsButton settingsButton--danger">
+                                            Permanently delete
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="settingsButton settingsButton--secondary"
+                                            onClick={() => {
+                                                setShowDelete(false)
+                                                setDeletePassword('')
+                                                setDeleteStatus(null)
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </section>
+                    </>
+                )}
 
             </div>
         </div>
