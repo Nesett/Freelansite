@@ -1,4 +1,5 @@
-import { X, Check } from "lucide-react"
+import { X, Users, Folder, Sparkles } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export type LimitCode = 'PLAN_LIMIT_CLIENTS' | 'PLAN_LIMIT_PROJECTS'
@@ -8,23 +9,69 @@ type UpgradeModalProps = {
     onClose: () => void
 }
 
-const COPY: Record<LimitCode | 'default', { title: string, text: string }> = {
+type Copy = {
+    eyebrow: string
+    title: string
+    text: string
+}
+
+const COPY: Record<LimitCode | 'default', Copy> = {
     PLAN_LIMIT_CLIENTS: {
-        title: "Client limit reached",
+        eyebrow: "Client limit reached",
+        title: "Unlock more customers",
         text: "You're using all the active client slots on the Free plan. Delete a client or upgrade to Pro to add more."
     },
     PLAN_LIMIT_PROJECTS: {
-        title: "Project limit reached",
+        eyebrow: "Project limit reached",
+        title: "Unlock unlimited projects",
         text: "You're using all the active project slots on the Free plan. Put a project on hold or upgrade to Pro to keep going."
     },
     default: {
-        title: "Upgrade to Pro",
+        eyebrow: "Pro plan",
+        title: "Unlock Freelansite Pro",
         text: "Unlock more clients, unlimited projects and your own branding."
     }
 }
 
+type FeatureId = 'clients' | 'projects' | 'branding'
+
+type Feature = {
+    id: FeatureId
+    icon: LucideIcon
+    title: string
+    text: string
+}
+
+const FEATURES: Feature[] = [
+    {
+        id: 'clients',
+        icon: Users,
+        title: "Up to 15 active clients",
+        text: "Room to grow your client list"
+    },
+    {
+        id: 'projects',
+        icon: Folder,
+        title: "Unlimited projects",
+        text: "Never put work on hold again"
+    },
+    {
+        id: 'branding',
+        icon: Sparkles,
+        title: "White-label branding",
+        text: "Your logo and colors on projects and magic links"
+    }
+]
+
+// the feature that solves the limit the user just hit gets highlighted
+const HIGHLIGHTED: Record<LimitCode, FeatureId> = {
+    PLAN_LIMIT_CLIENTS: 'clients',
+    PLAN_LIMIT_PROJECTS: 'projects'
+}
+
 export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
     const copy = COPY[code ?? 'default']
+    const highlighted = code ? HIGHLIGHTED[code] : undefined
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -62,27 +109,51 @@ export default function UpgradeModal({ code, onClose }: UpgradeModalProps) {
 
     return (
         <div className="modalOverlay" onClick={onClose}>
-            <div className="newClientModal" onClick={(e) => e.stopPropagation()}>
-                <div className="newClientModalTop">
-                    <button type="button" onClick={onClose}><X size={16} /></button>
-                    <h2>{copy.title}</h2>
+            <div
+                className="upgradeModal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="upgradeModalTitle"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="upgradeIntro">
+                    <button type="button" className="upgradeClose" onClick={onClose} aria-label="Close">
+                        <X size={20} />
+                    </button>
+
+                    <div className="upgradeHeading">
+                        <span className="upgradeEyebrow">{copy.eyebrow}</span>
+                        <h2 id="upgradeModalTitle">{copy.title}</h2>
+                        <p className="upgradeText">{copy.text}</p>
+                        {error && <p className="settingsMessage settingsMessage--error">{error}</p>}
+                    </div>
                 </div>
 
-                <div className="upgradeModalBody">
-                    <p className="upgradeModalText">{copy.text}</p>
+                <aside className="upgradeFeatures">
+                    <h3>Included with the Pro plan</h3>
 
-                    <ul className="upgradeBenefits">
-                        <li><Check size={16} /> Up to 15 active clients</li>
-                        <li><Check size={16} /> Unlimited active projects</li>
-                        <li><Check size={16} /> White-label branding on projects and magic links</li>
+                    <ul className="upgradeFeatureList">
+                        {FEATURES.map(({ id, icon: Icon, title, text }) => (
+                            <li
+                                key={id}
+                                className={`upgradeFeature${id === highlighted ? ' upgradeFeature--highlight' : ''}`}
+                            >
+                                <span className="upgradeFeatureIcon"><Icon size={20} /></span>
+                                <div className="upgradeFeatureText">
+                                    <strong>{title}</strong>
+                                    <span>{text}</span>
+                                </div>
+                            </li>
+                        ))}
                     </ul>
+                </aside>
 
-                    {error && <p className="settingsMessage settingsMessage--error">{error}</p>}
-                    <button type="button" className="upgradeButton" onClick={handleUpgrade} disabled={loading}>
-                        {loading ? 'Redirecting...' : 'Upgrade to Pro'}
-                    </button>
-                    <button type="button" className="upgradeLaterButton" onClick={onClose}>
+                <div className="upgradeActions">
+                    <button type="button" className="upgradeButton upgradeButton--secondary" onClick={onClose}>
                         Maybe later
+                    </button>
+                    <button type="button" className="upgradeButton upgradeButton--primary" onClick={handleUpgrade} disabled={loading}>
+                        {loading ? 'Redirecting...' : 'Upgrade to Pro'}
                     </button>
                 </div>
             </div>

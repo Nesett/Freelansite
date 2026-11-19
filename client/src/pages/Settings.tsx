@@ -354,164 +354,153 @@ export default function Settings() {
 
                 {activeTab === 'subscription' && !isClient && (
                     <>
-                        <section className="settingsCard">
-                            <h2>
-                                Branding
-                                {!isPro && <span className="proBadge">Pro</span>}
-                            </h2>
-                            <p className="settingsCardDescription">
-                                Your logo and brand color replace Freelansite when you and your clients view your projects and shared links.
-                            </p>
+                        {isPro && (
+                            <section className="settingsCard">
+                                <h2>Branding</h2>
+                                <p className="settingsCardDescription">
+                                    Your logo and brand color replace Freelansite when you and your clients view your projects and shared links.
+                                </p>
 
-                            {!isPro && (
-                                <div className="brandingLocked">
-                                    <p>Branding is available on the Pro plan.</p>
-                                    <button type="button" className="settingsButton" onClick={() => openUpgrade()}>
-                                        Upgrade to Pro
-                                    </button>
-                                </div>
-                            )}
+                                <form className="settingsForm" onSubmit={handleBrandingSubmit}>
+                                    <fieldset className="brandingFieldset" disabled={!isPro}>
 
-                            <form className="settingsForm" onSubmit={handleBrandingSubmit}>
-                                <fieldset className="brandingFieldset" disabled={!isPro}>
-
-                                    <div className="brandingField">
-                                        <span className="brandingFieldLabel">Brand color</span>
-                                        <div className="brandColorRow">
-                                            <input
-                                                type="color"
-                                                className="brandColorPicker"
-                                                aria-label="Pick brand color"
-                                                value={normalizedColor ?? '#1D3557'}
-                                                onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
-                                            />
-                                            <input
-                                                type="text"
-                                                className="brandColorText"
-                                                aria-label="Brand color hex code"
-                                                placeholder="#0F7734"
-                                                maxLength={7}
-                                                value={brandColor}
-                                                onChange={(e) => setBrandColor(e.target.value)}
-                                            />
-                                            {brandColor && (
-                                                <button
-                                                    type="button"
-                                                    className="settingsButton settingsButton--secondary"
-                                                    onClick={() => setBrandColor('')}
-                                                >
-                                                    Reset
-                                                </button>
-                                            )}
-                                        </div>
-                                        {colorProblem && (
-                                            <div className="brandingProblem">
-                                                <p className="settingsMessage settingsMessage--error">{colorProblem}</p>
-                                                {normalizedColor && (
+                                        <div className="brandingField">
+                                            <span className="brandingFieldLabel">Brand color</span>
+                                            <div className="brandColorRow">
+                                                <input
+                                                    type="color"
+                                                    className="brandColorPicker"
+                                                    aria-label="Pick brand color"
+                                                    value={normalizedColor ?? '#1D3557'}
+                                                    onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="brandColorText"
+                                                    aria-label="Brand color hex code"
+                                                    placeholder="#0F7734"
+                                                    maxLength={7}
+                                                    value={brandColor}
+                                                    onChange={(e) => setBrandColor(e.target.value)}
+                                                />
+                                                {brandColor && (
                                                     <button
                                                         type="button"
                                                         className="settingsButton settingsButton--secondary"
-                                                        onClick={() => setBrandColor(makeReadable(brandColor))}
+                                                        onClick={() => setBrandColor('')}
                                                     >
-                                                        Use closest readable shade
+                                                        Reset
                                                     </button>
                                                 )}
                                             </div>
-                                        )}
-                                        <p className="brandingHint">
-                                            Used for headings, buttons and progress. The pale accent, background and borders are generated from it.
-                                        </p>
-                                    </div>
-
-                                    <div className="brandingField">
-                                        <span className="brandingFieldLabel">Logo</span>
-
-                                        <div className="logoStyleOptions" role="radiogroup" aria-label="Logo style">
-                                            <label className={`logoStyleOption${logoStyle === 'WORDMARK' ? ' logoStyleOption--active' : ''}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="logoStyle"
-                                                    checked={logoStyle === 'WORDMARK'}
-                                                    onChange={() => setLogoStyle('WORDMARK')}
-                                                />
-                                                <span className="logoStyleTitle">Wordmark</span>
-                                                <span className="logoStyleHint">
-                                                    Wide, text-style logo. Shown on the left, same size as the Freelansite logo.
-                                                </span>
-                                            </label>
-                                            <label className={`logoStyleOption${logoStyle === 'SYMBOL' ? ' logoStyleOption--active' : ''}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="logoStyle"
-                                                    checked={logoStyle === 'SYMBOL'}
-                                                    onChange={() => setLogoStyle('SYMBOL')}
-                                                />
-                                                <span className="logoStyleTitle">Symbol</span>
-                                                <span className="logoStyleHint">
-                                                    Round or square emblem. Shown centered, up to twice as large.
-                                                </span>
-                                            </label>
+                                            {colorProblem && (
+                                                <div className="brandingProblem">
+                                                    <p className="settingsMessage settingsMessage--error">{colorProblem}</p>
+                                                    {normalizedColor && (
+                                                        <button
+                                                            type="button"
+                                                            className="settingsButton settingsButton--secondary"
+                                                            onClick={() => setBrandColor(makeReadable(brandColor))}
+                                                        >
+                                                            Use closest readable shade
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <p className="brandingHint">
+                                                Used for headings, buttons and progress. The pale accent, background and borders are generated from it.
+                                            </p>
                                         </div>
 
-                                        <div className="logoUploadRow">
-                                            <input
-                                                ref={logoInputRef}
-                                                type="file"
-                                                accept={LOGO_RULES.types.join(',')}
-                                                hidden
-                                                onChange={handleLogoChange}
-                                            />
-                                            <button
-                                                type="button"
-                                                className="settingsButton settingsButton--secondary"
-                                                onClick={() => logoInputRef.current?.click()}
-                                            >
-                                                <Upload size={16} />
-                                                {displayLogo ? 'Replace logo' : 'Upload logo'}
-                                            </button>
-                                            {displayLogo && (
+                                        <div className="brandingField">
+                                            <span className="brandingFieldLabel">Logo</span>
+
+                                            <div className="logoStyleOptions" role="radiogroup" aria-label="Logo style">
+                                                <label className={`logoStyleOption${logoStyle === 'WORDMARK' ? ' logoStyleOption--active' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="logoStyle"
+                                                        checked={logoStyle === 'WORDMARK'}
+                                                        onChange={() => setLogoStyle('WORDMARK')}
+                                                    />
+                                                    <span className="logoStyleTitle">Wordmark</span>
+                                                    <span className="logoStyleHint">
+                                                        Wide, text-style logo. Shown on the left, same size as the Freelansite logo.
+                                                    </span>
+                                                </label>
+                                                <label className={`logoStyleOption${logoStyle === 'SYMBOL' ? ' logoStyleOption--active' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="logoStyle"
+                                                        checked={logoStyle === 'SYMBOL'}
+                                                        onChange={() => setLogoStyle('SYMBOL')}
+                                                    />
+                                                    <span className="logoStyleTitle">Symbol</span>
+                                                    <span className="logoStyleHint">
+                                                        Round or square emblem. Shown centered, up to twice as large.
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            <div className="logoUploadRow">
+                                                <input
+                                                    ref={logoInputRef}
+                                                    type="file"
+                                                    accept={LOGO_RULES.types.join(',')}
+                                                    hidden
+                                                    onChange={handleLogoChange}
+                                                />
                                                 <button
                                                     type="button"
                                                     className="settingsButton settingsButton--secondary"
-                                                    onClick={handleLogoRemove}
+                                                    onClick={() => logoInputRef.current?.click()}
                                                 >
-                                                    <Trash2 size={16} />
-                                                    Remove
+                                                    <Upload size={16} />
+                                                    {displayLogo ? 'Replace logo' : 'Upload logo'}
                                                 </button>
-                                            )}
+                                                {displayLogo && (
+                                                    <button
+                                                        type="button"
+                                                        className="settingsButton settingsButton--secondary"
+                                                        onClick={handleLogoRemove}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <p className="brandingHint">
+                                                PNG, JPG or WebP, up to 2 MB, at least {LOGO_RULES.minPx} px on each side. A transparent PNG works best.
+                                            </p>
                                         </div>
-                                        <p className="brandingHint">
-                                            PNG, JPG or WebP, up to 2 MB, at least {LOGO_RULES.minPx} px on each side. A transparent PNG works best.
-                                        </p>
-                                    </div>
 
-                                    <div className="brandingField">
-                                        <span className="brandingFieldLabel">Preview</span>
-                                        <div className="brandingPreview" style={previewVars}>
-                                            <div className="brandingPreviewSidebar">
-                                                <div className={displayLogo ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}>
-                                                    {displayLogo
-                                                        ? <img className="sidebarLogoImg" src={displayLogo} alt="" />
-                                                        : <span className="logo-text">Freelansate</span>}
+                                        <div className="brandingField">
+                                            <span className="brandingFieldLabel">Preview</span>
+                                            <div className="brandingPreview" style={previewVars}>
+                                                <div className="brandingPreviewSidebar">
+                                                    <div className={displayLogo ? `sidebar-logo sidebar-logo--${logoStyle.toLowerCase()}` : 'sidebar-logo'}>
+                                                        {displayLogo
+                                                            ? <img className="sidebarLogoImg" src={displayLogo} alt="" />
+                                                            : <span className="logo-text">Freelansate</span>}
+                                                    </div>
+                                                    <span className="nav-link active">
+                                                        <FolderKanban size={18} />
+                                                        Projects
+                                                    </span>
                                                 </div>
-                                                <span className="nav-link active">
-                                                    <FolderKanban size={18} />
-                                                    Projects
-                                                </span>
-                                            </div>
-                                            <div className="brandingPreviewMain">
-                                                <h3>Website redesign</h3>
-                                                <StatusBar percent={60} />
-                                                <span className="newButton brandingPreviewButton">Approve milestone</span>
+                                                <div className="brandingPreviewMain">
+                                                    <h3>Website redesign</h3>
+                                                    <StatusBar percent={60} />
+                                                    <span className="newButton brandingPreviewButton">Approve milestone</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                </fieldset>
+                                    </fieldset>
 
-                                <StatusMessage status={brandingStatus} />
+                                    <StatusMessage status={brandingStatus} />
 
-                                {isPro && (
+                                
                                     <div className="settingsActions">
                                         <button
                                             type="submit"
@@ -521,9 +510,9 @@ export default function Settings() {
                                             {brandingSaving ? 'Saving...' : 'Save branding'}
                                         </button>
                                     </div>
-                                )}
-                            </form>
-                        </section>
+                                </form>
+                            </section>
+                        )}
 
                         <section className="settingsCard">
                             <h2>
