@@ -20,10 +20,10 @@ export interface Invoice {
         admin: {
             email: string
         }
-        client: {
-            id: string
-            email: string
-        }
+		client: {
+			id: string | null
+			email: string
+		}
     }
 }
 

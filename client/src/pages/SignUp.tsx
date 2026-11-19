@@ -1,6 +1,7 @@
 import loginImg from '../images/loginImg.png'
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useToast } from '../context/ToastContext'
 
 export default function SignUpPage() {
     const [ name, setName ] = useState("")
@@ -9,7 +10,7 @@ export default function SignUpPage() {
     const [ password, setPassword ] = useState("")
     const [ confirmPassword, setConfirmPassword ] = useState("")
     const [ showPassword, setShowPassword ] = useState(false)
-    const [ errorMessage, setErrorMessage ] = useState("")
+    const { showError } = useToast()
     const [ isSubmitting, setIsSubmitting ] = useState(false)
     const navigate = useNavigate()
 
@@ -17,12 +18,11 @@ export default function SignUpPage() {
         e.preventDefault()
 
         if (password !== confirmPassword) {
-            setErrorMessage("Passwords do not match.")
+            showError("Passwords do not match.")
             return
         }
 
         setIsSubmitting(true)
-        setErrorMessage("")
 
         try {
             const response = await fetch('/api/auth/signup', {
@@ -50,9 +50,9 @@ export default function SignUpPage() {
 
         } catch (err: unknown) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred.")
+                showError("An unexpected error occurred.")
             }
         } finally {
             setIsSubmitting(false)
@@ -142,9 +142,6 @@ export default function SignUpPage() {
                                 required
                             />
                         </label>
-
-                        {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-
                         <button type="submit" className="signInButton" disabled={isSubmitting}>
                             {isSubmitting ? "Creating account..." : "Sign up"}
                         </button>

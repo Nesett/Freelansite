@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt'
 import validator from 'validator'
 import jwt from 'jsonwebtoken'
 import { toClientSafe } from '../utils/sanitizer.js'
+import { Admin, Client } from '@prisma/client'
+import { stripe } from '../services/stripe.js'
 
 
 export async function signUp(req: Request, res: Response) {
@@ -157,13 +159,18 @@ export async function changePassword(req: Request, res: Response) {
             return res.status(401).json({ error: 'Unauthorized' })
         }
 
-        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+        const isClient = req.userRole === 'client'
 
-        if (!admin) {
+        const account = isClient
+            ? await db.client.findUnique({ where: { id: req.user.id } })
+            : await db.admin.findUnique({ where: { id: req.user.id } })
+
+        // a client who deleted their account has no password anymore
+        if (!account || !account.password) {
             return res.status(401).json({ error: 'User no longer exists' })
         }
 
-        const passwordMatch = await bcrypt.compare(currentPassword, admin.password)
+        const passwordMatch = await bcrypt.compare(currentPassword, account.password)
 
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Current password is incorrect.' })
@@ -175,16 +182,41 @@ export async function changePassword(req: Request, res: Response) {
 
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
-        await db.admin.update({
-            where: { id: admin.id },
-            data: { password: hashedPassword }
-        })
+        if (isClient) {
+            await db.client.update({
+                where: { id: account.id },
+                data: { password: hashedPassword }
+            })
+        } else {
+            await db.admin.update({
+                where: { id: account.id },
+                data: { password: hashedPassword }
+            })
+        }
 
         return res.status(200).json({ message: 'Password updated.' })
 
     } catch (err) {
         console.log(err)
         return res.status(500).json({ error: 'Internal server error.' })
+    }
+}
+
+async function cancelStripeSubscriptions(customerId: string) {
+    try {
+        const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'all'
+        })
+
+        for (const subscription of subscriptions.data) {
+            if (subscription.status !== 'canceled' && subscription.status !== 'incomplete_expired') {
+                await stripe.subscriptions.cancel(subscription.id)
+            }
+        }
+    } catch (err) {
+        if ((err as { code?: string }).code === 'resource_missing') return
+        throw err
     }
 }
 
@@ -197,19 +229,52 @@ export async function deleteAccount(req: Request, res: Response) {
             return res.status(401).json({ error: 'Unauthorized' })
         }
 
-        const admin = await db.admin.findUnique({ where: { id: req.user.id } })
+        const isClient = req.userRole === 'client'
 
-        if (!admin) {
+        const account = isClient
+            ? await db.client.findUnique({ where: { id: req.user.id } })
+            : await db.admin.findUnique({ where: { id: req.user.id } })
+
+        if (!account || !account.password) {
             return res.status(401).json({ error: 'User no longer exists' })
         }
 
-        const passwordMatch = await bcrypt.compare(password, admin.password)
+        const passwordMatch = await bcrypt.compare(password, account.password)
 
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Password is incorrect.' })
         }
 
-        await db.admin.delete({ where: { id: admin.id } })
+        if (isClient) {
+            const client = account as Client
+
+            await db.$transaction([
+                db.project.updateMany({
+                    where: { clientId: client.id },
+                    data: {
+                        clientName: client.name,
+                        clientCompanyName: client.companyName,
+                        clientEmail: client.email
+                    }
+                }),
+                db.client.delete({ where: { id: client.id } })
+            ])
+        } else {
+            const admin = account as Admin
+
+            if (admin.stripeCustomerId) {
+                try {
+                    await cancelStripeSubscriptions(admin.stripeCustomerId)
+                } catch (err) {
+                    console.log(err)
+                    return res.status(502).json({
+                        error: 'Could not cancel your subscription, so your account was not deleted. Please try again.'
+                    })
+                }
+            }
+
+            await db.admin.delete({ where: { id: admin.id } })
+        }
 
         res.clearCookie('auth_token')
         return res.status(200).json({ message: 'Account deleted.' })

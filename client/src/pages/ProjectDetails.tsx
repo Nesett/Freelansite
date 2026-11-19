@@ -14,6 +14,10 @@ import { useAuth } from "../context/AuthContext"
 import MagicLinkFormModal from "../components/MagicLinkFormModal"
 import InvoiceFormModal from "../components/InvoiceFormModal"
 import { formatInvoiceNumber } from "../components/InvoiceEntry"
+import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
+import { useToast } from "../context/ToastContext"
+import NotFoundState from "../components/NotFoundState"
+import { useBranding } from "../context/BrandingContext"
 
 
 
@@ -26,7 +30,7 @@ export default function ProjectDetails() {
     const [areYouSure, setAreYouSure] = useState<boolean>(false)
     const [holdConfirm, setHoldConfirm] = useState<boolean>(false)
 	const [loading, setLoading] = useState<boolean>(true)
-	const [errorMessage, setErrorMessage] = useState<string>("")
+	const { showError } = useToast()
     const [milestones, setMilestones] = useState<Milestone[]>([])
     const [showAddMilestone, setShowAddMilestone] = useState<boolean>(false)
     const [ editProjectForm, setEditProjectForm] = useState<boolean>(false)
@@ -37,6 +41,9 @@ export default function ProjectDetails() {
     const [copied, setCopied] = useState<boolean>(false)
     const [showInvoiceForm, setShowInvoiceForm] = useState<boolean>(false)
     const navigate = useNavigate()
+
+    useBreadcrumbLabel(project?.title)
+    useBranding(project?.admin.branding)
 
 	useEffect(() => {
         let isFinished = true
@@ -64,10 +71,12 @@ export default function ProjectDetails() {
 				}
 
 			} catch (err) {
+				if (!isFinished) return
+
 				if (err instanceof Error) {
-					setErrorMessage(err.message)
+					showError(err.message)
 				} else {
-					setErrorMessage("An unexpected error occurred")
+					showError("An unexpected error occurred")
 				}
 			} finally {
 				if (isFinished) {
@@ -82,7 +91,7 @@ export default function ProjectDetails() {
 			isFinished = false
 		}
 
-	}, [id])
+	}, [id, showError])
 
 
     async function deleteProject() {
@@ -100,9 +109,9 @@ export default function ProjectDetails() {
             navigate("/projects")
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while deleting project.")
+                showError("An unexpected error occurred while deleting project.")
             }
         }
     }
@@ -128,9 +137,9 @@ export default function ProjectDetails() {
             setEditOptions(false)
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while updating project.")
+                showError("An unexpected error occurred while updating project.")
             }
         }
     }
@@ -158,9 +167,9 @@ export default function ProjectDetails() {
 
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while deleting project.")
+                showError("An unexpected error occurred while deleting project.")
             }
         }
     }
@@ -187,9 +196,9 @@ export default function ProjectDetails() {
 
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while updating milestone.")
+                showError("An unexpected error occurred while updating milestone.")
             }
         }
     }
@@ -212,9 +221,9 @@ export default function ProjectDetails() {
 
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while deleting milestone.")
+                showError("An unexpected error occurred while deleting milestone.")
             }
         }
     }
@@ -267,12 +276,11 @@ export default function ProjectDetails() {
             }
 
             setMagicLink(null)
-            setErrorMessage("")
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occurred while revoking magic link.")
+                showError("An unexpected error occurred while revoking magic link.")
             }
         }
     }
@@ -306,8 +314,15 @@ export default function ProjectDetails() {
 		return <p>Loading project details...</p>
 	}
 
-	if (errorMessage || !project) {
-		return <p>{errorMessage || "Project not found."}</p>
+	if (!project) {
+		return (
+			<NotFoundState
+				title="Project not found"
+				text="This project doesn't exist, or you don't have access to it."
+				backTo="/projects"
+				backLabel="Back to projects"
+			/>
+		)
 	}
 
     const { label, variant } = getProjectTag(project.isOnHold, milestones)
@@ -404,7 +419,12 @@ export default function ProjectDetails() {
             )}
 			<header className="projectHeader">
                 <div className="projectHeaderInfo">
-                    <p className="projectHeaderClient">{project.client.companyName ? project.client.companyName : project.client.name}</p>
+                    <p className="projectHeaderClient">
+                        {project.client.companyName || project.client.name || project.client.email}
+                        {isAdmin && project.client.accountDeleted && (
+                            <span className="statusTag statusTag--neutral" style={{ marginLeft: 8 }}>Account deleted</span>
+                        )}
+                    </p>
                     <h1>{project.title}</h1>
                     {project.description && (
                         <p className="projectDescription">{project.description}</p>
@@ -436,10 +456,10 @@ export default function ProjectDetails() {
                 <div className="projectMilestonesDiv">
                     <div className="milestoneHeader">
                         <h2>Milestones</h2>
-                        <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton" disabled={project.isOnHold}>
+                        {isAdmin && <button onClick={()=>setShowAddMilestone(prev=>!prev)} className="newButton" disabled={project.isOnHold}>
                             <Plus />
                             Add Milestone
-                        </button>
+                        </button>}
                     </div>
                     <div className="projectMilestones" style={project.isOnHold ? { pointerEvents: "none", opacity: 0.55 } : undefined}>
                         {sortedMilestones.length > 0 ? (

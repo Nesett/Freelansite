@@ -7,6 +7,12 @@ import useClickOutside from "../utils/clicksOutside"
 import type { Client } from "./Clients"
 import type { Project } from "./Projects"
 import ProjectsTable from "../components/ProjectsTable"
+import { useUpgrade } from "../context/UpgradeContext"
+import { useBreadcrumbLabel } from "../context/BreadcrumbContext"
+import { useToast } from "../context/ToastContext"
+import NotFoundState from "../components/NotFoundState"
+
+
 
 export default function ClientsDetails() {
     const [client, setClient] = useState<Client | null>(null)
@@ -17,9 +23,12 @@ export default function ClientsDetails() {
     const [showNewProjectForm, setShowNewProjectForm] = useState<boolean>(false)
     const { id } = useParams<{ id: string }>()
     const clientOptionsRef = useRef<HTMLDivElement | null>(null)
-    const [errorMessage, setErrorMessage] = useState<string>("")
+    const { showError } = useToast()
+    const { checkLimit } = useUpgrade()
 
     const navigate = useNavigate()
+
+    useBreadcrumbLabel(client ? (client.companyName || client.name) : null)
 
     useClickOutside(editOptions, () => setEditOptions(false), clientOptionsRef)
 
@@ -49,10 +58,12 @@ export default function ClientsDetails() {
 					setProjects(projectsJson)
 				}
 			} catch (err) {
+                if (!isFinished) return
+
                 if (err instanceof Error) {
-                    setErrorMessage(err.message)
+                    showError(err.message)
                 } else {
-                    setErrorMessage("An unexpected error occured.")
+                    showError("An unexpected error occured.")
                     console.error("error:", err)
                 }
 				
@@ -68,7 +79,7 @@ export default function ClientsDetails() {
 		return () => {
 			isFinished = false
 		}
-	}, [id])
+	}, [id, showError])
 
 
     async function deleteClient() {
@@ -86,9 +97,9 @@ export default function ClientsDetails() {
             navigate("/clients")
         } catch (err) {
             if (err instanceof Error) {
-                setErrorMessage(err.message)
+                showError(err.message)
             } else {
-                setErrorMessage("An unexpected error occured while deleting client.")
+                showError("An unexpected error occured while deleting client.")
                 console.error("error:", err)
             }
         }
@@ -104,9 +115,21 @@ export default function ClientsDetails() {
     }
 
     if (!client) {
-        return <div>Client not found.</div>
+        return (
+            <NotFoundState
+                title="Client not found"
+                text="This client doesn't exist, or you don't have access to them."
+                backTo="/clients"
+                backLabel="Back to clients"
+            />
+        )
     }
 
+    async function handleNewProjectClick() {
+        if (await checkLimit('projects')) {
+            setShowNewProjectForm(true)
+        }
+    }
 
     
     function showClientOptions() {
@@ -183,7 +206,7 @@ export default function ClientsDetails() {
                 <div className="projectsSectionHeader">
                     <h3>Projects</h3>
                     {projects.length > 0 && (
-                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                        <button onClick={handleNewProjectClick} className="newButton">
                             <Plus />
                             New Project
                         </button>
@@ -198,7 +221,7 @@ export default function ClientsDetails() {
                         </div>
                         <h4>No projects yet for {client.companyName || client.name}</h4>
                         <p>Start a project to track progress, budget, and status for this client.</p>
-                        <button onClick={() => setShowNewProjectForm(true)} className="newButton">
+                        <button onClick={handleNewProjectClick} className="newButton">
                             <Plus size={16} />
                             New Project
                         </button>

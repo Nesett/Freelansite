@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { User, Mail, Phone, Building2 } from "lucide-react"
-import type { Milestone } from "./Projects"
+import type { Milestone, ProjectBranding } from "./Projects"
 import StatusBar from "../components/StatusBar"
 import PublicMilestoneEntry from "../components/PublicMilestoneEntry"
 import { getActiveMilestone } from "../utils/ProjectStatus"
+import { useBranding } from "../context/BrandingContext"
 
 interface PublicProjectData {
     title: string
@@ -19,6 +20,7 @@ interface PublicProjectData {
         businessName: string | null
         email: string
         phone: string | null
+        branding: ProjectBranding | null
     }
     milestones: Milestone[]
 }
@@ -71,6 +73,8 @@ export default function PublicProject() {
         }
     }, [token])
 
+    useBranding(project?.admin.branding)
+
     if (loading) {
         return <p>Loading project...</p>
     }
@@ -87,9 +91,6 @@ export default function PublicProject() {
         <div className="pageContent publicPage">
             <header className="projectHeader">
                 <div className="projectHeaderInfo">
-                    {project.admin.businessName && (
-                        <p className="projectHeaderClient">{project.admin.businessName}</p>
-                    )}
                     {clientLabel && (
                         <p className="projectHeaderClient">{clientLabel}</p>
                     )}
@@ -143,6 +144,13 @@ export default function PublicProject() {
                             </p>
                         )}
                     </div>
+                    {project.admin.branding?.logoUrl && (
+                        <img
+                            className={`publicManagedByLogo publicManagedByLogo--${project.admin.branding.logoStyle.toLowerCase()}`}
+                            src={project.admin.branding.logoUrl}
+                            alt={`${project.admin.branding.name} logo`}
+                        />
+                    )}
                 </section>
             </main>
         </div>

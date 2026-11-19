@@ -6,7 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
 enum MilestoneStatus {
   NOT_STARTED
   CURRENTLY_WORKED_ON
@@ -20,6 +19,16 @@ enum InvoiceStatus {
   OVERDUE
 }
 
+enum Plan {
+  FREE
+  PRO
+}
+
+enum LogoStyle {
+  WORDMARK
+  SYMBOL
+}
+
 model Admin {
   id                String   @id @default(uuid())
   name              String
@@ -30,9 +39,20 @@ model Admin {
   createdAt         DateTime @default(now()) @map("created_at")
   address           String?
   lastInvoiceNumber Int      @default(0) @map("last_invoice_number")
+  cancelAtPeriodEnd Boolean  @default(false)
+
+  plan                 Plan      @default(FREE)
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+
+  brandPrimary String?   @map("brand_primary")
+  brandAccent  String?   @map("brand_accent")
+  logoUrl      String?   @map("logo_url")
+  logoStyle    LogoStyle @default(WORDMARK) @map("logo_style")
 
   adminClients AdminClient[]
-  projects Project[]
+  projects     Project[]
 
   @@map("admins")
 }
@@ -41,9 +61,12 @@ model Client {
   id                 String    @id @default(uuid())
   email              String    @unique
   password           String?
+  name               String?
+  companyName        String?   @map("company_name")
+  phone              String?
+  address            String?
   createdAt          DateTime  @default(now()) @map("created_at")
   lastActive         DateTime  @default(now()) @map("last_active")
-  deletedByClient    Boolean   @default(false) @map("deleted_by_client")
   inviteToken        String?   @unique
   inviteTokenExpires DateTime?
 
@@ -54,37 +77,36 @@ model Client {
 }
 
 model AdminClient {
-    id             String   @id @default(uuid())
-    adminId        String   @map("admin_id")
-    clientId       String   @map("client_id")
-    name           String?
-    companyName    String?
-    phone          String?
-    address        String?
-    deletedByAdmin Boolean  @default(false) @map("deleted_by_admin")
-    createdAt      DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  adminId        String   @map("admin_id")
+  clientId       String   @map("client_id")
+  deletedByAdmin Boolean  @default(false) @map("deleted_by_admin")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-    admin  Admin  @relation(fields: [adminId], references: [id], onDelete: Cascade)
-    client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  admin  Admin  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-    @@unique([adminId, clientId])
-    @@map("admin_clients")
+  @@unique([adminId, clientId])
+  @@map("admin_clients")
 }
 
 model Project {
-  id              String        @id @default(uuid())
-  clientId        String        @map("client_id")
-  adminId         String        @map("admin_id")
-  title           String
-  description     String?
-  budget          Int?
-  isOnHold        Boolean       @default(false) @map("is_on_hold")
-  notes           String?
-  deletedByAdmin  Boolean       @default(false) @map("deleted_by_admin")
-  deletedByClient Boolean       @default(false) @map("deleted_by_client")
-  createdAt       DateTime      @default(now()) @map("created_at")
+  id                String   @id @default(uuid())
+  clientId          String?  @map("client_id")
+  clientName        String?  @map("client_name")
+  clientCompanyName String?  @map("client_company_name")
+  clientEmail       String   @map("client_email")
+  adminId           String   @map("admin_id")
+  title             String
+  description       String?
+  budget            Int?
+  isOnHold          Boolean  @default(false) @map("is_on_hold")
+  notes             String?
+  deletedByAdmin    Boolean  @default(false) @map("deleted_by_admin")
+  deletedByClient   Boolean  @default(false) @map("deleted_by_client")
+  createdAt         DateTime @default(now()) @map("created_at")
 
-  client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client     Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
   admin      Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
   milestones Milestone[]
   invoices   Invoice[]

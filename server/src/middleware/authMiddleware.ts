@@ -77,12 +77,7 @@ export async function requireAnyAuth(req: Request, res: Response, next: NextFunc
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload
         const user = decoded.role === 'admin'
             ? await db.admin.findUnique({ where: { id: decoded.id } })
-            : await db.client.findFirst({
-                where: {
-                    id: decoded.id,
-                    deletedByClient: false
-                }
-            })
+            : await db.client.findUnique({ where: { id: decoded.id } })
         if (!user) {
             return res.status(401).json({ error: 'User no longer exists' })
         }

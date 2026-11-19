@@ -6,6 +6,16 @@ type User = {
 	email: string
 	businessName: string | null
 	role: 'admin' | 'client'
+	companyName?: string | null
+	phone?: string | null
+	address?: string | null
+	// admins only
+	plan?: 'FREE' | 'PRO'
+	brandPrimary?: string | null
+	logoUrl?: string | null
+	logoStyle?: 'WORDMARK' | 'SYMBOL'
+	cancelAtPeriodEnd: boolean
+	currentPeriodEnd?: string | null
 }
 
 

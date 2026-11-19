@@ -4,54 +4,19 @@ import { MilestoneStatus } from '@prisma/client'
 import countProgressPercent from '../utils/milestoneProgress.js'
 import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"
+import { canAddProject } from '../services/planLimits.js'
+import { getPublicBranding } from '../utils/branding.js'
+import { resolveClient } from '../utils/clientSnapshot.js'
 
 
-type ClientDetails = {
-    clientId: string
-    name: string | null
-    companyName: string | null
-    phone: string | null
-    address: string | null
-}
-
-async function getClientDetails(req: Request, clientIds: string[]) {
-    const detailsByClientId = new Map<string, ClientDetails>()
-
-    if (req.userRole !== 'admin' || clientIds.length === 0) {
-        return detailsByClientId
-    }
-
-    const rows = await db.adminClient.findMany({
-        where: {
-            adminId: req.user.id,
-            clientId: { in: clientIds }
-        },
-        select: {
-            clientId: true,
-            name: true,
-            companyName: true,
-            phone: true,
-            address: true
-        }
-    })
-
-    for (const row of rows) {
-        detailsByClientId.set(row.clientId, row)
-    }
-
-    return detailsByClientId
-}
-
-function buildClient(client: { id: string, email: string }, details?: ClientDetails) {
-    return {
-        id: client.id,
-        email: client.email,
-        name: details?.name ?? null,
-        companyName: details?.companyName ?? null,
-        phone: details?.phone ?? null,
-        address: details?.address ?? null
-    }
-}
+const clientSelect = {
+    id: true,
+    email: true,
+    name: true,
+    companyName: true,
+    phone: true,
+    address: true
+} as const
 
 
 export async function createProject(req: Request, res: Response) {
@@ -81,11 +46,27 @@ export async function createProject(req: Request, res: Response) {
                 adminId,
                 clientId,
                 deletedByAdmin: false
+            },
+            include: {
+                client: { 
+                    select: { 
+                        email: true, 
+                        name: true, 
+                        companyName: true 
+                    } 
+                }
             }
         })
 
         if (!existingClient) {
             return res.status(404).json({error: "Client does not exist."})
+        }
+
+        if (!(await canAddProject(adminId))) {
+            return res.status(402).json({
+                error: "You've reached the active project limit for your plan. Put a project on hold or upgrade to Pro.",
+                code: 'PLAN_LIMIT_PROJECTS'
+            })
         }
 
         // every project starts with exactly one milestone, same as project.
@@ -97,7 +78,10 @@ export async function createProject(req: Request, res: Response) {
                     title,
                     description,
                     budget: projectBudget,
-                    notes
+                    notes,
+                    clientEmail: existingClient.client.email,
+                    clientName: existingClient.client.name,
+                    clientCompanyName: existingClient.client.companyName
                 }
             })
 
@@ -130,10 +114,7 @@ export async function getAllProjects(req: Request, res: Response) {
             orderBy: { createdAt: 'desc' },
             include: {
                 client: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
+                    select: clientSelect
                 },
                 admin: {
                     select: {
@@ -155,12 +136,9 @@ export async function getAllProjects(req: Request, res: Response) {
             }
         })
 
-        const clientIds = [...new Set(allProjects.map(project => project.clientId))]
-        const clientDetails = await getClientDetails(req, clientIds)
-
         const projectsWithProgress = allProjects.map(project => ({
             ...project,
-            client: buildClient(project.client, clientDetails.get(project.clientId)),
+            client: resolveClient(project.client, project),
             progress: countProgressPercent(project.milestones)
         }))
 
@@ -188,10 +166,7 @@ export async function getProject(req: Request, res: Response) {
             },
             include: {
                 client: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
+                    select: clientSelect
                 },
                 admin: {
                     select: {
@@ -199,7 +174,12 @@ export async function getProject(req: Request, res: Response) {
                         businessName: true,
                         email: true,
                         phone: true,
-                        address: true
+                        address: true,
+                        plan: true,
+                        currentPeriodEnd: true,
+                        brandPrimary: true,
+                        logoUrl: true,
+                        logoStyle: true
                     }
                 },
                 milestones: {
@@ -224,11 +204,19 @@ export async function getProject(req: Request, res: Response) {
             return res.status(404).json({ error: "Project not found." })
         }
 
-        const clientDetails = await getClientDetails(req, [project.clientId])
+        const { admin } = project
 
         return res.status(200).json({
             ...project,
-            client: buildClient(project.client, clientDetails.get(project.clientId)),
+            admin: {
+                name: admin.name,
+                businessName: admin.businessName,
+                email: admin.email,
+                phone: admin.phone,
+                address: admin.address,
+                branding: getPublicBranding(admin)
+            },
+            client: resolveClient(project.client, project),
             progress: countProgressPercent(project.milestones)
         })
 
@@ -264,6 +252,15 @@ export async function updateProject(req: Request, res: Response) {
 
         if (!existingProject) {
             return res.status(404).json({error: "Project does not exist."})
+        }
+
+        const isResuming = isOnHold === false && existingProject.isOnHold
+
+        if (isResuming && !(await canAddProject(req.user.id))) {
+            return res.status(402).json({
+                error: "You've reached the active project limit for your plan. Put another project on hold first or upgrade to Pro.",
+                code: 'PLAN_LIMIT_PROJECTS'
+            })
         }
 
         const updatedProject = await db.project.update({

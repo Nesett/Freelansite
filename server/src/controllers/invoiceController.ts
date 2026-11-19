@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import db from '../db/db.js'
 import { InvoiceStatus } from '@prisma/client'
 import { deletedFilter, projectAccessFilter } from '../utils/accessByUser.js'
+import { resolveClient } from '../utils/clientSnapshot.js'
 
 interface InvoiceItemInput {
     title: string
@@ -201,6 +202,9 @@ export async function getInvoice(req: Request, res: Response) {
                     select: {
                         id: true,
                         title: true,
+                        clientName: true,
+                        clientCompanyName: true,
+                        clientEmail: true,
                         admin: {
                             select: {
                                 email: true
@@ -220,7 +224,17 @@ export async function getInvoice(req: Request, res: Response) {
             return res.status(404).json({ error: "Invoice not found." })
         }
 
-        return res.status(200).json({ invoice })
+        const { project } = invoice
+
+        return res.status(200).json({
+            invoice: {
+                ...invoice,
+                project: {
+                    ...project,
+                    client: resolveClient(project.client, project)
+                }
+            }
+        })
 
     } catch (err) {
         console.log(err)
@@ -390,6 +404,9 @@ export async function getUserInvoices(req: Request, res: Response) {
                     select: {
                         id: true,
                         title: true,
+                        clientName: true,
+                        clientCompanyName: true,
+                        clientEmail: true,
                         admin: {
                             select: {
                                 email: true
@@ -406,7 +423,15 @@ export async function getUserInvoices(req: Request, res: Response) {
             }
         })
 
-        return res.status(200).json(invoices)
+        const result = invoices.map(invoice => ({
+            ...invoice,
+            project: {
+                ...invoice.project,
+                client: resolveClient(invoice.project.client, invoice.project)
+            }
+        }))
+
+        return res.status(200).json(result)
 
     } catch (err) {
         console.log(err)
