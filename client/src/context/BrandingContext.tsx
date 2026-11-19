@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { buildBrandTheme, themeToCssVars, type LogoStyle } from '../utils/brandTheme'
+import { useAuth } from './AuthContext'
 
 export type Branding = {
     name: string
@@ -16,11 +17,26 @@ type BrandingContextType = {
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined)
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-    const [branding, setBranding] = useState<Branding | null>(null)
+    const { user } = useAuth()
+
+    const [pageBranding, setPageBranding] = useState<Branding | null>(null)
+
+    const isProAdmin = user?.role === 'admin' && user.plan === 'PRO'
+    const ownName = user?.businessName || user?.name || ''
+    const ownPrimary = user?.brandPrimary ?? null
+    const ownLogoUrl = user?.logoUrl ?? null
+    const ownLogoStyle = user?.logoStyle ?? 'WORDMARK'
+
+    const ownBranding = useMemo<Branding | null>(() => {
+        if (!isProAdmin) return null
+
+        return { name: ownName, primary: ownPrimary, logoUrl: ownLogoUrl, logoStyle: ownLogoStyle }
+    }, [isProAdmin, ownName, ownPrimary, ownLogoUrl, ownLogoStyle])
+
+    const branding = pageBranding ?? ownBranding
     const primary = branding?.primary ?? null
 
-    // Override the color variables from index.css on <html> so everything
-    // (sidebar, topbar, modals, the public page) picks them up. Removed again when branding clears.
+
     useEffect(() => {
         if (!primary) return
 
@@ -35,7 +51,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     }, [primary])
 
     return (
-        <BrandingContext.Provider value={{ branding, setBranding }}>
+        <BrandingContext.Provider value={{ branding, setBranding: setPageBranding }}>
             {children}
         </BrandingContext.Provider>
     )
@@ -49,8 +65,7 @@ export function useBrandingContext() {
     return context
 }
 
-// Call this in a page that shows another admin's branding (project details, magic link page).
-// Pass null/undefined while loading or when the admin has no active branding.
+
 export function useBranding(branding: Branding | null | undefined) {
     const { setBranding } = useBrandingContext()
 
