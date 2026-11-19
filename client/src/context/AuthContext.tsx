@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	async function refreshUser() {
 		try {
-			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+			const res = await fetch(`/api/auth/me`, {
 				credentials: 'include'
 			})
 			const data = await res.json()

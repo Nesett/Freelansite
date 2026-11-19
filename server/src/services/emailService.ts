@@ -1,47 +1,51 @@
-import nodemailer from 'nodemailer'
-import dotenv from 'dotenv'
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email'
 
-dotenv.config()
+const escapeHtml = (text: string) =>
+    text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
 
+const sendEmail = async (to: string, subject: string, htmlContent: string) => {
+    const response = await fetch(BREVO_URL, {
+        method: 'POST',
+        headers: {
+            'api-key': process.env.BREVO_API_KEY as string,
+            'content-type': 'application/json',
+            accept: 'application/json'
+        },
+        body: JSON.stringify({
+            sender: { name: 'Freelansite', email: process.env.MAIL_FROM },
+            to: [{ email: to }],
+            subject,
+            htmlContent
+        })
+    })
 
-const transporter = nodemailer.createTransport({
-	service: 'gmail',
-	auth: {
-		user: process.env.GMAIL_EMAIL,
-		pass: process.env.GMAIL_APP_PASSWORD
-	}
-})
+    if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Failed to send email:', response.status, errorText)
+        throw new Error(`Email failed with status ${response.status}`)
+    }
+
+    const data = await response.json()
+    console.log('Email sent successfully!', data.messageId)
+    return data
+}
 
 export const sendInviteEmail = async (clientEmail: string, inviteLink: string, name: string) => {
-	try {
-		const mail = await transporter.sendMail({
-			from: process.env.GMAIL_EMAIL,
-			to: clientEmail,
-			subject: 'Welcome to Freelansate - Set up your password',
-			html: `<h1>${name} invited you to join Freelansate!<h1><hr/><p>Click <a href="${inviteLink}">here</a> to set up your account.</p>`
-		})
-		
-		console.log('Email sent successfully!', mail.messageId)
-		return mail
-	} catch (error) {
-		console.error('Failed to send email:', error)
-		throw error
-	}
+    return sendEmail(
+        clientEmail,
+        'Welcome to Freelansite - Set up your password',
+        `<h1>${escapeHtml(name)} invited you to join Freelansite!</h1><hr/><p>Click <a href="${inviteLink}">here</a> to set up your account.</p>`
+    )
 }
 
 export const sendAdminAddedYouEmail = async (clientEmail: string, name: string) => {
-	try {
-		const mail = await transporter.sendMail({
-			from: process.env.GMAIL_EMAIL,
-			to: clientEmail,
-			subject: `You have been added by ${name}`,
-			html: `<p>${name} has added you to their clients list. Open freelansate to see more.</p>`
-		})
-		
-		console.log('Email sent successfully!', mail.messageId)
-		return mail
-	} catch (error) {
-		console.error('Failed to send email:', error)
-		throw error
-	}
+    return sendEmail(
+        clientEmail,
+        `You have been added by ${name}`,
+        `<p>${escapeHtml(name)} has added you to their clients list. Open Freelansite to see more.</p>`
+    )
 }

@@ -22,7 +22,7 @@ import helmet from 'helmet'
 
 
 const app = express()
-
+app.set('trust proxy', 2)
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
