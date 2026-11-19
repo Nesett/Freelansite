@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import db from '../db/db.js'
+import { resolveClient } from '../utils/clientSnapshot.js'
 
 const MAX_RESULTS = 5
 const MIN_QUERY_LENGTH = 2
@@ -61,12 +62,22 @@ export async function search(req: Request, res: Response) {
                                         { companyName: contains(term) }
                                     ]
                                 }
+                            },
+                            {
+                                clientId: null,
+                                OR: [
+                                    { clientName: contains(term) },
+                                    { clientCompanyName: contains(term) }
+                                ]
                             }
                         ]
                     },
                     select: {
                         id: true,
                         title: true,
+                        clientName: true,
+                        clientCompanyName: true,
+                        clientEmail: true,
                         client: {
                             select: {
                                 email: true,
@@ -106,11 +117,15 @@ export async function search(req: Request, res: Response) {
                     companyName: client.companyName,
                     email: client.email
                 })),
-                projects: projects.map(project => ({
-                    id: project.id,
-                    title: project.title,
-                    clientName: project.client.companyName || project.client.name || project.client.email
-                })),
+                projects: projects.map(project => {
+                    const client = resolveClient(project.client, project)
+
+                    return {
+                        id: project.id,
+                        title: project.title,
+                        clientName: client.companyName || client.name || client.email
+                    }
+                }),
                 invoices: invoices.map(invoice => ({
                     id: invoice.id,
                     number: invoice.number,

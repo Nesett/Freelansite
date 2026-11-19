@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import Stripe from 'stripe'
 import db from '../db/db.js'
-import { stripe } from '../utils/stripe.js'
+import { stripe } from '../services/stripe.js'
 
 function getId(value: string | { id: string }) {
     return typeof value === 'string' ? value : value.id

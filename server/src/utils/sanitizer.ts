@@ -12,7 +12,7 @@ function isAdmin(user: Admin | Client): user is Admin {
 
 export const toClientSafe = (user: Admin | Client): SafeUser => {
     if ('lastActive' in user) {
-        const { password, inviteToken, inviteTokenExpires, deletedByClient, ...safeData } = user
+        const { password, inviteToken, inviteTokenExpires, ...safeData } = user
         return { ...safeData, role: 'client' } as SafeClient
     }
 

@@ -6,12 +6,13 @@ import type { LogoStyle } from "../utils/brandTheme"
 export type MilestoneStatusValue = "NOT_STARTED" | "CURRENTLY_WORKED_ON" | "AWAITING_APPROVAL" | "APPROVED"
 
 export interface ProjectClient {
-	id: string
-	name: string | null
-	companyName: string | null
-	email: string
-	phone: string | null
-	address: string
+    id: string | null
+    name: string | null
+    companyName: string | null
+    email: string
+    phone: string | null
+    address: string | null
+    accountDeleted: boolean
 }
 
 export interface Milestone {

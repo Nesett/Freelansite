@@ -645,8 +645,8 @@ export default function Settings() {
                             <h2>Delete account</h2>
                             <p className="settingsCardDescription">
                                 {isClient
-                                    ? 'This closes your account and you will lose access to all your projects and invoices. The freelancers you worked with keep their own records of that work. This cannot be undone.'
-                                    : 'This permanently deletes your account along with all your clients, projects, milestones, invoices, and shared links. Your clients will lose access immediately. This cannot be undone.'}
+                                    ? 'This permanently deletes your account and you will lose access to all your projects and invoices. The freelancers you worked with keep a copy of your name and email on their projects and invoices for their records. This cannot be undone.'
+                                    : 'This permanently deletes your account along with all your clients, projects, milestones, invoices, and shared links. Your clients will lose access immediately. If you have a Pro subscription, it is cancelled right away and the rest of your billing period is not refunded. This cannot be undone.'}
                             </p>
 
                             {!showDelete ? (

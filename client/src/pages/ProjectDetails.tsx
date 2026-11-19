@@ -419,7 +419,12 @@ export default function ProjectDetails() {
             )}
 			<header className="projectHeader">
                 <div className="projectHeaderInfo">
-                    <p className="projectHeaderClient">{project.client.companyName ? project.client.companyName : project.client.name}</p>
+                    <p className="projectHeaderClient">
+                        {project.client.companyName || project.client.name || project.client.email}
+                        {isAdmin && project.client.accountDeleted && (
+                            <span className="statusTag statusTag--neutral" style={{ marginLeft: 8 }}>Account deleted</span>
+                        )}
+                    </p>
                     <h1>{project.title}</h1>
                     {project.description && (
                         <p className="projectDescription">{project.description}</p>

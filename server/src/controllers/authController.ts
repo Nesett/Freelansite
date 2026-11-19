@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt'
 import validator from 'validator'
 import jwt from 'jsonwebtoken'
 import { toClientSafe } from '../utils/sanitizer.js'
+import { Admin, Client } from '@prisma/client'
+import { stripe } from '../services/stripe.js'
 
 
 export async function signUp(req: Request, res: Response) {
@@ -200,6 +202,24 @@ export async function changePassword(req: Request, res: Response) {
     }
 }
 
+async function cancelStripeSubscriptions(customerId: string) {
+    try {
+        const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'all'
+        })
+
+        for (const subscription of subscriptions.data) {
+            if (subscription.status !== 'canceled' && subscription.status !== 'incomplete_expired') {
+                await stripe.subscriptions.cancel(subscription.id)
+            }
+        }
+    } catch (err) {
+        if ((err as { code?: string }).code === 'resource_missing') return
+        throw err
+    }
+}
+
 export async function deleteAccount(req: Request, res: Response) {
 
     const { password } = req.body
@@ -226,17 +246,34 @@ export async function deleteAccount(req: Request, res: Response) {
         }
 
         if (isClient) {
-            await db.client.update({
-                where: { id: account.id },
-                data: {
-                    deletedByClient: true,
-                    password: null,
-                    inviteToken: null,
-                    inviteTokenExpires: null
-                }
-            })
+            const client = account as Client
+
+            await db.$transaction([
+                db.project.updateMany({
+                    where: { clientId: client.id },
+                    data: {
+                        clientName: client.name,
+                        clientCompanyName: client.companyName,
+                        clientEmail: client.email
+                    }
+                }),
+                db.client.delete({ where: { id: client.id } })
+            ])
         } else {
-            await db.admin.delete({ where: { id: account.id } })
+            const admin = account as Admin
+
+            if (admin.stripeCustomerId) {
+                try {
+                    await cancelStripeSubscriptions(admin.stripeCustomerId)
+                } catch (err) {
+                    console.log(err)
+                    return res.status(502).json({
+                        error: 'Could not cancel your subscription, so your account was not deleted. Please try again.'
+                    })
+                }
+            }
+
+            await db.admin.delete({ where: { id: admin.id } })
         }
 
         res.clearCookie('auth_token')

@@ -23,7 +23,12 @@ export default function ProjectEntry({ project, showClient = false }: ProjectEnt
                 <div className="clientPrimary">{project.title}</div>
             </td>
             {showClient && (
-                <td>{project.client.companyName || project.client.name}</td>
+                <td>
+                    {project.client.companyName || project.client.name || project.client.email}
+                    {project.client.accountDeleted && (
+                        <span className="statusTag statusTag--neutral" style={{ marginLeft: 8 }}>Account deleted</span>
+                    )}
+                </td>
             )}
             <td>{Math.round(progressPercent)}%</td>
             <td>

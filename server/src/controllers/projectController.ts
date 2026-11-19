@@ -6,6 +6,7 @@ import { projectAccessFilter } from '../utils/accessByUser.js'
 import crypto from "crypto"
 import { canAddProject } from '../services/planLimits.js'
 import { getPublicBranding } from '../utils/branding.js'
+import { resolveClient } from '../utils/clientSnapshot.js'
 
 
 const clientSelect = {
@@ -45,6 +46,15 @@ export async function createProject(req: Request, res: Response) {
                 adminId,
                 clientId,
                 deletedByAdmin: false
+            },
+            include: {
+                client: { 
+                    select: { 
+                        email: true, 
+                        name: true, 
+                        companyName: true 
+                    } 
+                }
             }
         })
 
@@ -68,7 +78,10 @@ export async function createProject(req: Request, res: Response) {
                     title,
                     description,
                     budget: projectBudget,
-                    notes
+                    notes,
+                    clientEmail: existingClient.client.email,
+                    clientName: existingClient.client.name,
+                    clientCompanyName: existingClient.client.companyName
                 }
             })
 
@@ -125,6 +138,7 @@ export async function getAllProjects(req: Request, res: Response) {
 
         const projectsWithProgress = allProjects.map(project => ({
             ...project,
+            client: resolveClient(project.client, project),
             progress: countProgressPercent(project.milestones)
         }))
 
@@ -202,6 +216,7 @@ export async function getProject(req: Request, res: Response) {
                 address: admin.address,
                 branding: getPublicBranding(admin)
             },
+            client: resolveClient(project.client, project),
             progress: countProgressPercent(project.milestones)
         })
 

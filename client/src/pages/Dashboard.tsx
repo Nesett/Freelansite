@@ -27,6 +27,10 @@ function getClientName(project: Project) {
     return companyName || name || email
 }
 
+function clientKey(project: Project) {
+    return project.client.id ?? project.client.email
+}
+
 function getProjectStatus(project: Project): { label: string, className: string } {
     const now = Date.now()
     const open = project.milestones.filter(m => m.status !== "APPROVED")
@@ -93,7 +97,7 @@ export default function DashboardPage() {
     }
 
     const activeProjects = projects.filter(p => !p.isOnHold && p.progress < 100)
-    const activeClientCount = new Set(activeProjects.map(p => p.client.id)).size
+    const activeClientCount = new Set(activeProjects.map(clientKey)).size
 
     const pendingApprovals = projects
         .flatMap(p => p.milestones)
@@ -106,7 +110,9 @@ export default function DashboardPage() {
     )
     const outstandingTotal = unpaidInvoices.reduce((sum, i) => sum + Number(i.total), 0)
 
-    const totalClients = new Set(projects.map(p => p.client.id)).size
+    const totalClients = new Set(
+        projects.filter(p => !p.client.accountDeleted).map(clientKey)
+    ).size
 
     const recentProjects = projects.slice(0, RECENT_PROJECTS_LIMIT)
 
@@ -178,7 +184,12 @@ export default function DashboardPage() {
                                         className="clickableEntry"
                                         onClick={() => navigate(`/projects/${project.id}`)}
                                     >
-                                        <td className="clientPrimary">{getClientName(project)}</td>
+                                        <td className="clientPrimary">
+                                            {getClientName(project)}
+                                            {project.client.accountDeleted && (
+                                                <span className="statusTag statusTag--neutral" style={{ marginLeft: 8 }}>Account deleted</span>
+                                            )}
+                                        </td>
                                         <td className="dashboardProjectTitle">{project.title}</td>
                                         <td>
                                             <div className="statusBarHolder dashboardProgress">
