@@ -22,6 +22,7 @@ export default function Navbar() {
 	]
 
 	const clientLinks = [
+		{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ to: '/projects', label: 'Projects', icon: FolderKanban },
 		{ to: '/invoices', label: 'Invoices', icon: Receipt },
 		{ to: '/settings', label: 'Settings', icon: Settings }

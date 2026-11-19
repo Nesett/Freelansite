@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import LandingPage from './pages/Landing'
 import LoginPage from './pages/Login'
-import DashboardPage from './pages/Dashboard'
+import DashboardRoute from './pages/DashboardRoute'
 import Clients from './pages/Clients'
 import Projects from './pages/Projects'
 import Invoices from './pages/Invoices'
@@ -37,7 +37,7 @@ export function App() {
 
 								<Route element={<ProtectedRoute />}>
 									<Route element={<Layout />}>
-										<Route path="/dashboard" element={<DashboardPage />} />
+										<Route path="/dashboard" element={<DashboardRoute />} />
 										<Route path="/projects" element={<Projects />} />
 										<Route path="/projects/:id" element={<ProjectDetails />} />
 										<Route path="/invoices" element={<Invoices />} />

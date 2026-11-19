@@ -3319,6 +3319,10 @@ hr {
     margin-bottom: 32px;
 }
 
+.dashboardStats--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .statCard {
     display: flex;
     flex-direction: column;
@@ -3432,22 +3436,6 @@ hr {
     font-family: 'ADLaM Display', 'Inter', sans-serif;
     font-size: 1.5rem;
     color: var(--text-color);
-}
-
-.notFoundLogo {
-    display: block;
-    width: auto;
-    object-fit: contain;
-}
-
-.notFoundLogo--wordmark {
-    height: 40px;
-    max-width: 240px;
-}
-
-.notFoundLogo--symbol {
-    height: 56px;
-    max-width: 120px;
 }
 
 .notFoundCard {
