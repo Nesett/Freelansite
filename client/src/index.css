@@ -3414,6 +3414,95 @@ hr {
         width: 90px;
     }
 }
+
+/* -------------------------------------------- 404 Page -------------------------------------------- */
+
+.notFoundPage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px;
+    background-color: var(--bg-color);
+}
+
+.notFoundBrand {
+    font-family: 'ADLaM Display', 'Inter', sans-serif;
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+.notFoundLogo {
+    display: block;
+    width: auto;
+    object-fit: contain;
+}
+
+.notFoundLogo--wordmark {
+    height: 40px;
+    max-width: 240px;
+}
+
+.notFoundLogo--symbol {
+    height: 56px;
+    max-width: 120px;
+}
+
+.notFoundCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 32px;
+    background-color: var(--elements-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.notFoundCode {
+    font-family: 'ADLaM Display', 'Inter', sans-serif;
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--primary-color);
+}
+
+.notFoundCard h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.notFoundText {
+    max-width: 340px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--muted-text-color);
+}
+
+.notFoundActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.notFoundActions .newButton,
+.notFoundActions .invoiceSecondaryButton {
+    padding: 10px 18px;
+    text-decoration: none;
+}
+
+.notFoundActions .newButton:focus-visible,
+.notFoundActions .invoiceSecondaryButton:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
 /* -------------------------------------------- Upgrade Modal -------------------------------------------- */
 
 .upgradeModal {

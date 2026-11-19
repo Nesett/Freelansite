@@ -16,6 +16,7 @@ import ClientSetPassword from './pages/ClientSetPassword'
 import InvoiceDetails from './pages/InvoiceDetails'
 import MagicLinkPage from './pages/MagicLinkPage'
 import SignUp from './pages/SignUp'
+import NotFound from './pages/NotFound'
 import { UpgradeProvider } from './context/UpgradeContext'
 import { ToastProvider } from './context/ToastContext'
 import { BrandingProvider } from './context/BrandingContext'
@@ -50,6 +51,7 @@ export function App() {
 										</Route>
 									</Route>
 								</Route>
+								<Route path="*" element={<NotFound />} />
 							</Routes>
 						</BrandingProvider>
 					</UpgradeProvider>
