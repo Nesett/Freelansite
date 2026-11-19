@@ -91,9 +91,6 @@ export default function PublicProject() {
         <div className="pageContent publicPage">
             <header className="projectHeader">
                 <div className="projectHeaderInfo">
-                    {project.admin.businessName && (
-                        <p className="projectHeaderClient">{project.admin.businessName}</p>
-                    )}
                     {clientLabel && (
                         <p className="projectHeaderClient">{clientLabel}</p>
                     )}
