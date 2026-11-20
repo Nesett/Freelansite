@@ -29,7 +29,7 @@ export default function ProjectFormModal({
         setError("")
 
         try {
-            const url = project ? `/api/projects/${project.id}` : `/api/projects/`
+            const url = project ? `/api/projects/${project.id}` : `/api/projects`
 
             const res = await fetch(url, {
                 method: isEdit ? "PUT" : "POST",
