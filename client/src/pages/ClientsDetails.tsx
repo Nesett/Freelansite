@@ -141,7 +141,7 @@ export default function ClientsDetails() {
             {areYouSure && (
                 <AreYouSureModal 
                     itemType="client"
-                    itemName={client.companyName ? client.companyName : client.name}
+                    itemName={client.companyName || client.name || client.email}
                     warningMessage="Deleting client will result in projects related with them to be deleted as well."
                     setAreYouSure={setAreYouSure} 
                     onConfirm={deleteClient}

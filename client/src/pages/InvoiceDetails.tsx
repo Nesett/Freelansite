@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, EllipsisVertical, Printer } from 'lucide-react'
 import { formatInvoiceNumber, STATUS_LABELS } from '../components/InvoiceEntry'
 import type { InvoiceStatus } from './Invoices'

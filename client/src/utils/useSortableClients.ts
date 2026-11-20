@@ -23,8 +23,8 @@ export function useSortableClients(clients: Client[]) {
 
 		sorted.sort((a, b) => {
 			if (sortField === 'client') {
-				const aKey = (a.companyName ?? a.name).toLowerCase()
-				const bKey = (b.companyName ?? b.name).toLowerCase()
+				const aKey = (a.companyName ?? a.name ?? a.email).toLowerCase()
+				const bKey = (b.companyName ?? b.name ?? b.email).toLowerCase()
 				const comparison = aKey.localeCompare(bKey)
 				return sortDirection === 'asc' ? comparison : -comparison
 			}
