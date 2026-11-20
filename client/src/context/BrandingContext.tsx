@@ -11,31 +11,18 @@ export type Branding = {
 
 type BrandingContextType = {
     branding: Branding | null
-    setBranding: (branding: Branding | null) => void
+    setPageBranding: (branding: Branding | null) => void
+    setOwnBranding: (branding: Branding | null) => void
 }
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined)
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-    const { user } = useAuth()
-
     const [pageBranding, setPageBranding] = useState<Branding | null>(null)
-
-    const isProAdmin = user?.role === 'admin' && user.plan === 'PRO'
-    const ownName = user?.businessName || user?.name || ''
-    const ownPrimary = user?.brandPrimary ?? null
-    const ownLogoUrl = user?.logoUrl ?? null
-    const ownLogoStyle = user?.logoStyle ?? 'WORDMARK'
-
-    const ownBranding = useMemo<Branding | null>(() => {
-        if (!isProAdmin) return null
-
-        return { name: ownName, primary: ownPrimary, logoUrl: ownLogoUrl, logoStyle: ownLogoStyle }
-    }, [isProAdmin, ownName, ownPrimary, ownLogoUrl, ownLogoStyle])
+    const [ownBranding, setOwnBranding] = useState<Branding | null>(null)
 
     const branding = pageBranding ?? ownBranding
     const primary = branding?.primary ?? null
-
 
     useEffect(() => {
         if (!primary) return
@@ -51,7 +38,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     }, [primary])
 
     return (
-        <BrandingContext.Provider value={{ branding, setBranding: setPageBranding }}>
+        <BrandingContext.Provider value={{ branding, setPageBranding, setOwnBranding }}>
             {children}
         </BrandingContext.Provider>
     )
@@ -65,10 +52,7 @@ export function useBrandingContext() {
     return context
 }
 
-
-export function useBranding(branding: Branding | null | undefined) {
-    const { setBranding } = useBrandingContext()
-
+function useRegisterBranding(branding: Branding | null | undefined, setter: (branding: Branding | null) => void) {
     const hasBranding = !!branding
     const name = branding?.name ?? ''
     const primary = branding?.primary ?? null
@@ -78,8 +62,32 @@ export function useBranding(branding: Branding | null | undefined) {
     useEffect(() => {
         if (!hasBranding) return
 
-        setBranding({ name, primary, logoUrl, logoStyle })
+        setter({ name, primary, logoUrl, logoStyle })
 
-        return () => setBranding(null)
-    }, [hasBranding, name, primary, logoUrl, logoStyle, setBranding])
+        return () => setter(null)
+    }, [hasBranding, name, primary, logoUrl, logoStyle, setter])
+}
+
+export function useBranding(branding: Branding | null | undefined) {
+    const { setPageBranding } = useBrandingContext()
+    useRegisterBranding(branding, setPageBranding)
+}
+
+export function useOwnBranding() {
+    const { user } = useAuth()
+    const { setOwnBranding } = useBrandingContext()
+
+    const isProAdmin = user?.role === 'admin' && user.plan === 'PRO'
+    const name = user?.businessName || user?.name || ''
+    const primary = user?.brandPrimary ?? null
+    const logoUrl = user?.logoUrl ?? null
+    const logoStyle = user?.logoStyle ?? 'WORDMARK'
+
+    const ownBranding = useMemo<Branding | null>(() => {
+        if (!isProAdmin) return null
+
+        return { name, primary, logoUrl, logoStyle }
+    }, [isProAdmin, name, primary, logoUrl, logoStyle])
+
+    useRegisterBranding(ownBranding, setOwnBranding)
 }

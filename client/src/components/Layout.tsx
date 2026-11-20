@@ -2,8 +2,11 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import TopBar from './TopBar'
 import { BreadcrumbProvider } from '../context/BreadcrumbContext'
+import { useOwnBranding } from '../context/BrandingContext'
 
 export default function Layout() {
+    useOwnBranding()
+
     return (
         <BreadcrumbProvider>
             <div style={{ display: 'flex' }}>
